@@ -412,7 +412,7 @@ async function handler(req,res){
   if(req.method==='OPTIONS')return send(res,204,'',{'access-control-allow-origin':'*'});
   const url=new URL(req.url,'https://radar.local'),p=url.pathname;
   try{
-    if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'5.0.0',phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
+    if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'v93',radarVersion:'v93',release:'5.0.0',phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
     if(p==='/api/yahoo')return send(res,200,await yahoo(url));
     if(p==='/api/yahoo-batch')return send(res,200,await yahooBatch(url));
     if(p==='/api/binance')return send(res,200,await binanceKlines(url));
