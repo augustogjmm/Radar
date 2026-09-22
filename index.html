@@ -2,7 +2,7 @@
 
 <html lang="es">
 <head>
-<script src="/web-compat.js?v=20260922-5"></script>
+<script src="/web-compat.js?v=20260922-6"></script>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Radar Técnico G2 · v5.0.0</title>
@@ -11073,7 +11073,7 @@ async function startScanner(){
  }catch(e){
    state.scan.running=false;
    $('startScanBtn').disabled=false;$('stopScanBtn').disabled=true;
-   $('scanProgressText').textContent='No se pudo cargar el universo: '+String(e.message||e)+' · Revisá radar_log.txt si persiste.';
+   $('scanProgressText').textContent='No se pudo cargar el universo: '+String(e.message||e)+' · Reintentá en unos segundos.';
    return;
  }
  if(isFixedIncomeUniverse($('scanUniverse').value)){
