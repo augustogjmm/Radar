@@ -7646,7 +7646,6 @@ async function fetchMervalUsdOfficialQuote(force=false){
  }catch(e){console.warn('SPMERVDT proxy',e)}
  return null;
 }
-function weeklyCloseFromDaily
 function weeklyCloseFromDaily(bars){
  const map=new Map();
  bars.forEach(b=>{
@@ -7787,7 +7786,6 @@ async function loadBreadthArgentina(){
  }catch(e){console.warn('breadth AR batch fallback',e)}
  return calcBreadth(rows);
 }
-async function loadBreadthUs
 async function loadBreadthUs(){
  const rows=[];
  const settled=await Promise.allSettled(BREADTH_US_SYMBOLS.map(async symbol=>{
@@ -7802,7 +7800,6 @@ async function loadBreadthUs(){
  }catch(e){console.warn('breadth USA batch fallback',e)}
  return calcBreadth(rows);
 }
-async function calculateRegime
 async function calculateRegime(){
  const comps=[];let score=50;
  const getCached=(id)=>marketBoardData.get(id);
@@ -7933,7 +7930,6 @@ async function loadUsCurve(){
 
  return pts.sort((a,b)=>a.x-b.x);
 }
-async function loadArCurve
 async function loadArCurve(){
  try{const j=await fetchJsonTimeout('/api/fixed-income/curve',30000);const rows=(j?.bonds||[]).filter(b=>dashValid(b.tir)&&dashValid(b.duration)&&Number(b.tir)>0&&Number(b.duration)>0).map(b=>({label:String(b.ticker||'').toUpperCase(),x:Number(b.duration),y:Number(b.tir),paridad:dashNum(b.paridad)})).filter(x=>/^(AL|GD|AE)/.test(x.label)).sort((a,b)=>a.x-b.x);const out=[],seen=new Set();for(const x of rows){if(x.label&&!seen.has(x.label)){seen.add(x.label);out.push(x)}}return out.slice(0,12)}catch(e){console.warn('AR curve lite',e);return[]}
 }
