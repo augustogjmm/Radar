@@ -8,8 +8,47 @@ function send(res,status,body,headers={}){
   for(const [k,v] of Object.entries(headers))res.setHeader(k,v);
   res.end(typeof body==='string'?body:JSON.stringify(body));
 }
-function arr(x){return Array.isArray(x)?x:Array.isArray(x?.data)?x.data:Array.isArray(x?.content?.data)?x.content.data:x&&x.symbol?[x]:[]}
-function num(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function arr(x){
+  return Array.isArray(x)?x:
+    Array.isArray(x?.results)?x.results:
+    Array.isArray(x?.data)?x.data:
+    Array.isArray(x?.data?.results)?x.data.results:
+    Array.isArray(x?.content?.data)?x.content.data:
+    x&&x.symbol?[x]:[];
+}
+function num(v){
+  if(typeof v==='number')return Number.isFinite(v)?v:null;
+  let s=String(v??'').trim().replace(/\s+/g,'').replace(/%/g,'');
+  if(!s)return null;
+  if(s.includes(',')&&s.includes('.')){
+    if(s.lastIndexOf(',')>s.lastIndexOf('.'))s=s.replace(/\./g,'').replace(',','.');
+    else s=s.replace(/,/g,'');
+  }else if(s.includes(',')){
+    s=s.replace(',','.');
+  }
+  const n=Number(s);return Number.isFinite(n)?n:null;
+}
+function plain(html){
+  return String(html||'')
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ')
+    .replace(/<[^>]+>/g,' ')
+    .replace(/&nbsp;|&#160;/gi,' ')
+    .replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'")
+    .replace(/\s+/g,' ').trim();
+}
+function arDate(){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+}
+function dateAr(v){
+  const d=new Date(v);if(!Number.isFinite(d.getTime()))return String(v||'');
+  return new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',year:'numeric'}).format(d);
+}
+function spanishDateIso(day,month,year){
+  const m={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',setiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'}[String(month||'').toLowerCase()];
+  return m?String(year).padStart(4,'0')+'-'+m+'-'+String(day).padStart(2,'0'):'';
+}
+async function request
 async function request(url,{method='GET',body,timeout=16000,headers={}}={}){
   const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);
   try{
@@ -33,15 +72,33 @@ function uniqueBest(rows){
 }
 async function fxCurrent(){
   let rows=[];
-  for(const u of ['https://dolarapi.com/v1/ambito/dolares','https://dolarapi.com/v1/dolares']){
-    try{const x=await getJson(u,{timeout:9000});rows=Array.isArray(x)?x:[];if(rows.length)break}catch{}
+  try{
+    const x=await getJson('https://dolarapi.com/v1/dolares',{timeout:9000});
+    if(Array.isArray(x))rows=x;
+  }catch{}
+  if(!rows.length){
+    const defs=[['oficial','https://dolarapi.com/v1/dolares/oficial'],['bolsa','https://dolarapi.com/v1/dolares/bolsa'],['contadoconliqui','https://dolarapi.com/v1/dolares/contadoconliqui']];
+    const out=await Promise.allSettled(defs.map(async ([c,u])=>({...(await getJson(u,{timeout:9000})),casa:c})));
+    rows=out.filter(x=>x.status==='fulfilled').map(x=>x.value);
   }
   const pick=(casa)=>{
     const x=rows.find(r=>String(r.casa||'').toLowerCase()===casa);
     return x?{compra:num(x.compra),venta:num(x.venta),changePct:num(x.variacion),fecha:x.fechaActualizacion||'',source:'DolarApi'}:{compra:null,venta:null,changePct:null,fecha:'',source:'No disponible'};
   };
-  return {updated:new Date().toISOString(),fx:{mep:pick('bolsa'),ccl:pick('contadoconliqui'),official:pick('oficial')}};
+  const fx={mep:pick('bolsa'),ccl:pick('contadoconliqui'),official:pick('oficial')};
+  for(const [k,series] of [['mep','mep'],['ccl','ccl'],['official','official']]){
+    const x=fx[k];if(x.venta===null)continue;
+    if(x.changePct===null){
+      try{
+        const h=await history(series,5),today=String(x.fecha||arDate()).slice(0,10);
+        const prev=[...h].reverse().find(r=>String(r.date)<today&&num(r.value)!==null);
+        if(prev&&num(prev.value)!==0)x.changePct=(x.venta/num(prev.value)-1)*100;
+      }catch{}
+    }
+  }
+  return {updated:new Date().toISOString(),fx};
 }
+async function history
 async function history(series,limit=240){
   const map={
     risk:['https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais','index'],
@@ -50,20 +107,43 @@ async function history(series,limit=240){
     ccl:['https://api.argentinadatos.com/v1/cotizaciones/dolares/contadoconliqui','fx'],
     official:['https://api.argentinadatos.com/v1/cotizaciones/dolares/oficial','fx']
   };
-  const spec=map[series]; if(!spec)throw new Error('Serie inválida');
+  const spec=map[series];if(!spec)throw new Error('Serie inválida');
   const x=await getJson(spec[0],{timeout:12000});
-  const rows=(Array.isArray(x)?x:arr(x)).map(r=>({date:String(r.fecha||r.date||'').slice(0,10),value:num(spec[1]==='fx'?r.venta:r.valor)})).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&r.value!==null).sort((a,b)=>a.date.localeCompare(b.date));
+  const rows=arr(x).map(r=>{
+    const date=String(r.fecha||r.date||'').slice(0,10);
+    const value=num(spec[1]==='fx'?(r.venta??r.value):(r.valor??r.value));
+    return {date,value,fecha:date,valor:value};
+  }).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&r.value!==null)
+    .sort((a,b)=>a.date.localeCompare(b.date));
   return rows.slice(-limit);
 }
+async function riskNow
 async function riskNow(){
+  const hist=await history('risk',10).catch(()=>[]);
+  const previousFor=(date)=>[...hist].reverse().find(r=>r.date<date)?.value??(hist.length>1?hist.at(-2)?.value:null);
+  try{
+    const html=await request('https://www.rava.com/cotizaciones/historico/riesgo-pais/hoy/',{timeout:9000,headers:{accept:'text/html,*/*'}});
+    const t=plain(html);
+    const mv=t.match(/Riesgo\s+Pa[ií]s\s+hoy\s*:?\s*([0-9]{2,5})/i)||t.match(/([0-9]{2,5})\s+puntos\s+b[aá]sicos/i);
+    const md=t.match(/Actualizado\s+al\s+(\d{1,2})\s+de\s+([A-Za-zÁÉÍÓÚáéíóú]+)\s+de\s+(\d{4})/i);
+    const value=mv?num(mv[1]):null,date=md?spanishDateIso(md[1],md[2],md[3]):arDate();
+    if(value!==null){
+      const mp=t.match(/Cierre\s+anterior\s+([0-9]{2,5})/i),previous=mp?num(mp[1]):previousFor(date);
+      return {value,previous,change:value!==null&&previous!==null?value-previous:null,date,source:'Rava Bursátil · Riesgo País',fallback:false,status:'ACTUAL',verifiedAt:new Date().toISOString()};
+    }
+  }catch{}
   try{
     const x=await getJson('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo',{timeout:8000});
-    const value=num(x.valor),date=String(x.fecha||'').slice(0,10);
-    const h=await history('risk',3).catch(()=>[]);
-    const prev=h.length>1?h[h.length-2].value:null;
-    return {value,previous:prev,change:value!==null&&prev!==null?value-prev:null,date,source:'ArgentinaDatos · riesgo país',fallback:true,status:'ACTUAL',verifiedAt:new Date().toISOString()};
-  }catch(e){return {value:null,previous:null,change:null,date:'',source:'No disponible',fallback:true,status:'STALE',warning:String(e.message||e)}}
+    const value=num(x.valor??x.value),date=String(x.fecha||x.date||'').slice(0,10)||hist.at(-1)?.date||arDate(),previous=previousFor(date);
+    if(value!==null)return {value,previous,change:previous!==null?value-previous:null,date,source:'ArgentinaDatos · riesgo país',fallback:true,status:'ACTUAL',verifiedAt:new Date().toISOString()};
+  }catch{}
+  if(hist.length){
+    const q=hist.at(-1),p=hist.length>1?hist.at(-2):null;
+    return {value:q.value,previous:p?.value??null,change:p?q.value-p.value:null,date:q.date,source:'ArgentinaDatos · histórico',fallback:true,status:'STALE',verifiedAt:new Date().toISOString()};
+  }
+  return {value:null,previous:null,change:null,date:'',source:'No disponible',fallback:true,status:'STALE'};
 }
+async function inflationNow
 async function inflationNow(){
   const rows=await history('inflation',240);
   return {rows:rows.map(r=>({fecha:r.date,valor:r.value})),source:'ArgentinaDatos / BCRA'};
@@ -79,6 +159,45 @@ async function yahoo(url){
   }
   throw new Error('Yahoo Finance: '+last);
 }
+function compactYahooChart(symbol,payload,source='Yahoo Finance'){
+  const r=payload?.chart?.result?.[0];if(!r)return {symbol,ok:false,error:'Sin datos',bars:[]};
+  const ts=Array.isArray(r.timestamp)?r.timestamp:[],cl=Array.isArray(r?.indicators?.quote?.[0]?.close)?r.indicators.quote[0].close:[],bars=[];
+  for(let i=0;i<Math.min(ts.length,cl.length);i++){const c=num(cl[i]);if(c!==null)bars.push({time:Number(ts[i]),close:c})}
+  let last=bars.at(-1)?.close??num(r?.meta?.regularMarketPrice),previous=bars.length>1?bars.at(-2)?.close:num(r?.meta?.chartPreviousClose),time=bars.at(-1)?.time??Math.floor(Date.now()/1000);
+  if(last===null)return {symbol,ok:false,error:'Sin cotización',bars};
+  const changePct=previous!==null&&previous!==0?(last/previous-1)*100:null;
+  return {symbol,ok:true,last,previous,changePct,time,bars,source};
+}
+async function yahooBatch(url){
+  const raw=String(url.searchParams.get('symbols')||''),range=url.searchParams.get('range')||'6mo',interval=url.searchParams.get('interval')||'1d';
+  const symbols=[...new Set(raw.split(',').map(x=>x.trim()).filter(Boolean))].slice(0,40);
+  if(!symbols.length)throw new Error('symbols requerido');
+  const encoded=symbols.map(encodeURIComponent).join(',');
+  let items=[],lastErr='';
+  for(const host of ['query1.finance.yahoo.com','query2.finance.yahoo.com']){
+    try{
+      const u='https://'+host+'/v7/finance/spark?symbols='+encoded+'&range='+encodeURIComponent(range)+'&interval='+encodeURIComponent(interval)+'&indicators=close&includeTimestamps=true&includePrePost=false&corsDomain=finance.yahoo.com&.tsrc=finance';
+      const j=JSON.parse(await request(u,{timeout:18000,headers:{accept:'application/json'}}));
+      if(j?.spark?.error)throw new Error(j.spark.error.description||'Yahoo Spark error');
+      const found=new Map();
+      for(const x of (j?.spark?.result||[])){
+        const symbol=String(x?.symbol||'').trim(),r=Array.isArray(x?.response)?x.response[0]:null;if(!symbol||!r)continue;
+        const payload={chart:{result:[r]}},q=compactYahooChart(symbol,payload,'Yahoo Finance Spark');found.set(symbol,q);
+      }
+      items=symbols.map(symbol=>found.get(symbol)||{symbol,ok:false,error:'Sin datos en Yahoo Spark',bars:[]});
+      if(items.some(x=>x.ok))break;
+    }catch(e){lastErr=String(e.message||e);items=[]}
+  }
+  if(!items.length||!items.some(x=>x.ok)){
+    const out=await Promise.allSettled(symbols.map(async symbol=>{
+      const u=new URL('https://radar.local/api/yahoo');u.searchParams.set('symbol',symbol);u.searchParams.set('range',range);u.searchParams.set('interval',interval);
+      return compactYahooChart(symbol,await yahoo(u),'Yahoo Finance Chart');
+    }));
+    items=out.map((r,i)=>r.status==='fulfilled'?r.value:{symbol:symbols[i],ok:false,error:String(r.reason?.message||r.reason||lastErr||'Yahoo sin datos'),bars:[]});
+  }
+  return {source:'Yahoo Finance',updated:new Date().toISOString(),count:items.length,items};
+}
+async function binanceKlines
 async function binanceKlines(url){
   const symbol=(url.searchParams.get('symbol')||'BTCUSDT').replace(/[\/-]/g,'').toUpperCase(),interval=url.searchParams.get('interval')||'1h';
   return await getJson('https://api.binance.com/api/v3/klines?symbol='+encodeURIComponent(symbol)+'&interval='+encodeURIComponent(interval)+'&limit=1000',{timeout:16000});
@@ -157,14 +276,83 @@ async function fred(series,range='1y'){
   const csv=await request('https://fred.stlouisfed.org/graph/fredgraph.csv?id='+encodeURIComponent(series),{timeout:16000,headers:{accept:'text/csv,*/*'}});
   const lines=csv.trim().split(/\r?\n/).slice(1),days={'1mo':31,'3mo':93,'6mo':186,'1y':366,'2y':732,'5y':1830,'10y':3660}[range]||366;
   const cutoff=Date.now()-days*86400000,rows=[];
-  for(const line of lines){const [date,val]=line.split(',');const value=Number(val);if(Date.parse(date)>=cutoff&&Number.isFinite(value))rows.push({date,value})}
+  for(const line of lines){const [date,val]=line.split(','),value=num(val),ms=Date.parse(date);if(ms>=cutoff&&value!==null)rows.push({date,value,time:Math.floor(ms/1000),close:value})}
   return rows;
 }
 async function treasuryCurve(){
   const defs=[['1M','DGS1MO'],['3M','DGS3MO'],['6M','DGS6MO'],['1Y','DGS1'],['2Y','DGS2'],['3Y','DGS3'],['5Y','DGS5'],['7Y','DGS7'],['10Y','DGS10'],['20Y','DGS20'],['30Y','DGS30']];
-  const out=[];for(const [tenor,s] of defs){try{const r=await fred(s,'1mo');const z=r.at(-1);if(z)out.push({tenor,value:z.value,date:z.date,series:s})}catch{}}
-  return {source:'FRED / U.S. Treasury',updated:new Date().toISOString(),curve:out};
+  const settled=await Promise.allSettled(defs.map(async ([tenor,series])=>{const r=await fred(series,'1mo'),z=r.at(-1);return z?{tenor,value:z.value,date:z.date,series}:null}));
+  const curve=settled.filter(x=>x.status==='fulfilled'&&x.value).map(x=>x.value);
+  return {source:'FRED / U.S. Treasury',updated:new Date().toISOString(),curve,points:curve.map(x=>({label:x.tenor,yield:x.value,date:x.date,series:x.series}))};
 }
+async function lastSeries(url,source){
+  try{
+    const rows=arr(await getJson(url,{timeout:10000})).map(x=>({date:String(x.fecha||x.date||'').slice(0,10),value:num(x.valor??x.value)})).filter(x=>x.value!==null).sort((a,b)=>a.date.localeCompare(b.date));
+    const q=rows.at(-1);return q?{value:q.value,date:q.date,source}:null;
+  }catch{return null}
+}
+async function localRates(){
+  let catalog=null;
+  try{catalog=await getJson('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias?Limit=3000',{timeout:12000,headers:{'accept-language':'es-AR'}})}catch{}
+  const bcra=(id,min,max)=>{
+    const r=arr(catalog).find(x=>Number(x.idVariable)===id),value=num(r?.ultValorInformado);
+    return r&&value!==null&&value>=min&&value<=max?{value,date:dateAr(r.ultFechaInformada),source:'BCRA API v4.0',idVariable:id}:null;
+  };
+  let tamar=bcra(44,0,300),badlar=bcra(7,0,300),tm20=bcra(8,0,300),cer=bcra(30,0,100000),uva=bcra(31,0,1000000);
+  if(!tamar||!badlar||!tm20){
+    try{
+      const t=plain(await request('https://www.bcra.gob.ar/principales-variables/',{timeout:10000,headers:{accept:'text/html,*/*'}}));
+      const page=(label)=>{
+        const safe=String(label).replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&'),m=t.match(new RegExp(safe+'\\s*\\(en\\s*%\\s*n\\.?a\\.?\\)\\s*(\\d{2}\\/\\d{2}\\/\\d{4})\\s*([0-9]+(?:[\\.,][0-9]+)?)','i')),value=m?num(m[2]):null;
+        return value!==null&&value>0&&value<300?{value,date:m[1],source:'BCRA Principales Variables'}:null;
+      };
+      tamar=tamar||page('TAMAR en pesos de bancos privados');
+      badlar=badlar||page('BADLAR en pesos de bancos privados');
+      tm20=tm20||page('TM20 en pesos de bancos privados');
+    }catch{}
+  }
+  const deposit30=tm20||await lastSeries('https://api.argentinadatos.com/v1/finanzas/tasas/depositos30Dias','ArgentinaDatos / BCRA · depósitos 30d');
+  uva=uva||await lastSeries('https://api.argentinadatos.com/v1/finanzas/indices/uva','ArgentinaDatos / BCRA · UVA');
+  let caucion=null;
+  try{
+    const t=plain(await request('https://www.byma.com.ar/',{timeout:9000,headers:{accept:'text/html,*/*'}})),m=t.match(/[IÍ]ndice\s+Cauci[oó]n\s+BYMA\s+([0-9]+(?:[\.,][0-9]+)?)/i),value=m?num(m[1]):null;
+    if(value!==null&&value>0&&value<300)caucion={value,date:dateAr(new Date()),source:'BYMA · Índice Caución BYMA'};
+  }catch{}
+  const values=[caucion,tamar,badlar,tm20||deposit30,cer,uva],available=values.filter(Boolean).length;
+  return {source:available?'BCRA API v4.0 · BYMA · ArgentinaDatos':'Fuentes oficiales no disponibles',updated:new Date().toISOString(),available,caucion,tamar,badlar,tm20,deposit30,cer,uva};
+}
+async function mervalUsd(){
+  let value=null,changePct=null,source='';
+  try{
+    const t=plain(await request('https://www.byma.com.ar/',{timeout:9000,headers:{accept:'text/html,*/*'}})),m=t.match(/S&P\s+Merval\s+USD\s+([0-9\.,]+)\s+([+-]?[0-9\.,]+)/i);
+    if(m){value=num(m[1]);changePct=num(m[2]);source='BYMA · SPMERVDT'}
+  }catch{}
+  if(value===null||value<=0){
+    try{
+      const t=plain(await request('https://www.max.capital/mercados/cotizaciones/indices/',{timeout:9000,headers:{accept:'text/html,*/*'}})),m=t.match(/SPMERVDT.*?([+-]?[0-9\.,]+)%.*?([0-9\.,]+)/i);
+      if(m){changePct=num(m[1]);value=num(m[2]);source='Max Capital / BYMA'}
+    }catch{}
+  }
+  if(value===null||value<=0){
+    const u=new URL('https://radar.local/api/yahoo');u.searchParams.set('symbol','^MERV');u.searchParams.set('range','5d');u.searchParams.set('interval','1d');
+    const q=compactYahooChart('^MERV',await yahoo(u),'Yahoo Finance'),fx=await fxCurrent(),mep=num(fx?.fx?.mep?.venta);
+    if(q.ok&&mep!==null&&mep>0){value=q.last/mep;changePct=q.changePct;source='Proxy ^MERV / MEP · Yahoo + DolarApi'}
+  }
+  if(value===null||value<=0)throw new Error('SPMERVDT no disponible');
+  return {value,changePct,symbol:'SPMERVDT',name:'S&P Merval USD (MEP)',source,updated:new Date().toISOString(),official:/BYMA|Max Capital/.test(source)};
+}
+async function fixedIncomeCurve(){
+  const x=await getJson('https://compararfondos.com.ar/api/bonos',{timeout:18000});
+  const rows=Array.isArray(x?.bonds)?x.bonds:arr(x),bonds=[];
+  for(const b of rows){
+    const ticker=String(b?.ticker||'').trim().toUpperCase(),tir=num(b?.tir),duration=num(b?.duration),paridad=num(b?.paridad);
+    if(!/^(AL|GD|AE)/.test(ticker)||tir===null||duration===null||tir<=0||duration<=0)continue;
+    bonds.push({ticker,tir,duration,paridad});
+  }
+  bonds.sort((a,b)=>a.duration-b.duration);
+  return {source:'CompararFondos · curva soberana',updated:new Date().toISOString(),bonds};
+}
+async function handler
 async function handler(req,res){
   if(!['GET','POST','OPTIONS'].includes(req.method||''))return send(res,405,{error:'METHOD_NOT_ALLOWED'});
   if(req.method==='OPTIONS')return send(res,204,'',{'access-control-allow-origin':'*'});
@@ -172,6 +360,7 @@ async function handler(req,res){
   try{
     if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'5.0.0',phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
     if(p==='/api/yahoo')return send(res,200,await yahoo(url));
+    if(p==='/api/yahoo-batch')return send(res,200,await yahooBatch(url));
     if(p==='/api/binance')return send(res,200,await binanceKlines(url));
     if(p==='/api/binance/universe')return send(res,200,await binanceUniverse(url));
     if(p==='/api/byma/equities')return send(res,200,await bymaEquities(url));
@@ -191,13 +380,14 @@ async function handler(req,res){
     if(p==='/api/dashboard/core'){const [fx,inf]=await Promise.all([fxCurrent(),inflationNow()]);const rows=inf.rows||[],last=rows.at(-1),prev=rows.at(-2);return send(res,200,{updated:new Date().toISOString(),fx:fx.fx,inflation:{value:last?.valor??null,previous:prev?.valor??null,change:last&&prev?last.valor-prev.valor:null,period:last?.fecha||'',source:'ArgentinaDatos / BCRA'}})}
     if(p==='/api/treasury-series'){const series=String(url.searchParams.get('series')||'DGS10').toUpperCase(),range=url.searchParams.get('range')||'1y';return send(res,200,{source:'FRED',series,rows:await fred(series,range)})}
     if(p==='/api/treasury-official-series'){const field=String(url.searchParams.get('field')||'10Y').toUpperCase(),map={'1M':'DGS1MO','3M':'DGS3MO','6M':'DGS6MO','1Y':'DGS1','2Y':'DGS2','3Y':'DGS3','5Y':'DGS5','7Y':'DGS7','10Y':'DGS10','20Y':'DGS20','30Y':'DGS30'},series=map[field]||'DGS10';return send(res,200,{source:'FRED / Treasury',field,rows:await fred(series,url.searchParams.get('range')||'1y')})}
-    if(p==='/api/treasury-curve'||p==='/api/fixed-income/curve')return send(res,200,await treasuryCurve());
-    if(p==='/api/local-rates')return send(res,200,{source:'Web runtime',updated:new Date().toISOString(),rates:[],warning:'Tasas locales avanzadas pendientes de proveedor web estable.'});
+    if(p==='/api/treasury-curve')return send(res,200,await treasuryCurve());
+    if(p==='/api/fixed-income/curve')return send(res,200,await fixedIncomeCurve());
+    if(p==='/api/local-rates')return send(res,200,await localRates());
     if(p==='/api/fixed-income/analytics'){const cr=await riskNow();return send(res,200,{source:'Radar Web',countryRisk:cr,bonds:[],letters:[],warning:'Analítica RF avanzada usa el motor local en la release de escritorio.'})}
     if(p==='/api/alphavantage/fundamentals')return send(res,200,{available:false,source:'Alpha Vantage',reason:'API key no configurada en Radar Web'});
     if(p==='/api/finviz')return send(res,200,{available:false,source:'Finviz',reason:'Scraping deshabilitado en runtime serverless'});
     if(p==='/api/yahoo/fundamentals')return send(res,200,{available:false,source:'Yahoo',reason:'Fundamentales avanzados no disponibles en este endpoint web'});
-    if(p==='/api/byma/merval-usd')return send(res,200,{available:false,source:'Radar Web',warning:'Serie Merval USD pendiente de adaptación web'});
+    if(p==='/api/byma/merval-usd')return send(res,200,await mervalUsd());
     if(p==='/api/g2/features')return send(res,200,{marketData:true,webRuntime:true,version:'5.0.0',phase:'12A',technical:false,fixedIncome:false,portfolio:false,risk:false,opportunity:false,advisor:false});
     return send(res,404,{error:'NOT_FOUND',path:p});
   }catch(e){
