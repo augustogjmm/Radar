@@ -2,7 +2,7 @@
 
 <html lang="es">
 <head>
-<script src="/web-compat.js?v=20260922-4"></script>
+<script src="/web-compat.js?v=20260922-5"></script>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Radar Técnico G2 · v5.0.0</title>
@@ -7616,11 +7616,37 @@ function unixArDate(ts){
 async function fetchMervalUsdOfficialQuote(force=false){
  if(!force&&mervalUsdQuoteCache)return mervalUsdQuoteCache;
  try{
-   const j=await queuedLocalJson('/api/byma/merval-usd',9000);
+   const j=await queuedLocalJson('/api/byma/merval-usd',12000);
    if(j&&dashValid(j.value)){mervalUsdQuoteCache=j;return j}
  }catch(e){console.warn('SPMERVDT oficial',e)}
+
+ // Fallback transparente: ^MERV / MEP. Usa los mismos datos ya visibles en Radar.
+ try{
+   let merv=marketBoardData.get('merval');
+   let mervLast=marketEntryValid(merv)?Number(merv.last):NaN;
+   let mervChg=marketEntryValid(merv)?Number(merv.changePct):NaN;
+   if(!Number.isFinite(mervLast)){
+     const bars=await fetchMarketBars('^MERV','1d','5d',15000,force),last=bars.at(-1),prev=bars.length>1?bars.at(-2):null;
+     mervLast=Number(last?.close);
+     mervChg=prev&&Number(prev.close)?(mervLast/Number(prev.close)-1)*100:NaN;
+   }
+
+   let mep=dashboardData?.fx?.mep||{};
+   if(!dashValid(mep.venta)){
+     const fx=await fetchJsonTimeout('/api/dashboard/fx-current?fresh=1&_='+Date.now(),12000);
+     if(fx?.fx?.mep)mep=fx.fx.mep;
+   }
+   const mepVenta=dashNum(mep.venta),mepChg=dashNum(mep.changePct);
+   if(Number.isFinite(mervLast)&&Number.isFinite(mepVenta)&&mepVenta>0){
+     const value=mervLast/mepVenta;
+     const changePct=Number.isFinite(mervChg)&&Number.isFinite(mepChg)?(((1+mervChg/100)/(1+mepChg/100))-1)*100:mervChg;
+     const j={value,changePct,symbol:'SPMERVDT',name:'S&P Merval USD (MEP)',source:'Proxy ^MERV / MEP · Radar',official:false,updated:new Date().toISOString()};
+     mervalUsdQuoteCache=j;return j;
+   }
+ }catch(e){console.warn('SPMERVDT proxy',e)}
  return null;
 }
+function weeklyCloseFromDaily
 function weeklyCloseFromDaily(bars){
  const map=new Map();
  bars.forEach(b=>{
@@ -7744,19 +7770,39 @@ function renderBreadth(which,data){
 }
 async function loadBreadthArgentina(){
  const pairs=[['GGAL','GGAL.BA'],['YPFD','YPFD.BA'],['PAMP','PAMP.BA'],['BMA','BMA.BA'],['BBAR','BBAR.BA'],['TXAR','TXAR.BA']],rows=[];
- try{const m=await fetchYahooBatch(pairs.map(x=>({symbol:x[1]})),'1y','1d',40000);for(const [local,yahoo] of pairs){const x=m.get(yahoo);if(!x?.ok||!x.bars?.length)continue;const p=barsBreadthPoint(x.bars,local);if(p)rows.push(p)}}catch(e){console.warn('breadth AR Yahoo',e)}
- if(rows.length>=4)return calcBreadth(rows);
- const have=new Set(rows.map(x=>x.symbol));
- for(const [symbol] of pairs){if(have.has(symbol))continue;try{const c=new AbortController(),tm=setTimeout(()=>c.abort(),30000);let j;try{const r=await fetch(`/api/byma/scan-history?symbol=${encodeURIComponent(symbol)}&tf=short`,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error(await r.text());j=await r.json()}finally{clearTimeout(tm)};if(j?.s!=='ok'||!Array.isArray(j.t))continue;const bars=[];for(let i=0;i<j.t.length;i++){const close=Number(j.c?.[i]);if(Number.isFinite(close))bars.push({time:Number(j.t[i]),close})};const p=barsBreadthPoint(bars,symbol);if(p)rows.push(p)}catch(e){console.warn('breadth AR fallback',symbol,e)}}
+ const settled=await Promise.allSettled(pairs.map(async([local,yahoo])=>{
+   const bars=await fetchMarketBars(yahoo,'1d','1y',18000);
+   return barsBreadthPoint(bars,local);
+ }));
+ settled.forEach(x=>{if(x.status==='fulfilled'&&x.value)rows.push(x.value)});
+ if(rows.length>=3)return calcBreadth(rows);
+
+ // Fallback batch para completar faltantes si Yahoo individual falló.
+ try{
+   const have=new Set(rows.map(x=>x.symbol)),missing=pairs.filter(([local])=>!have.has(local));
+   if(missing.length){
+     const m=await fetchYahooBatch(missing.map(x=>({symbol:x[1]})),'1y','1d',30000);
+     for(const [local,yahoo] of missing){const x=m.get(yahoo);if(!x?.ok||!x.bars?.length)continue;const p=barsBreadthPoint(x.bars,local);if(p)rows.push(p)}
+   }
+ }catch(e){console.warn('breadth AR batch fallback',e)}
  return calcBreadth(rows);
 }
+async function loadBreadthUs
 async function loadBreadthUs(){
+ const rows=[];
+ const settled=await Promise.allSettled(BREADTH_US_SYMBOLS.map(async symbol=>{
+   const bars=await fetchMarketBars(symbol,'1d','1y',18000);
+   return barsBreadthPoint(bars,symbol);
+ }));
+ settled.forEach(x=>{if(x.status==='fulfilled'&&x.value)rows.push(x.value)});
+ if(rows.length)return calcBreadth(rows);
  try{
-   const m=await fetchYahooBatch(BREADTH_US_SYMBOLS.map(symbol=>({symbol})),'1y','1d',40000),rows=[];
+   const m=await fetchYahooBatch(BREADTH_US_SYMBOLS.map(symbol=>({symbol})),'1y','1d',30000);
    for(const symbol of BREADTH_US_SYMBOLS){const x=m.get(symbol);if(!x?.ok||!x.bars?.length)continue;const p=barsBreadthPoint(x.bars,symbol);if(p)rows.push(p)}
-   return calcBreadth(rows);
- }catch(e){console.warn('breadth USA batch',e);return null}
+ }catch(e){console.warn('breadth USA batch fallback',e)}
+ return calcBreadth(rows);
 }
+async function calculateRegime
 async function calculateRegime(){
  const comps=[];let score=50;
  const getCached=(id)=>marketBoardData.get(id);
@@ -7855,11 +7901,39 @@ function parseFredCurveCsv(text){
 }
 
 async function loadUsCurve(){
- const defs=[['13w','^IRX',0.25],['5Y','^FVX',5],['10Y','^TNX',10],['30Y','^TYX',30]],pts=[];
- try{const m=await fetchYahooBatch(defs.map(x=>({symbol:x[1]})),'1mo','1d',35000);for(const [label,symbol,x] of defs){const q=m.get(symbol);if(q?.ok&&Number.isFinite(q.last))pts.push({label,x,y:q.last,source:'Yahoo Finance Spark'})}}catch(e){console.warn('Treasury batch',e)}
- try{const j=await fetchJsonTimeout('/api/treasury-curve',9000),p=(j?.points||[]).find(x=>String(x.label)==='2Y');if(p&&Number.isFinite(Number(p.yield)))pts.push({label:'2Y',x:2,y:Number(p.yield),source:j.source||'FRED'})}catch{}
- const seen=new Set(),out=[];for(const p of pts.sort((a,b)=>a.x-b.x)){if(!seen.has(p.label)){seen.add(p.label);out.push(p)}}return out;
+ const defs=[
+   ['13w','ust13w','^IRX',0.25],
+   ['5Y','ust5y','^FVX',5],
+   ['10Y','ust10y','^TNX',10],
+   ['30Y','ust30y','^TYX',30]
+ ],pts=[];
+
+ for(const [label,id,symbol,x] of defs){
+   const q=marketBoardData.get(id);
+   if(marketEntryValid(q)&&Number.isFinite(Number(q.last)))pts.push({label,x,y:Number(q.last),source:q.source||'Radar market board'});
+ }
+
+ const have=new Set(pts.map(x=>x.label));
+ const missing=defs.filter(([label])=>!have.has(label));
+ if(missing.length){
+   const settled=await Promise.allSettled(missing.map(async([label,id,symbol,x])=>{
+     const bars=await fetchMarketBars(symbol,'1d','1mo',15000),last=bars.at(-1);
+     return last&&Number.isFinite(Number(last.close))?{label,x,y:Number(last.close),source:'Yahoo Finance · Radar'}:null;
+   }));
+   settled.forEach(x=>{if(x.status==='fulfilled'&&x.value)pts.push(x.value)});
+ }
+
+ try{
+   const j=await fetchJsonTimeout('/api/treasury-curve',10000);
+   for(const p of (j?.points||[])){
+     const label=String(p.label||p.tenor||''),years=Number(p.years??(label==='3M'?.25:label==='2Y'?2:label==='5Y'?5:label==='10Y'?10:label==='30Y'?30:NaN)),y=Number(p.yield??p.value);
+     if(label&&Number.isFinite(years)&&Number.isFinite(y)&&!pts.some(x=>x.label===label))pts.push({label,x:years,y,source:j.source||'FRED'});
+   }
+ }catch(e){console.warn('Treasury curve fallback',e)}
+
+ return pts.sort((a,b)=>a.x-b.x);
 }
+async function loadArCurve
 async function loadArCurve(){
  try{const j=await fetchJsonTimeout('/api/fixed-income/curve',30000);const rows=(j?.bonds||[]).filter(b=>dashValid(b.tir)&&dashValid(b.duration)&&Number(b.tir)>0&&Number(b.duration)>0).map(b=>({label:String(b.ticker||'').toUpperCase(),x:Number(b.duration),y:Number(b.tir),paridad:dashNum(b.paridad)})).filter(x=>/^(AL|GD|AE)/.test(x.label)).sort((a,b)=>a.x-b.x);const out=[],seen=new Set();for(const x of rows){if(x.label&&!seen.has(x.label)){seen.add(x.label);out.push(x)}}return out.slice(0,12)}catch(e){console.warn('AR curve lite',e);return[]}
 }
