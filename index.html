@@ -7327,7 +7327,7 @@ function dashDateLabel(v){if(!v)return'—';const d=new Date(v);return isNaN(d)?
 
 async function loadDashboard(force=false){
  const id=++dashboardLoadId;
- if(!force&&dashboardData.updated){renderDashboard();return}
+ const dashboardCoreReady=()=>dashValid(dashboardData?.fx?.mep?.venta)&&dashValid(dashboardData?.fx?.ccl?.venta)&&dashValid(dashboardData?.fx?.official?.venta)&&dashValid(dashboardData?.inflation?.value)&&dashValid(dashboardData?.risk?.value);if(!force&&dashboardData.updated&&dashboardCoreReady()){renderDashboard();return}
 
  stabilityState.dashboardStarted=Date.now();
  dashBegin();
@@ -7872,7 +7872,7 @@ function renderCurves(){
 async function loadMarketIntelligence(force=false){
  if(marketIntel.loading)return;
  if(marketBoardLoading){$('intelStatus').textContent='Esperando Mercados de Referencia…';const start=Date.now();while(marketBoardLoading&&Date.now()-start<45000)await new Promise(r=>setTimeout(r,250))}
- if(!force&&marketIntel.updated&&Date.now()-marketIntel.updated<20*60*1000){renderBreadth('ar',marketIntel.breadthAr);renderBreadth('us',marketIntel.breadthUs);renderRegime(marketIntel.regime);renderScannerContext();renderLocalRates(marketIntel.rates);renderCurves();$('intelStatus').textContent='Contexto desde cache';return}
+ const intelCacheComplete=!!marketIntel.breadthUs&&!!marketIntel.breadthAr&&Number(marketIntel.rates?.available||0)>0&&(marketIntel.usCurve?.length||0)>=4&&(marketIntel.arCurve?.length||0)>=2;if(!force&&intelCacheComplete&&marketIntel.updated&&Date.now()-marketIntel.updated<20*60*1000){renderBreadth('ar',marketIntel.breadthAr);renderBreadth('us',marketIntel.breadthUs);renderRegime(marketIntel.regime);renderScannerContext();renderLocalRates(marketIntel.rates);renderCurves();$('intelStatus').textContent='Contexto desde cache';return}
  marketIntel.loading=true;$('intelRefresh').disabled=true;
  try{
    $('intelStatus').textContent='1/5 · Curva Treasury USA…';try{marketIntel.usCurve=await loadUsCurve()}catch{marketIntel.usCurve=[]};renderCurves();
