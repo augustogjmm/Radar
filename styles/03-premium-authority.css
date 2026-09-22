@@ -1,0 +1,1334 @@
+/* Radar Tecnico G2 - INDEX STYLE BLOCK 3 */
+/* ========================================================================== */
+/* FUNCTIONAL RC20.29 · PREMIUM STRUCTURE + LAYOUT AUTHORITY                 */
+/* Loaded LAST. This is the visual authority for every user-facing workspace. */
+/* Financial engines, calculations and decision semantics are not defined here.*/
+/* ========================================================================== */
+:root{
+  --premium-bg:#06121d;
+  --premium-canvas:#071722;
+  --premium-surface:#081621;
+  --premium-raised:#0a1926;
+  --premium-strong:#0b2132;
+  --premium-header:#0b2a40;
+  --premium-border:rgba(74,145,199,.22);
+  --premium-border-strong:rgba(76,157,226,.36);
+  --premium-divider:rgba(255,255,255,.055);
+  --premium-text:#eaf5fb;
+  --premium-text-strong:#f1f9ff;
+  --premium-muted:#7892a4;
+  --premium-muted-2:#9fb5c5;
+  --premium-blue:#4bb4f5;
+  --premium-green:#42d392;
+  --premium-amber:#f3c45f;
+  --premium-red:#ff7b85;
+  --premium-radius:12px;
+  --premium-radius-sm:9px;
+  --premium-gap:10px;
+  --premium-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+
+/* RC20.28 source-clean guarantee: historical UI sheets are also purged of the
+   warm/black neutral palette. This final layer remains the sole cascade authority. */
+
+/* --- Product canvas ------------------------------------------------------- */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view){
+  color:var(--premium-text)!important;
+}
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view),
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) *{
+  box-sizing:border-box;
+}
+
+/* --- Primary screen headers ---------------------------------------------- */
+:is(.dash-head,.watch-toolbar,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.workspace-context-head,.p360-master-head){
+  border-color:var(--premium-border)!important;
+}
+:is(.dash-head,.watch-toolbar,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero) h2,
+:is(.view-title,.alloc-rpt-title-line h2){
+  color:var(--premium-text-strong)!important;
+  letter-spacing:-.02em!important;
+}
+:is(.dash-head,.watch-toolbar,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero) p,
+:is(.view-subtitle,.alloc-rpt-head p){
+  color:var(--premium-muted-2)!important;
+  line-height:1.5!important;
+}
+
+/* --- Surfaces: one geometry, one material -------------------------------- */
+:is(.card,.box,.g2-panel,.decision-center,.daily-brief,.intel-wrap,.intel-card,.curve-box,.market-board,.market-board-card,.market-tile,.market-group,.dash-official-strip,.dash-detail,.dash-loading-panel,.data-health,.data-diagnostics,.selftest-box,.scan-diagnostic,.scan-table-wrap,.rf-table-wrap,.signal-table-wrap,.watch-table-wrap,.ledger-table-wrap,.portfolio360,.portfolio-ledger,.portfolio-diversification,.provenance-panel,.validation-panel,.model-validation,.audit-panel,.help-card,.help-step,.help-kpi,.help-code,.bond-market-card,.bond-reading,.bond-scenario,.risk-intelligence,.performance-panel,.stress-panel,.lab-box,.advisor-directory-panel,.advisor-workflow-panel,.advisor-review-card,.cedar-card,.bond-card,.fund-summary-card,.fund-feature,.verdict-box,.chart-card,.position-panel,.position-result,.watch-premium-entry,.watch-premium-monitor,.risk-premium-card,.premium-section-shell){
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.07),transparent 38%),linear-gradient(145deg,var(--premium-raised),var(--premium-surface))!important;
+  border:1px solid var(--premium-border)!important;
+  border-radius:var(--premium-radius)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.018),var(--premium-shadow)!important;
+}
+:is(.metric,.status,.dash-kpi,.decision-v74-metric,.brief-box,.intel-mini>div,.intel-rate,.monitor-stat,.portfolio360-kpi,.risk-kpi,.perf-kpi,.stress-result,.signal-metric,.rf-context-card,.bond-kpi,.qa-stage4-kpi,.fund-kpi,.fund-metric,.div-mini,.portfolio360-box,.portfolio-stage2-card,.validation-box,.lab-kpi,.advisor-kpi,.advisor-monitor-kpi){
+  background:linear-gradient(180deg,#0b2940,#081b2a)!important;
+  border:1px solid rgba(65,157,223,.24)!important;
+  border-radius:var(--premium-radius-sm)!important;
+  color:var(--premium-text)!important;
+}
+
+/* Dynamic records: generated JS cannot reintroduce a different card system. */
+:is(.decision-card-v74,.decision-card,.decision-ranking-row,.decision-portfolio-card,.advisor-client-row,.advisor-opp-row,.advisor-rec-row,.advisor-attention-row,.advisor-monitor-client-row,.advisor-directory-row,.advisor-selected-holding-row,.advisor-cross-row,.g2-action-row,.g2-candidate-row,.scan-row,.portfolio-row){
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.055),transparent 42%),linear-gradient(145deg,#091d2c,#071722)!important;
+  border:1px solid rgba(66,145,201,.20)!important;
+  border-radius:10px!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.018)!important;
+}
+:is(.decision-card-v74,.decision-card,.decision-ranking-row,.decision-portfolio-card,.advisor-client-row,.advisor-opp-row,.advisor-rec-row,.advisor-attention-row,.advisor-monitor-client-row,.advisor-directory-row,.advisor-selected-holding-row,.advisor-cross-row,.g2-action-row,.g2-candidate-row,.scan-row,.portfolio-row):hover{
+  border-color:rgba(78,169,232,.36)!important;
+}
+
+/* --- Typography/readability floor ---------------------------------------- */
+/* RC20.26 still contained many visible 8–9 px labels. Premium UI never does. */
+:is(.watch-field,.position-field,.scan-field,.quick-portfolio-field,.alloc-field,.monitor-mode-wrap,.bond-calculator) label,
+:is(.lab-controls,.lab-advanced-controls,.advisor-directory-form,.cedar-form-grid) label{
+  font-size:10px!important;
+  line-height:1.3!important;
+  font-weight:850!important;
+  letter-spacing:.055em!important;
+  color:var(--premium-muted)!important;
+}
+:is(.metric,.status,.dash-kpi,.decision-v74-metric,.brief-box,.monitor-stat,.portfolio360-kpi,.risk-kpi,.perf-kpi,.stress-result,.signal-metric,.rf-context-card,.bond-kpi,.qa-stage4-kpi,.fund-kpi,.fund-metric,.lab-kpi,.advisor-kpi,.advisor-monitor-kpi) small{
+  font-size:10px!important;
+  line-height:1.3!important;
+  color:var(--premium-muted)!important;
+}
+:is(.note,.sub,.config-state,.advisor-note,.portfolio360-note,.lab-note,.scan-note,.scan-diagnostic,.signal-note,.quick-portfolio-read,.g2-portfolio-live,.decision-footnote,.brief-changes,.dash-data-rule,.market-board-note,.cedar-source-status){
+  font-size:10.5px!important;
+  line-height:1.5!important;
+  color:var(--premium-muted)!important;
+}
+:is(.pill,.toggle,.source,.status-chip,.profile-chip,.health-chip,.data-badge,.decision-tag,.portfolio-state,.scan-context-badge,.intel-chip,.alert-badge,.alloc-rpt-chip,.alloc-rpt-ready,.bond-tag,.rf-validated,.rf-unvalidated,.rf-conflict){
+  font-size:10px!important;
+  line-height:1.2!important;
+}
+
+/* Decision center readability: the exact area that previously looked legacy. */
+.decision-premium-head h2{font-size:23px!important}
+.decision-premium-head p{font-size:12px!important}
+.decision-premium-actions button{font-size:11px!important;min-height:40px!important}
+.decision-premium-section .alloc-rpt-card-head h3{font-size:15.5px!important}
+.decision-premium-section .alloc-rpt-card-head small{font-size:10.5px!important}
+.decision-premium-section .alloc-rpt-chip{font-size:10px!important;min-height:28px!important}
+.decision-card-v74{padding:13px!important}
+.decision-card-v74 :is(.decision-vision-why,.decision-why,.why){font-size:10.5px!important;line-height:1.5!important}
+.decision-step small{font-size:10px!important;line-height:1.25!important}
+.decision-step div{font-size:11px!important;line-height:1.4!important}
+.decision-source-chip,.decision-tag{font-size:10px!important}
+.decision-portfolio-card .top b,.decision-portfolio-card .pnl{font-size:14px!important}
+.decision-portfolio-card .why{font-size:10.5px!important}
+
+/* Daily report and market intelligence use the same hierarchy. */
+.daily-premium-card h3,.intel-head h3,.market-board-head h3{font-size:15.5px!important}
+.daily-premium-card .alloc-rpt-card-head small,.intel-sub,.market-board-sub{font-size:10.5px!important}
+.brief-box small{font-size:10px!important}.brief-box b{font-size:14.5px!important}
+.intel-label{font-size:10px!important}.intel-sub{line-height:1.45!important}
+
+/* --- Controls ------------------------------------------------------------- */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) :is(input,select,textarea){
+  min-height:40px!important;
+  background:var(--premium-canvas)!important;
+  border:1px solid rgba(71,150,208,.30)!important;
+  border-radius:8px!important;
+  color:var(--premium-text)!important;
+  font-size:12px!important;
+  box-shadow:none!important;
+}
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) :is(input,select,textarea):focus{
+  border-color:rgba(73,171,239,.62)!important;
+  background:#081b29!important;
+  box-shadow:0 0 0 3px rgba(47,140,255,.09)!important;
+}
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) button{
+  min-height:38px;
+  border-radius:8px!important;
+  font-size:11px!important;
+  line-height:1.2!important;
+  font-weight:800!important;
+  background:linear-gradient(180deg,#0d2639,#091a28)!important;
+  border:1px solid rgba(64,151,215,.34)!important;
+  color:#dcebf5!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025)!important;
+}
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) button:hover{
+  background:linear-gradient(180deg,#11314a,#0a2031)!important;
+  border-color:rgba(87,181,247,.54)!important;
+}
+:is(#startScanBtn,#rfStartBtn,#addWatchBtn,#advisorSaveBtn,#cedarRefreshBtn,#labBacktestBtn,#signalAuditBtn,#refreshWatchlistBtn){
+  background:linear-gradient(135deg,#158bc9,#0c6fa8)!important;
+  border-color:rgba(83,190,250,.66)!important;
+  color:#fff!important;
+}
+
+/* --- Navigation/tabs ------------------------------------------------------ */
+.portfolio-subnav{
+  padding:5px!important;
+  gap:5px!important;
+  background:#071722!important;
+  border:1px solid var(--premium-border)!important;
+  border-radius:10px!important;
+  box-shadow:none!important;
+}
+:is(.portfolio-subnav-btn,.market-filter,.market-tf,.tf-btn){
+  background:transparent!important;
+  color:#8fa8ba!important;
+  border-color:transparent!important;
+  font-size:11px!important;
+}
+:is(.portfolio-subnav-btn.active,.market-filter.active,.market-tf.active,.tf-btn.active,.dash-series-tabs button.active){
+  background:#0d3651!important;
+  border-color:rgba(67,162,229,.42)!important;
+  color:#e8f7ff!important;
+}
+
+/* --- Tables --------------------------------------------------------------- */
+:is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table){
+  border-collapse:collapse!important;
+}
+:is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table) th{
+  background:var(--premium-header)!important;
+  color:#82bfe6!important;
+  border-bottom:1px solid rgba(75,142,190,.18)!important;
+  font-size:10px!important;
+  line-height:1.3!important;
+  font-weight:900!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase!important;
+  padding:10px 9px!important;
+}
+:is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table) td{
+  background:transparent!important;
+  color:#b6cbd8!important;
+  border-bottom-color:rgba(255,255,255,.045)!important;
+  font-size:11px!important;
+  line-height:1.4!important;
+  padding:10px 9px!important;
+}
+:is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table) tbody tr:hover td{
+  background:rgba(42,125,180,.055)!important;
+}
+:is(.rf-table-wrap,.scan-table-wrap,.signal-table-wrap,.lab-table-wrap,.model-table-wrap,.audit-table-wrap,.cedar-table-wrap,.watch-table-wrap,.ledger-table-wrap,.stress-table-wrap,.alloc-table-wrap){
+  background:var(--premium-surface)!important;
+  border:1px solid var(--premium-border)!important;
+  border-radius:10px!important;
+  overflow:auto!important;
+}
+
+/* --- Portfolio/Watchlist strict composition ------------------------------ */
+#watchlistView.mode-watchlist,#watchlistView.mode-risk{
+  background:var(--premium-bg)!important;
+  border-color:var(--premium-border-strong)!important;
+}
+#watchlistView.mode-watchlist .watch-premium-entry,
+#watchlistView.mode-watchlist .watch-premium-monitor,
+#watchlistView.mode-risk .risk-premium-card{
+  padding:15px!important;
+  margin-bottom:10px!important;
+}
+#watchlistView.mode-watchlist .watch-form{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(120px,1fr)) auto auto!important;
+  gap:10px!important;
+  align-items:end!important;
+}
+#watchlistView.mode-watchlist .monitor-config{
+  display:grid!important;
+  grid-template-columns:minmax(220px,.8fr) minmax(0,2.2fr) auto!important;
+  gap:10px!important;
+  align-items:center!important;
+}
+#watchlistView.mode-watchlist .monitor-state-grid{
+  gap:1px!important;
+  background:#12304a!important;
+  border:1px solid #12304a!important;
+  border-radius:9px!important;
+  overflow:hidden!important;
+}
+#watchlistView.mode-watchlist .monitor-stat{min-height:64px!important;padding:10px 11px!important;border:0!important;border-radius:0!important}
+#watchlistView.mode-watchlist .monitor-stat b{font-size:13.5px!important;margin-top:5px!important}
+#watchlistView.mode-watchlist .monitor-alert-options{font-size:10.5px!important;gap:12px!important}
+#watchlistView.mode-watchlist .watch-premium-kpis>.metric{min-height:74px!important;padding:12px 13px!important}
+#watchlistView.mode-watchlist .watch-premium-kpis small{font-size:10px!important}
+#watchlistView.mode-watchlist .watch-premium-kpis b{font-size:17px!important}
+#watchlistView.mode-watchlist .watch-premium-table-card .watch-table{min-width:1660px!important}
+#watchlistView.mode-watchlist .watch-premium-table-card th{font-size:10px!important;padding:10px 9px!important}
+#watchlistView.mode-watchlist .watch-premium-table-card td{font-size:11px!important;padding:10px 9px!important}
+
+/* Cartera 360 strict report geometry. */
+.p360-master{background:var(--premium-bg)!important}
+.p360-master-kpis>div{min-height:78px!important;padding:13px 14px!important}
+.p360-master-kpis small{font-size:10px!important}.p360-master-kpis b{font-size:18px!important}.p360-master-kpis span{font-size:10px!important}
+.p360-master-secondary>div{padding:10px 12px!important}.p360-master-secondary small{font-size:10px!important}.p360-master-secondary b{font-size:13px!important}
+.p360-master-dashboard{gap:10px!important;padding:10px!important}
+.p360-master-card{padding:15px!important}
+.p360-master-card .alloc-rpt-card-head h3{font-size:15.5px!important}
+.p360-master-card .alloc-rpt-card-head small{font-size:10.5px!important}
+
+/* Risk & Performance readability. */
+#watchlistView.mode-risk .risk-premium-kpis>.risk-kpi,
+#watchlistView.mode-risk .perf-kpi,
+#watchlistView.mode-risk .stress-result{min-height:70px!important;padding:11px 12px!important}
+#watchlistView.mode-risk :is(.risk-premium-kpis,.perf-kpis,.stress-summary) small{font-size:10px!important}
+#watchlistView.mode-risk .risk-premium-kpis b{font-size:14px!important}
+#watchlistView.mode-risk .perf-kpi b,#watchlistView.mode-risk .stress-result b{font-size:15px!important}
+#watchlistView.mode-risk .risk-premium-subhead b{font-size:12px!important}
+#watchlistView.mode-risk .risk-premium-subhead small{font-size:10px!important}
+#watchlistView.mode-risk .risk-contrib-row{font-size:10.5px!important;padding:7px 0!important}
+#watchlistView.mode-risk .corr-table{font-size:11px!important}
+#watchlistView.mode-risk .stress-buttons button{font-size:10.5px!important;min-height:38px!important}
+#watchlistView.mode-risk #riskExposureSummary,
+#watchlistView.mode-risk #riskIntelligenceNote{font-size:10.5px!important}
+
+/* --- Charts --------------------------------------------------------------- */
+:is(#marketCandleChart,#dashMacroChart,.chart-host,.tv-chart,.perf-chart-wrap,.curve-box svg){
+  background:var(--premium-bg)!important;
+  border-color:rgba(65,145,201,.14)!important;
+}
+:is(.dash-chart-legend,.market-chart-legend,.perf-chart-legend){font-size:10px!important;color:var(--premium-muted-2)!important}
+
+/* --- Semantic states: color is accent, not a different material ---------- */
+:is(.pill,.toggle,.source,.status-chip,.profile-chip,.health-chip,.data-badge,.decision-tag,.portfolio-state,.scan-context-badge,.intel-chip,.alert-badge,.alloc-rpt-chip){
+  background:#081923!important;
+  border-color:rgba(71,150,208,.27)!important;
+  color:#a8c0cf!important;
+}
+:is(.green,.positive,.ok,.pass){color:var(--premium-green)!important}
+:is(.amber,.warning,.warn){color:var(--premium-amber)!important}
+:is(.red,.negative,.blocked,.error){color:var(--premium-red)!important}
+
+/* --- Responsive density without shrinking text --------------------------- */
+@media(max-width:1500px){
+  #watchlistView.mode-watchlist .watch-form{grid-template-columns:repeat(4,minmax(130px,1fr))!important}
+  #watchlistView.mode-watchlist .monitor-config{grid-template-columns:220px 1fr!important}
+  #watchlistView.mode-watchlist #applyMonitorModeBtn{grid-column:1/-1!important;justify-self:start!important}
+}
+@media(max-width:1100px){
+  #watchlistView.mode-watchlist .watch-form{grid-template-columns:repeat(3,minmax(140px,1fr))!important}
+  #watchlistView.mode-watchlist .monitor-config{grid-template-columns:1fr!important}
+}
+@media(max-width:760px){
+  #watchlistView.mode-watchlist .watch-form{grid-template-columns:1fr!important}
+  :is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) button{font-size:11px!important}
+  :is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table) th{font-size:10px!important}
+  :is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table) td{font-size:11px!important}
+}
+
+/* ========================================================================== */
+/* FUNCTIONAL RC20.29 · PREMIUM STRUCTURE + LAYOUT AUTHORITY                  */
+/* One geometry contract for every user-facing workspace and dynamic record.  */
+/* ========================================================================== */
+:root{
+  --premium-space-1:6px;
+  --premium-space-2:10px;
+  --premium-space-3:14px;
+  --premium-space-4:18px;
+  --premium-space-5:24px;
+  --premium-control-height:40px;
+  --premium-card-padding:15px;
+  --premium-section-gap:12px;
+  --premium-row-radius:10px;
+  --premium-header-height:72px;
+}
+
+/* Every workspace occupies the same canvas and inherits the same vertical rhythm. */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view){
+  width:100%!important;
+  min-width:0!important;
+  color:var(--premium-text)!important;
+}
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view)>*{
+  min-width:0;
+}
+
+/* Primary workspace headers: identical material, spacing and hierarchy. */
+:is(.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar){
+  min-height:var(--premium-header-height)!important;
+  padding:var(--premium-space-4)!important;
+  margin:0 0 var(--premium-section-gap)!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:var(--premium-space-4)!important;
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.085),transparent 40%),linear-gradient(145deg,var(--premium-raised),var(--premium-surface))!important;
+  border:1px solid var(--premium-border)!important;
+  border-radius:var(--premium-radius)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.02),var(--premium-shadow)!important;
+}
+:is(.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar) h2{
+  margin:0!important;
+  font-size:22px!important;
+  line-height:1.14!important;
+  font-weight:800!important;
+  letter-spacing:-.025em!important;
+  color:var(--premium-text-strong)!important;
+}
+:is(.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar) :is(p,.sub){
+  margin:5px 0 0!important;
+  font-size:11.5px!important;
+  line-height:1.5!important;
+  color:var(--premium-muted-2)!important;
+}
+
+/* Surface-family authority. Dynamically generated cards cannot invent material. */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view)
+:is([class$="-card"],[class*="-card "],[class$="-panel"],[class*="-panel "],[class$="-box"],[class*="-box "]):not(.chart-card):not(.curve-box):not(.perf-chart-wrap):not(.premium-donut-shell){
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.06),transparent 40%),linear-gradient(145deg,var(--premium-raised),var(--premium-surface))!important;
+  border:1px solid var(--premium-border)!important;
+  border-radius:var(--premium-radius)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.018),var(--premium-shadow)!important;
+  color:var(--premium-text)!important;
+}
+
+/* Known content cards share a 15px internal grid. Chart/table shells keep their own canvas. */
+:is(.intel-card,.market-board-card,.market-tile,.bond-market-card,.bond-reading,.bond-scenario,.risk-intelligence,.performance-panel,.stress-panel,.lab-box,.advisor-directory-panel,.advisor-workflow-panel,.advisor-review-card,.cedar-card,.cedar-blacklist-card,.bond-card,.fund-card,.fund-summary-card,.fund-feature,.verdict-box,.position-panel,.position-result,.risk-premium-card,.performance-premium-card,.stress-premium-card,.scanner-analytics-card,.premium-analytics-card,.relative-strength-card,.decision-analytics-card,.decision-portfolio-card,.portfolio-operational-panel,.g2-opportunity-panel){
+  padding:var(--premium-card-padding)!important;
+}
+
+/* Nested section headers: same baseline and separator. */
+:is(.alloc-rpt-card-head,.intel-head,.market-board-head,.daily-brief-head,.portfolio-ledger-head,.risk-intelligence-head,.perf-head,.stress-head,.premium-analytics-head,.g2-opportunity-head,.advisor-directory-head,.advisor-workflow-head,.advisor-editor-head,.advisor-cross-head,.advisor-rotation-head,.cedar-section-head,.cedar-detail-head,.model-head){
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:var(--premium-space-3)!important;
+  margin:0 0 var(--premium-space-3)!important;
+  padding:0 0 var(--premium-space-2)!important;
+  border-bottom:1px solid var(--premium-divider)!important;
+}
+:is(.alloc-rpt-card-head,.intel-head,.market-board-head,.daily-brief-head,.portfolio-ledger-head,.risk-intelligence-head,.perf-head,.stress-head,.premium-analytics-head,.g2-opportunity-head,.advisor-directory-head,.advisor-workflow-head,.advisor-editor-head,.advisor-cross-head,.advisor-rotation-head,.cedar-section-head,.cedar-detail-head,.model-head) :is(h3,h4){
+  margin:0!important;
+  font-size:15.5px!important;
+  line-height:1.25!important;
+  font-weight:800!important;
+  letter-spacing:-.018em!important;
+  color:var(--premium-text-strong)!important;
+}
+
+/* KPI geometry: same height/padding independent of module. */
+:is(.status,.metric,.dash-kpi,.decision-v74-metric,.brief-box,.monitor-stat,.portfolio360-kpi,.risk-kpi,.perf-kpi,.stress-result,.signal-metric,.rf-context-card,.bond-kpi,.qa-stage4-kpi,.fund-kpi,.fund-metric,.div-mini,.portfolio360-box,.portfolio-stage2-card,.validation-box,.lab-kpi,.advisor-kpi,.advisor-monitor-kpi,.alloc-kpi,.g2-action-kpi,.g2-meeting-kpi,.rs-metric){
+  min-height:70px!important;
+  padding:11px 12px!important;
+  border-radius:var(--premium-radius-sm)!important;
+}
+:is(.status,.metric,.dash-kpi,.decision-v74-metric,.brief-box,.monitor-stat,.portfolio360-kpi,.risk-kpi,.perf-kpi,.stress-result,.signal-metric,.rf-context-card,.bond-kpi,.qa-stage4-kpi,.fund-kpi,.fund-metric,.div-mini,.portfolio360-box,.portfolio-stage2-card,.validation-box,.lab-kpi,.advisor-kpi,.advisor-monitor-kpi,.alloc-kpi,.g2-action-kpi,.g2-meeting-kpi,.rs-metric) :is(small,.k){
+  display:block!important;
+  margin:0 0 5px!important;
+  font-size:10px!important;
+  line-height:1.25!important;
+  font-weight:800!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase!important;
+  color:var(--premium-muted)!important;
+}
+
+/* Dynamic records: rows created by JS follow the same card geometry. */
+:is(.advisor-business-client-row,.advisor-holding-row,.advisor-cross-fit-row,.advisor-rotation-row,.advisor-attention-row,.advisor-monitor-client-row,.advisor-client-row,.advisor-rec-row,.advisor-directory-row,.advisor-selected-holding-row,.advisor-cross-row,.advisor-opp-row,.g2-action-row,.g2-candidate-row,.decision-card-v74,.decision-card,.decision-ranking-row,.decision-portfolio-card,.cedar-alert-row,.cedar-blacklist-row,.exposure-row,.risk-alert-row,.scan-row,.portfolio-row){
+  padding:12px 13px!important;
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.05),transparent 42%),linear-gradient(145deg,#091d2c,#071722)!important;
+  border:1px solid rgba(66,145,201,.20)!important;
+  border-radius:var(--premium-row-radius)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.018)!important;
+}
+
+/* Form and action consistency across all workspaces. */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view)
+:is(input,select,textarea,button){
+  min-height:var(--premium-control-height)!important;
+  border-radius:8px!important;
+}
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view)
+:is(.secondary-action,.factory-secondary,.factory-primary,.primary-action){
+  padding:9px 12px!important;
+  font-size:11px!important;
+  line-height:1.2!important;
+  font-weight:800!important;
+}
+:is(.watch-form,.alloc-config-grid,.cedar-config-grid,.cedar-form-grid,.lab-controls,.lab-advanced-controls,.advisor-directory-form,.factory-form-grid){
+  gap:var(--premium-space-2)!important;
+}
+
+/* Empty/loading/error placeholders must look like intentional Premium states. */
+:is(.alloc-empty,.watch-empty,.cedar-empty,.market-empty,.dash-empty,.scan-empty,.advisor-empty,.portfolio-empty){
+  min-height:72px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:var(--premium-space-4)!important;
+  text-align:center!important;
+  line-height:1.5!important;
+  color:var(--premium-muted-2)!important;
+  background:rgba(8,27,42,.62)!important;
+  border:1px dashed rgba(72,151,208,.26)!important;
+  border-radius:var(--premium-radius-sm)!important;
+}
+
+/* Dialogs / technical surfaces are part of the same product, not a second skin. */
+:is(.factory-dialog-shell,.technical-drawer,.help-shell){
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.07),transparent 38%),linear-gradient(145deg,var(--premium-raised),var(--premium-surface))!important;
+  border-color:var(--premium-border-strong)!important;
+  color:var(--premium-text)!important;
+}
+.factory-dialog-shell{border:1px solid var(--premium-border-strong)!important;border-radius:var(--premium-radius)!important;box-shadow:0 24px 70px rgba(0,0,0,.42)!important}
+.factory-dialog-head{padding:16px 18px!important;border-bottom:1px solid var(--premium-divider)!important}
+.factory-dialog-body{padding:18px!important}
+.factory-dialog-actions{gap:8px!important;padding-top:14px!important}
+.technical-drawer-head{background:var(--premium-raised)!important;border-bottom:1px solid var(--premium-border)!important}
+.technical-section{border-bottom-color:var(--premium-divider)!important}
+
+/* Tables: one row density, no module-specific black bands. */
+:is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table,.provenance-table){
+  width:100%!important;
+  border-spacing:0!important;
+}
+:is(.scan-table,.rf-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table,.watch-table,.ledger-table,.corr-table,.stress-table,.alloc-table,.provenance-table) :is(th,td){
+  height:42px!important;
+  vertical-align:middle!important;
+}
+
+/* Top command bar and global chrome use the same radius/material language. */
+.top{
+  border-radius:var(--premium-radius)!important;
+  border-color:var(--premium-border)!important;
+  background:linear-gradient(145deg,var(--premium-raised),var(--premium-surface))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.018),0 8px 24px rgba(0,0,0,.10)!important;
+}
+.command-search :is(input,select,button){min-height:40px!important;border-radius:8px!important}
+
+/* Responsive layout contracts preserve spacing rather than switching visual systems. */
+@media(max-width:1100px){
+  :is(.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar){flex-direction:column!important;align-items:stretch!important}
+}
+@media(max-width:760px){
+  :root{--premium-card-padding:12px;--premium-space-4:14px;--premium-space-5:18px}
+  :is(.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar) h2{font-size:20px!important}
+}
+
+/* RC20.29 small structural utilities */
+.scan-config-card{padding:var(--premium-card-padding)!important}
+.rf-scanner-view .rf-context-panel.v41{display:grid!important}
+.scan-summary.scan-summary-six{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+.decision-open-position{margin-top:7px!important}
+@media(max-width:1100px){.scan-summary.scan-summary-six{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:700px){.scan-summary.scan-summary-six{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* ========================================================================== */
+/* FUNCTIONAL RC20.30 · PREMIUM COMPONENT + STATE AUTHORITY                  */
+/* Interaction, loading, empty, error, selection and action semantics share  */
+/* one visual contract. No financial/decision logic is defined in this layer. */
+/* ========================================================================== */
+:root{
+  --premium-focus-ring:0 0 0 3px rgba(72,169,235,.16);
+  --premium-hover-surface:#0b2132;
+  --premium-selected-surface:#0d314b;
+  --premium-disabled-opacity:.46;
+  --premium-positive-bg:rgba(44,174,119,.10);
+  --premium-positive-border:rgba(66,211,146,.34);
+  --premium-warning-bg:rgba(211,158,49,.10);
+  --premium-warning-border:rgba(243,196,95,.34);
+  --premium-danger-bg:rgba(211,79,92,.10);
+  --premium-danger-border:rgba(255,123,133,.34);
+}
+
+/* Focus and keyboard navigation are visually identical in every workspace. */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view,.help-shell,.factory-dialog-shell,.technical-drawer)
+:is(button,input,select,textarea,[tabindex]):focus-visible{
+  outline:0!important;
+  border-color:rgba(83,181,247,.72)!important;
+  box-shadow:var(--premium-focus-ring)!important;
+}
+
+/* Disabled controls never look like active actions. */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view,.help-shell,.factory-dialog-shell)
+:is(button,input,select,textarea):disabled,
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view,.help-shell,.factory-dialog-shell)
+[aria-disabled="true"]{
+  opacity:var(--premium-disabled-opacity)!important;
+  cursor:not-allowed!important;
+  filter:saturate(.65)!important;
+  box-shadow:none!important;
+}
+
+/* Action hierarchy: neutral / positive / warning / destructive. */
+:is(.secondary-action,.factory-secondary,.quick-portfolio-btn,.portfolio-action-btn,.help-route-btn,.scan-action){
+  background:linear-gradient(180deg,#0d2639,#091a28)!important;
+  border:1px solid rgba(64,151,215,.34)!important;
+  color:#dcebf5!important;
+}
+:is(.increase-btn,.action-buy,.action-add,.portfolio-increase){
+  background:linear-gradient(180deg,rgba(30,116,82,.30),rgba(16,65,48,.24))!important;
+  border-color:var(--premium-positive-border)!important;
+  color:var(--premium-green)!important;
+}
+:is(.reduce-btn,.action-reduce,.portfolio-reduce){
+  background:linear-gradient(180deg,rgba(141,103,27,.25),rgba(78,58,18,.22))!important;
+  border-color:var(--premium-warning-border)!important;
+  color:var(--premium-amber)!important;
+}
+:is(.close-position-btn,.danger-action,.action-exit,.portfolio-close){
+  background:linear-gradient(180deg,rgba(139,51,61,.27),rgba(77,27,33,.23))!important;
+  border-color:var(--premium-danger-border)!important;
+  color:var(--premium-red)!important;
+}
+:is(.increase-btn,.reduce-btn,.close-position-btn,.quick-portfolio-btn,.portfolio-action-btn,.help-route-btn,.scan-action){
+  min-height:38px!important;
+  padding:8px 11px!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+
+/* Active and selected controls use one selected material, never a new skin. */
+:is(.portfolio-subnav-btn.active,.market-filter.active,.market-tf.active,.tf-btn.active,.dash-series-tabs button.active,.help-nav-btn.active,.side-nav-item.active,.help-route-btn.active){
+  background:linear-gradient(180deg,var(--premium-selected-surface),#0a2437)!important;
+  border-color:rgba(72,169,235,.48)!important;
+  color:var(--premium-text-strong)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025)!important;
+}
+
+/* Section/title authority for secondary modules omitted by earlier contracts. */
+:is(.analysis-chart-head,.chart-head,.technical-section-title,.qa-stage4-head,.diag-head,.provenance-head,.cedar-progress-head,.alloc-progress-head,.fund-head,.decision-card-head,.risk-premium-subhead){
+  color:var(--premium-text-strong)!important;
+}
+:is(.analysis-chart-head,.chart-head,.qa-stage4-head,.diag-head,.provenance-head,.cedar-progress-head,.alloc-progress-head,.fund-head){
+  margin-bottom:var(--premium-space-2)!important;
+  padding-bottom:var(--premium-space-2)!important;
+  border-bottom:1px solid var(--premium-divider)!important;
+}
+:is(.technical-section-title,.analysis-control-label,.sidebar-section-label,.top-eyebrow,.cedar-eyebrow,.factory-dialog-eyebrow,.technical-drawer-eyebrow){
+  font-size:10px!important;
+  line-height:1.3!important;
+  font-weight:900!important;
+  letter-spacing:.06em!important;
+  text-transform:uppercase!important;
+  color:var(--premium-muted)!important;
+}
+
+/* Grid rhythm: independent modules no longer invent their own gaps. */
+:is(.help-grid,.fund-grid,.qa-grid,.status-grid,.metric-grid,.rs-grid,.position-grid,.position-risk-grid,.cedar-grid,.cedar-stage-grid,.cedar-detail-grid,.bond-grid,.bond-kpis,.bond-scenario-grid,.alloc-profile-metrics,.advisor-review-grid,.decision-card-grid){
+  gap:var(--premium-space-2)!important;
+}
+:is(.watch-actions,.scan-actions,.cedar-form-actions,.qa-stage4-actions,.provenance-actions,.g2-meeting-actions,.g2-review-plan-actions,.g2-action-actions,.advisor-client-actions,.decision-card-actions,.alloc-actions,.alloc-report-actions,.alloc-report-action,.bond-head-actions,.help-topbar-actions,.help-hero-actions){
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+}
+
+/* Dynamic/secondary surfaces that were still relying on legacy module CSS. */
+:is(.market-card,.reason-box,.qa-box,.local-engine-card,.diag-item,.selftest-item,.g2-review-agenda-row,.factory-agenda-row,.risk-alert-summary,.provenance-summary,.cedar-progress-panel,.alloc-summary,.decision-summary){
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.05),transparent 42%),linear-gradient(145deg,var(--premium-raised),var(--premium-surface))!important;
+  border:1px solid var(--premium-border)!important;
+  border-radius:var(--premium-row-radius)!important;
+  color:var(--premium-text)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.018)!important;
+}
+:is(.market-card,.reason-box,.qa-box,.local-engine-card,.diag-item,.selftest-item,.g2-review-agenda-row,.factory-agenda-row,.risk-alert-summary,.provenance-summary,.cedar-progress-panel,.alloc-summary,.decision-summary){
+  padding:12px 13px!important;
+}
+
+/* Chips and badges: neutral material + semantic accent only. */
+:is(.help-badge,.help-version-badge,.system-chip,.currency-chip,.prov-summary-chip,.risk-alert-chip,.portfolio-risk-badge,.g2-opportunity-status,.cedar-state,.fund-compact-status,.alloc-engine-badge){
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:26px!important;
+  padding:4px 8px!important;
+  border:1px solid rgba(71,150,208,.27)!important;
+  border-radius:999px!important;
+  background:#081923!important;
+  color:#a8c0cf!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+  font-weight:800!important;
+}
+:is(.risk-alert-chip.warn,.g2-opportunity-status.warn,.cedar-state.warn){border-color:var(--premium-warning-border)!important;color:var(--premium-amber)!important;background:var(--premium-warning-bg)!important}
+:is(.risk-alert-chip.error,.g2-opportunity-status.blocked,.cedar-state.error){border-color:var(--premium-danger-border)!important;color:var(--premium-red)!important;background:var(--premium-danger-bg)!important}
+:is(.risk-alert-chip.ok,.g2-opportunity-status.ok,.cedar-state.ok){border-color:var(--premium-positive-border)!important;color:var(--premium-green)!important;background:var(--premium-positive-bg)!important}
+
+/* Loading states are intentional skeleton/status surfaces, not bare text. */
+:is(.dash-loading-panel,.dash-section-loading,.market-card-loading,.profile-loading,.alloc-report-state,.refresh-progress,.cedar-progress-panel){
+  color:var(--premium-muted-2)!important;
+}
+:is(.dash-section-loading,.profile-loading,.alloc-report-state){
+  min-height:72px!important;
+  padding:var(--premium-space-4)!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  background:rgba(8,27,42,.62)!important;
+  border:1px dashed rgba(72,151,208,.26)!important;
+  border-radius:var(--premium-radius-sm)!important;
+}
+.dash-section-loading-chart{height:300px!important;justify-content:center!important}
+
+/* Empty states: complete source-wide coverage. */
+:is(.alloc-empty,.watch-empty,.cedar-empty,.market-empty,.dash-empty,.scan-empty,.advisor-empty,.portfolio-empty,.signal-empty,.alloc-report-empty,.decision-empty-v74,.premium-donut-empty,.market-card-error,.is-empty){
+  min-height:72px!important;
+  padding:var(--premium-space-4)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  line-height:1.5!important;
+  color:var(--premium-muted-2)!important;
+  background:rgba(8,27,42,.62)!important;
+  border:1px dashed rgba(72,151,208,.26)!important;
+  border-radius:var(--premium-radius-sm)!important;
+}
+.dash-empty-chart{padding:55px 20px!important}
+
+/* Errors and warnings preserve the Premium surface and change only the accent. */
+:is(.scanner-error-cell,.market-card-error,.reduce-error,.risk-alert-row.error,.alloc-diag.error){
+  color:var(--premium-red)!important;
+  border-color:var(--premium-danger-border)!important;
+  background:var(--premium-danger-bg)!important;
+}
+:is(.scanner-error-note,.market-empty-detail){color:var(--premium-muted)!important;font-size:10.5px!important}
+.premium-inline-warning{color:var(--premium-amber)!important}
+
+/* Compact helper classes replace static inline visual styles. */
+.ui-mt-1{margin-top:6px!important}
+.ui-mt-2{margin-top:10px!important}
+.ui-hidden{display:none!important}
+.premium-scroll{overflow:auto!important}
+.premium-inline-head{display:flex!important;align-items:center!important;gap:8px!important}
+.help-search-empty{padding:12px!important;color:var(--premium-muted-2)!important;font-size:11px!important;text-align:center!important}
+.advisor-row-sub{display:block!important;color:var(--premium-muted)!important;font-size:10px!important;line-height:1.35!important;font-weight:600!important}
+.advisor-row-sub-spaced{margin-top:2px!important}
+.market-card-unit{font-size:10px!important;color:var(--premium-muted)!important;font-weight:600!important}
+.read-model-muted{opacity:.82!important;color:var(--premium-muted-2)!important}
+.bond-line-stack{display:grid!important;gap:7px!important}
+.fund-context-tight{margin:3px 0 0!important}
+.fund-context-spaced{margin-bottom:8px!important}
+.dot-ema20{background:#9fb5c5!important}.dot-ema50{background:#c7a86c!important}.dot-ema200{background:#eaf1f7!important}
+
+/* Watch/portfolio operational cards no longer carry inline one-off geometry. */
+.watch-premium-entry{padding:13px!important;margin-bottom:12px!important}
+.watch-premium-monitor{padding:11px 13px!important;margin-bottom:12px!important}
+#portfolioContextTitle{margin:0!important}
+
+/* Hover only increases contrast/border; it never changes component family. */
+:is(.market-card,.advisor-client-row,.advisor-opp-row,.advisor-rec-row,.decision-card-v74,.portfolio-row,.scan-row,.g2-candidate-row,.g2-action-row,.help-search-result):hover{
+  border-color:rgba(78,169,232,.40)!important;
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.08),transparent 42%),linear-gradient(145deg,var(--premium-hover-surface),#081923)!important;
+}
+
+/* Small-screen actions remain usable without collapsing text. */
+@media(max-width:760px){
+  :is(.watch-actions,.scan-actions,.cedar-form-actions,.qa-stage4-actions,.provenance-actions,.g2-meeting-actions,.g2-review-plan-actions,.g2-action-actions,.advisor-client-actions,.decision-card-actions,.alloc-actions,.alloc-report-actions,.bond-head-actions,.help-topbar-actions,.help-hero-actions){align-items:stretch!important}
+  :is(.watch-actions,.scan-actions,.cedar-form-actions,.qa-stage4-actions,.provenance-actions,.g2-meeting-actions,.g2-review-plan-actions,.g2-action-actions,.advisor-client-actions,.decision-card-actions,.alloc-actions,.alloc-report-actions,.bond-head-actions,.help-topbar-actions,.help-hero-actions)>button{flex:1 1 auto!important}
+}
+
+/* RC20.30 static-inline cleanup mappings. */
+.compact-action{min-height:34px!important;padding:6px 9px!important;font-size:10px!important}
+.market-legend-up{background:var(--premium-green)!important}
+.market-legend-down{background:var(--premium-red)!important}
+.market-legend-index{border-top-color:var(--premium-muted-2)!important}
+.portfolio-cutover-panel{margin-top:10px!important}
+.portfolio-cutover-head{display:flex!important;justify-content:space-between!important;gap:10px!important;align-items:flex-start!important;flex-wrap:wrap!important}
+.portfolio-cutover-head h4,.portfolio-ledger-head h4{margin:0!important;color:var(--premium-text-strong)!important}
+.portfolio-cutover-actions{display:flex!important;gap:7px!important;flex-wrap:wrap!important}
+.lab-box-spaced{margin-top:10px!important}
+.signal-controls-premium{padding:var(--premium-card-padding)!important}
+.lab-table-wrap-compact{max-height:300px!important}
+.advisor-monitor-grid>.card{padding:var(--premium-card-padding)!important}
+.advisor-monitor-grid>.card>h3,.advisor-monitor-toolbar h3{margin:0 0 8px!important;color:var(--premium-text-strong)!important}
+
+/* RC20.30 declarative replacements for advisor/static inline geometry. */
+[data-premium-space="mt1"]{margin-top:6px!important}
+[data-premium-space="mt2"]{margin-top:10px!important}
+[data-premium-space="mb2"]{margin-bottom:10px!important}
+[data-premium-space="my2"]{margin:10px 0!important}
+[data-premium-align="end"]{align-self:end!important}
+[data-premium-pad="card"]{padding:var(--premium-card-padding)!important}
+[data-premium-heading="compact"]{margin:0 0 8px!important}
+[data-premium-margin="zero"]{margin:0!important}
+[data-premium-block="divider"]{margin:10px 0!important;padding-top:10px!important;border-top:1px solid var(--premium-divider)!important}
+
+/* RC20.30 action specificity lock: beats generic workspace button authority. */
+button:is(.increase-btn,.action-buy,.action-add,.portfolio-increase){
+  background:linear-gradient(180deg,rgba(30,116,82,.30),rgba(16,65,48,.24))!important;
+  border-color:var(--premium-positive-border)!important;
+  color:var(--premium-green)!important;
+}
+button:is(.reduce-btn,.action-reduce,.portfolio-reduce){
+  background:linear-gradient(180deg,rgba(141,103,27,.25),rgba(78,58,18,.22))!important;
+  border-color:var(--premium-warning-border)!important;
+  color:var(--premium-amber)!important;
+}
+button:is(.close-position-btn,.danger-action,.action-exit,.portfolio-close){
+  background:linear-gradient(180deg,rgba(139,51,61,.27),rgba(77,27,33,.23))!important;
+  border-color:var(--premium-danger-border)!important;
+  color:var(--premium-red)!important;
+}
+
+
+/* ======================================================================== */
+/* FUNCTIONAL RC20.31 · PREMIUM WORKSPACE IDENTITY + DENSITY ALIGNMENT AUTHORITY */
+/* ======================================================================== */
+:root{
+  --premium-layout-gap:12px;
+  --premium-section-gap:14px;
+  --premium-action-gap:8px;
+  --premium-section-pad:14px;
+  --premium-toolbar-min:42px;
+}
+
+/* One vertical rhythm across workspaces. The selectors deliberately target the
+   workspace roots, not financial/content internals. */
+:is(#scannerView,#rfScannerView,#bondView,#watchlistView,#allocatorView,#advisorView,#labView,#signalsView,#cedearRotationView) {
+  row-gap:var(--premium-section-gap)!important;
+}
+:is(#scannerView,#rfScannerView,#bondView,#allocatorView,#advisorView,#labView,#signalsView,#cedearRotationView) > :is(.card,.panel,.box,[class*="-card"],[class*="-panel"],[class*="-box"]) {
+  min-width:0!important;
+}
+
+/* Headers and their actions share the same baseline and wrapping behavior. */
+:is(.alloc-rpt-card-head,.risk-intelligence-head,.perf-head,.stress-head,.portfolio-ledger-head,.portfolio-cutover-head,.scanner-head,.rf-head,.bond-head,.advisor-monitor-toolbar,.help-topbar,.lab-head,.signal-head,.cedar-head,.watch-toolbar){
+  min-height:var(--premium-toolbar-min)!important;
+  align-items:center!important;
+  column-gap:var(--premium-action-gap)!important;
+  row-gap:6px!important;
+}
+:is(.alloc-rpt-card-head,.risk-intelligence-head,.perf-head,.stress-head,.portfolio-ledger-head,.portfolio-cutover-head,.scanner-head,.rf-head,.bond-head,.advisor-monitor-toolbar,.help-topbar,.lab-head,.signal-head,.cedar-head,.watch-toolbar)>:first-child{
+  min-width:0!important;
+}
+:is(.watch-actions,.scan-actions,.cedar-form-actions,.qa-stage4-actions,.provenance-actions,.g2-meeting-actions,.g2-review-plan-actions,.g2-action-actions,.advisor-client-actions,.decision-card-actions,.alloc-actions,.alloc-report-actions,.bond-head-actions,.help-topbar-actions,.help-hero-actions,.portfolio-cutover-actions,.stress-buttons){
+  gap:var(--premium-action-gap)!important;
+}
+
+/* Grids stretch their cells uniformly; forms never overflow their track. */
+:is(.alloc-rpt-kpis,.risk-kpis,.perf-kpis,.watch-summary,.portfolio-ledger-kpis,.stress-summary,.market-kpi-grid,.scanner-kpis,.rf-kpis,.advisor-monitor-grid,.g2-kpi-grid,.alloc-summary-grid){
+  align-items:stretch!important;
+}
+:is(.scanner-form,.rf-form,.watch-form,.alloc-form,.cedar-form,.advisor-form,.g2-form-grid,.market-form-grid)>*{
+  min-width:0!important;
+}
+
+/* Tables use one density and one baseline without touching column semantics. */
+:is(.watch-table,.ledger-table,.corr-table,.scanner-table,.rf-table,.alloc-table,.g2-table) th{
+  vertical-align:middle!important;
+}
+:is(.watch-table,.ledger-table,.corr-table,.scanner-table,.rf-table,.alloc-table,.g2-table) td{
+  vertical-align:middle!important;
+}
+
+/* Technical timeframe cards belong exclusively to the single-asset analysis
+   workspace. Other views hide them in runtime to preserve information density. */
+#technicalStatusGrid{
+  margin-bottom:var(--premium-section-gap)!important;
+}
+
+
+/* ======================================================================== */
+/* FUNCTIONAL RC20.33 · PREMIUM TYPOGRAPHY + RESPONSIVE COMPOSITION AUTHORITY */
+/* ======================================================================== */
+:root{
+  --premium-type-eyebrow:10.5px;
+  --premium-type-label:10.5px;
+  --premium-type-small:11px;
+  --premium-type-body:12px;
+  --premium-type-control:11.5px;
+  --premium-type-section:16px;
+  --premium-type-screen:22px;
+  --premium-type-hero:24px;
+  --premium-line-body:1.45;
+  --premium-line-compact:1.3;
+  --premium-responsive-gap:12px;
+}
+
+/* Stable readable scale: screen chrome, workspace hero, sections, body and metadata. */
+.top-eyebrow{font-size:var(--premium-type-eyebrow)!important;line-height:1.2!important}
+.view-title{font-size:var(--premium-type-screen)!important;line-height:1.12!important;font-weight:900!important;letter-spacing:-.025em!important}
+.view-subtitle{font-size:11.5px!important;line-height:1.4!important;color:var(--premium-muted-2)!important}
+:is(.workspace-context-head,.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar) h2{
+  font-size:var(--premium-type-hero)!important;
+  line-height:1.12!important;
+}
+:is(.workspace-context-head,.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar) :is(p,.sub){
+  font-size:12px!important;
+  line-height:1.5!important;
+}
+:is(.alloc-rpt-card-head,.risk-intelligence-head,.perf-head,.stress-head,.portfolio-ledger-head,.portfolio-cutover-head,.premium-analytics-head,.scanner-head,.rf-head,.advisor-monitor-toolbar,.lab-head,.signal-head,.cedar-head) h3,
+:is(.alloc-rpt-card-head,.risk-intelligence-head,.perf-head,.stress-head,.portfolio-ledger-head,.portfolio-cutover-head,.premium-analytics-head,.scanner-head,.rf-head,.advisor-monitor-toolbar,.lab-head,.signal-head,.cedar-head) b:first-child{
+  font-size:var(--premium-type-section)!important;
+  line-height:1.2!important;
+}
+:is(.alloc-rpt-card-head,.risk-intelligence-head,.perf-head,.stress-head,.portfolio-ledger-head,.premium-analytics-head,.scanner-head,.rf-head,.advisor-monitor-toolbar,.lab-head,.signal-head,.cedar-head) small{
+  font-size:var(--premium-type-small)!important;
+  line-height:1.4!important;
+}
+
+/* Controls and action language are readable without creating a second density system. */
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) :is(input,select,textarea,button){
+  font-size:var(--premium-type-control)!important;
+}
+:is(.dashboard-view,.analysis-view,.watchlist-view,.scanner-view,.rf-scanner-view,.advisor-view,.cedear-rotation-view,.lab-view,.signals-view,.bond-view,.allocator-view) button:not(.context-help){
+  min-height:38px!important;
+  line-height:1.2!important;
+}
+.context-help{width:30px!important;height:30px!important;min-height:30px!important;font-size:12px!important}
+:is(.watch-field,.position-field,.scan-field,.quick-portfolio-field,.alloc-field,.monitor-mode-wrap,.bond-calculator,.lab-controls,.lab-advanced-controls,.advisor-directory-form,.cedar-form-grid) label{
+  font-size:var(--premium-type-label)!important;
+  line-height:var(--premium-line-compact)!important;
+}
+:is(.pill,.toggle,.source,.status-chip,.profile-chip,.health-chip,.data-badge,.decision-tag,.portfolio-state,.scan-context-badge,.intel-chip,.alert-badge,.alloc-rpt-chip,.alloc-rpt-ready,.bond-tag,.rf-validated,.rf-unvalidated,.rf-conflict,.help-badge,.help-version-badge,.system-chip,.currency-chip,.prov-summary-chip,.risk-alert-chip,.portfolio-risk-badge,.g2-opportunity-status,.cedar-state,.fund-compact-status,.alloc-engine-badge){
+  font-size:10.5px!important;
+}
+:is(.note,.sub,.config-state,.advisor-note,.portfolio360-note,.lab-note,.scan-note,.signal-note,.quick-portfolio-read,.g2-portfolio-live,.decision-footnote,.brief-changes,.dash-data-rule,.market-board-note,.cedar-source-status,.advisor-row-sub,.market-card-unit,.scanner-error-note,.market-empty-detail){
+  font-size:11px!important;
+  line-height:var(--premium-line-body)!important;
+}
+
+/* KPI rhythm: labels are never microscopic and values preserve visual priority. */
+:is(.alloc-rpt-kpis,.risk-kpis,.perf-kpis,.watch-summary,.portfolio-ledger-kpis,.stress-summary,.market-kpi-grid,.scanner-kpis,.rf-kpis,.advisor-monitor-grid,.g2-kpi-grid,.alloc-summary-grid,.monitor-state-grid) small{
+  font-size:10.5px!important;
+  line-height:1.25!important;
+}
+:is(.alloc-rpt-kpis,.risk-kpis,.perf-kpis,.watch-summary,.portfolio-ledger-kpis,.stress-summary,.market-kpi-grid,.scanner-kpis,.rf-kpis,.advisor-monitor-grid,.g2-kpi-grid,.alloc-summary-grid,.monitor-state-grid) b{
+  line-height:1.15!important;
+}
+
+/* Tables: same information density in every workspace. Wide tables keep horizontal scroll. */
+:is(.watch-table,.ledger-table,.corr-table,.scanner-table,.rf-table,.alloc-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table) th{
+  font-size:10.5px!important;
+  line-height:1.25!important;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+:is(.watch-table,.ledger-table,.corr-table,.scanner-table,.rf-table,.alloc-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table) td{
+  font-size:11.5px!important;
+  line-height:1.38!important;
+}
+:is(.watch-table-wrap,.ledger-table-wrap,.corr-wrap,.scan-table-wrap,.rf-table-wrap,.signal-table-wrap,.lab-table-wrap,.model-table-wrap,.audit-table-wrap,.cedar-table-wrap,.stress-table-wrap){
+  overflow-x:auto!important;
+  overscroll-behavior-x:contain!important;
+}
+
+/* Intermediate desktop widths: reduce columns before shrinking typography. */
+@media(max-width:1180px){
+  :is(.alloc-rpt-kpis,.risk-premium-kpis,.perf-kpis,.scanner-kpis,.rf-kpis,.portfolio-ledger-kpis,.watch-premium-kpis){
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  :is(.p360-master-dashboard,.risk-premium-analysis-grid){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  :is(.scanner-form,.rf-form,.alloc-form,.cedar-form,.market-form-grid,.g2-form-grid){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .view-subtitle{max-width:300px!important}
+}
+
+/* Compact desktop / tablet-width window: content reflows, type does not collapse. */
+@media(max-width:900px){
+  :root{--premium-card-padding:14px;--premium-section-gap:12px}
+  .view-title{font-size:20px!important}
+  .view-subtitle{font-size:11.5px!important;max-width:250px!important}
+  :is(.workspace-context-head,.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar) h2{font-size:22px!important}
+  :is(.alloc-rpt-kpis,.risk-premium-kpis,.perf-kpis,.scanner-kpis,.rf-kpis,.portfolio-ledger-kpis,.watch-premium-kpis,.stress-summary,.monitor-state-grid){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  :is(.p360-master-dashboard,.risk-premium-analysis-grid,.scanner-form,.rf-form,.alloc-form,.cedar-form,.market-form-grid,.g2-form-grid){
+    grid-template-columns:1fr!important;
+  }
+  :is(.watch-actions,.scan-actions,.alloc-actions,.alloc-report-actions,.bond-head-actions,.portfolio-cutover-actions,.stress-buttons){width:100%!important}
+}
+
+/* Narrow window: preserve touch/click targets and make action rows predictable. */
+@media(max-width:760px){
+  :root{--premium-responsive-gap:10px}
+  :is(.alloc-rpt-kpis,.risk-premium-kpis,.perf-kpis,.scanner-kpis,.rf-kpis,.portfolio-ledger-kpis,.watch-premium-kpis,.stress-summary,.monitor-state-grid){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  :is(.workspace-context-head,.dash-head,.scan-toolbar,.advisor-toolbar,.lab-toolbar,.signal-toolbar,.bond-head,.cedar-hero,.alloc-toolbar,.watch-toolbar){
+    padding:14px!important;
+    gap:10px!important;
+  }
+  :is(.watch-actions,.scan-actions,.alloc-actions,.alloc-report-actions,.bond-head-actions,.portfolio-cutover-actions,.stress-buttons)>button:not(.context-help){
+    min-height:40px!important;
+  }
+  :is(.watch-table,.ledger-table,.corr-table,.scanner-table,.rf-table,.alloc-table,.signal-table,.lab-table,.model-table,.audit-table,.cedar-table) td{font-size:11.5px!important}
+}
+
+
+/* ======================================================================== */
+/* FUNCTIONAL RC20.33 · PREMIUM ANALYTICS + REPORTING AUTHORITY             */
+/* ======================================================================== */
+:root{
+  --premium-chart-grid:rgba(83,151,198,.16);
+  --premium-chart-axis:#7f9aad;
+  --premium-chart-primary:#2f9cff;
+  --premium-chart-secondary:#f3b74d;
+  --premium-chart-positive:#24c78e;
+  --premium-chart-negative:#ff6b7a;
+  --premium-chart-neutral:#94a9bb;
+  --premium-chart-surface:#071722;
+  --premium-chart-surface-2:#0a1c29;
+  --premium-data-row:34px;
+}
+
+/* One visualization canvas for donuts, charts, heatmaps and client reports. */
+:is(.premium-donut-layout,.risk-contribution-donut,.perf-chart-wrap,.corr-wrap,.alloc-rpt-projection-layout,.alloc-rpt-map,.alloc-rpt-table-wrap){
+  min-width:0!important;
+}
+:is(.perf-chart-wrap,.corr-wrap,.alloc-rpt-projection-layout,.alloc-rpt-map){
+  background:linear-gradient(145deg,rgba(8,25,38,.94),rgba(5,18,28,.82))!important;
+  border:1px solid rgba(73,151,205,.18)!important;
+  border-radius:10px!important;
+}
+
+/* Donut center labels must remain readable: never ellipsize a business label. */
+.premium-donut-hole{
+  padding:7px!important;
+  box-sizing:border-box!important;
+}
+.premium-donut-hole small{
+  max-width:100%!important;
+  width:100%!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  text-transform:none!important;
+  letter-spacing:0!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  line-clamp:2!important;
+  line-height:1.12!important;
+  text-align:center!important;
+}
+.premium-donut-hole em{
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.premium-donut-legend-row{
+  min-height:28px!important;
+  border-bottom:1px solid rgba(70,145,197,.08)!important;
+}
+.premium-donut-legend-row:last-child{border-bottom:0!important}
+.premium-donut-legend-row i{
+  border:1px solid rgba(255,255,255,.20)!important;
+  box-shadow:0 0 10px color-mix(in srgb,currentColor 45%,transparent)!important;
+}
+.premium-donut-legend-row span{font-size:11px!important}
+.premium-donut-legend-row b{font-variant-numeric:tabular-nums!important;font-size:11px!important}
+
+/* Portfolio analytics cards use the same minimum visual proportions. */
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-layout{
+  min-height:168px!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-hole{
+  width:90px!important;
+  height:90px!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-hole small{
+  max-width:76px!important;
+  font-size:10px!important;
+}
+#watchlistView.mode-portfolio .p360-master-position-layout .portfolio-top-donut .premium-donut-hole small{
+  max-width:58px!important;
+  font-size:10px!important;
+}
+
+/* Correlation matrix behaves as a heatmap, while preserving numeric values. */
+#watchlistView.mode-risk .corr-wrap{
+  max-height:390px!important;
+  overflow:auto!important;
+}
+#watchlistView.mode-risk .corr-table{
+  border-collapse:separate!important;
+  border-spacing:1px!important;
+  min-width:700px!important;
+  background:rgba(45,93,126,.08)!important;
+}
+#watchlistView.mode-risk .corr-table :is(th,td){
+  height:var(--premium-data-row)!important;
+  min-width:58px!important;
+  padding:7px 8px!important;
+  text-align:center!important;
+  font-variant-numeric:tabular-nums!important;
+  border:0!important;
+}
+#watchlistView.mode-risk .corr-table thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:4!important;
+  background:#0b2a40!important;
+}
+#watchlistView.mode-risk .corr-table tbody th{
+  position:sticky!important;
+  left:0!important;
+  z-index:3!important;
+  text-align:left!important;
+  background:#0a2234!important;
+  color:#9dc3dc!important;
+}
+#watchlistView.mode-risk .corr-table thead th:first-child{
+  left:0!important;
+  z-index:5!important;
+}
+#watchlistView.mode-risk .corr-table td{
+  font-weight:800!important;
+  transition:filter .16s ease,transform .16s ease!important;
+}
+#watchlistView.mode-risk .corr-table td:hover{
+  filter:brightness(1.18)!important;
+  transform:translateZ(0) scale(1.025)!important;
+}
+#watchlistView.mode-risk .corr-table td.corr-low{background:rgba(47,156,255,.08)!important;color:#a8c5d8!important}
+#watchlistView.mode-risk .corr-table td.corr-med.corr-pos{background:rgba(243,183,77,.15)!important;color:#f4cf83!important}
+#watchlistView.mode-risk .corr-table td.corr-high.corr-pos{background:rgba(255,107,122,.17)!important;color:#ff9aa4!important}
+#watchlistView.mode-risk .corr-table td.corr-med.corr-neg{background:rgba(47,156,255,.16)!important;color:#79c5ff!important}
+#watchlistView.mode-risk .corr-table td.corr-high.corr-neg{background:rgba(138,114,255,.20)!important;color:#b9a7ff!important}
+#watchlistView.mode-risk .corr-table td.corr-self{background:rgba(36,199,142,.14)!important;color:#71e3b9!important}
+
+/* Risk contribution rows use sign and magnitude without changing financial math. */
+#watchlistView.mode-risk .risk-contrib{
+  gap:0!important;
+  border-top:1px solid rgba(72,148,201,.10)!important;
+}
+#watchlistView.mode-risk .risk-contrib-row{
+  min-height:34px!important;
+  grid-template-columns:minmax(82px,132px) minmax(100px,1fr) 62px 78px!important;
+  gap:9px!important;
+  padding:7px 4px!important;
+  border-bottom:1px solid rgba(72,148,201,.08)!important;
+  font-variant-numeric:tabular-nums!important;
+}
+#watchlistView.mode-risk .risk-contrib-row:last-child{border-bottom:0!important}
+#watchlistView.mode-risk .risk-contrib-track{
+  height:7px!important;
+  background:rgba(81,139,180,.13)!important;
+  border:1px solid rgba(86,153,199,.10)!important;
+}
+#watchlistView.mode-risk .risk-contrib-row .risk-contrib-track i{height:100%!important;background:var(--premium-chart-negative)!important}
+#watchlistView.mode-risk .risk-contrib-row.is-positive .risk-contrib-track i{background:var(--premium-chart-positive)!important}
+#watchlistView.mode-risk .risk-contrib-row.is-negative .risk-contrib-track i{background:var(--premium-chart-negative)!important}
+#watchlistView.mode-risk .risk-contrib-row .risk-contrib-value{font-weight:850!important;text-align:right!important}
+#watchlistView.mode-risk .risk-contrib-row.is-positive .risk-contrib-value{color:#64dcae!important}
+#watchlistView.mode-risk .risk-contrib-row.is-negative .risk-contrib-value{color:#ff919c!important}
+#watchlistView.mode-risk .risk-contrib-row .risk-contrib-weight{color:var(--premium-muted-2)!important;text-align:right!important}
+
+/* Performance chart receives a professional canvas shell and external legend. */
+#watchlistView.mode-risk .perf-chart-wrap{
+  position:relative!important;
+  padding:12px 12px 8px!important;
+  min-height:292px!important;
+  overflow:hidden!important;
+}
+#watchlistView.mode-risk #portfolioPerformanceCanvas{
+  display:block!important;
+  width:100%!important;
+  height:252px!important;
+  border-radius:8px!important;
+}
+#watchlistView.mode-risk .perf-chart-legend{
+  display:flex!important;
+  align-items:center!important;
+  gap:16px!important;
+  min-height:28px!important;
+  padding:0 4px 7px!important;
+  color:#9cb3c3!important;
+  font-size:11px!important;
+}
+#watchlistView.mode-risk .perf-chart-legend span{display:inline-flex!important;align-items:center!important;gap:7px!important}
+#watchlistView.mode-risk .perf-chart-legend i{width:18px!important;height:3px!important;border-radius:999px!important}
+#watchlistView.mode-risk .perf-chart-legend .portfolio i{background:var(--premium-chart-primary)!important}
+#watchlistView.mode-risk .perf-chart-legend .benchmark i{background:var(--premium-chart-secondary)!important}
+
+/* Client-facing allocator report: charts, legends and tables use the same visual grammar. */
+.alloc-rpt-shell .alloc-rpt-card{
+  background:linear-gradient(145deg,rgba(9,27,40,.94),rgba(7,20,30,.92))!important;
+  border-color:rgba(75,151,204,.18)!important;
+}
+.alloc-rpt-shell .alloc-rpt-projection-svg{
+  background:linear-gradient(180deg,rgba(7,23,34,.36),rgba(5,17,26,.08))!important;
+  border-radius:8px!important;
+}
+.alloc-rpt-shell .alloc-rpt-projection-svg .chart-axis{
+  fill:var(--premium-chart-axis)!important;
+  font-size:10.5px!important;
+}
+.alloc-rpt-shell .alloc-rpt-legend>div,
+.alloc-rpt-shell .alloc-rpt-region-list>div{
+  min-height:30px!important;
+  border-bottom:1px solid rgba(72,148,201,.08)!important;
+  background:transparent!important;
+}
+.alloc-rpt-shell .alloc-rpt-legend>div:last-child,
+.alloc-rpt-shell .alloc-rpt-region-list>div:last-child{border-bottom:0!important}
+.alloc-rpt-shell .alloc-rpt-table-wrap{
+  border:1px solid rgba(72,148,201,.14)!important;
+  border-radius:9px!important;
+}
+.alloc-rpt-shell .alloc-rpt-positions th{
+  position:sticky!important;
+  top:0!important;
+  z-index:2!important;
+  background:#0b2a40!important;
+  color:#8ec5e8!important;
+}
+.alloc-rpt-shell .alloc-rpt-positions td{font-variant-numeric:tabular-nums!important}
+
+@media(max-width:900px){
+  #watchlistView.mode-risk .risk-contrib-row{grid-template-columns:minmax(72px,105px) minmax(90px,1fr) 56px 70px!important}
+  #watchlistView.mode-risk .perf-chart-wrap{min-height:270px!important}
+  #watchlistView.mode-risk #portfolioPerformanceCanvas{height:232px!important}
+}
+@media(max-width:760px){
+  .premium-donut-layout{grid-template-columns:1fr!important;justify-items:center!important}
+  .premium-donut-legend{width:100%!important}
+  #watchlistView.mode-risk .risk-contrib-row{grid-template-columns:82px 1fr 54px!important}
+  #watchlistView.mode-risk .risk-contrib-row .risk-contrib-weight{grid-column:2/4;text-align:left!important;font-size:10px!important}
+  .alloc-rpt-projection-layout{grid-template-columns:1fr!important}
+}
+
+/* RC20.34 · functional-flow feedback + contextual drilldown navigation */
+.radar-toast-host{
+  position:fixed;right:22px;bottom:22px;z-index:3000;display:grid;gap:10px;
+  width:min(420px,calc(100vw - 32px));pointer-events:none;
+}
+.radar-toast{
+  pointer-events:auto;display:grid;grid-template-columns:30px minmax(0,1fr) 28px;gap:10px;align-items:center;
+  min-height:54px;padding:10px 10px 10px 12px;border:1px solid rgba(78,153,204,.34);border-radius:14px;
+  background:linear-gradient(180deg,rgba(8,29,43,.98),rgba(7,24,36,.98));box-shadow:0 18px 50px rgba(0,0,0,.38);
+  color:#d9e7f0;transform:translateY(0);opacity:1;transition:opacity .18s ease,transform .18s ease;
+}
+.radar-toast.ok{border-color:rgba(43,197,138,.42)}
+.radar-toast.warn{border-color:rgba(241,181,72,.45)}
+.radar-toast.bad{border-color:rgba(236,99,99,.46)}
+.radar-toast.leaving{opacity:0;transform:translateY(8px)}
+.radar-toast-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:rgba(49,147,214,.16);font-size:13px;font-weight:900;color:#7fc8f7}
+.radar-toast.ok .radar-toast-icon{background:rgba(43,197,138,.16);color:#6ae0ad}
+.radar-toast.warn .radar-toast-icon{background:rgba(241,181,72,.15);color:#f1c46c}
+.radar-toast.bad .radar-toast-icon{background:rgba(236,99,99,.15);color:#f18f8f}
+.radar-toast-copy{font-size:12px;line-height:1.45;font-weight:700;overflow-wrap:anywhere}
+.radar-toast-close{min-width:28px!important;width:28px!important;height:28px!important;min-height:28px!important;padding:0!important;border-radius:9px!important;background:rgba(255,255,255,.035)!important;color:#89a3b4!important;border-color:rgba(111,158,190,.2)!important;font-size:15px!important}
+.analysis-context-back{
+  min-height:30px!important;padding:5px 9px!important;border-radius:10px!important;font-size:10px!important;letter-spacing:.02em!important;
+  white-space:nowrap;align-self:center;
+}
+.analysis-title-line:has(.analysis-context-back:not([hidden])){display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center}
+.analysis-title-line:has(.analysis-context-back:not([hidden])) .analysis-live-meta{grid-column:1/-1}
+@media(max-width:900px){.radar-toast-host{right:12px;bottom:12px;width:calc(100vw - 24px)}}
+
+
+/* RC20.35 · premium interaction dialogs — no browser-native confirm/prompt in Radar surfaces */
+body.radar-dialog-open{overflow:hidden!important}
+.radar-dialog-backdrop{
+  position:fixed;inset:0;z-index:3200;display:none;place-items:center;padding:20px;
+  background:rgba(2,10,16,.74);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+}
+.radar-dialog-backdrop.open{display:grid}
+.radar-dialog{
+  width:min(520px,calc(100vw - 28px));padding:20px;border:1px solid var(--premium-border-strong);border-radius:16px;
+  background:radial-gradient(circle at 100% 0,rgba(75,180,245,.10),transparent 42%),linear-gradient(145deg,var(--premium-strong),var(--premium-surface));
+  box-shadow:0 28px 80px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.025);color:var(--premium-text);
+}
+.radar-dialog[data-tone="bad"]{border-color:rgba(255,123,133,.48)}
+.radar-dialog[data-tone="ok"]{border-color:rgba(66,211,146,.42)}
+.radar-dialog[data-tone="warn"]{border-color:rgba(243,196,95,.46)}
+.radar-dialog-kicker{font-size:10px;font-weight:900;letter-spacing:.14em;color:var(--premium-blue);text-transform:uppercase;margin-bottom:8px}
+.radar-dialog h3{margin:0;color:var(--premium-text-strong);font-size:20px;line-height:1.18;letter-spacing:-.02em}
+.radar-dialog-message{margin:10px 0 0;color:var(--premium-muted-2);font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.radar-dialog-input-wrap{display:grid;gap:7px;margin-top:16px}
+.radar-dialog-input-wrap[hidden]{display:none!important}
+.radar-dialog-input-wrap span{font-size:10px;font-weight:850;letter-spacing:.055em;color:var(--premium-muted)}
+.radar-dialog-input-wrap input{width:100%;min-height:42px!important;padding:9px 11px!important;border:1px solid var(--premium-border-strong)!important;border-radius:10px!important;background:#06131e!important;color:var(--premium-text)!important;font-size:12px!important;outline:none!important}
+.radar-dialog-input-wrap input:focus{border-color:rgba(75,180,245,.72)!important;box-shadow:0 0 0 3px rgba(75,180,245,.10)!important}
+.radar-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;padding-top:14px;border-top:1px solid var(--premium-divider)}
+.radar-dialog-actions button{min-width:100px!important;min-height:36px!important;border-radius:10px!important}
+@media(max-width:600px){.radar-dialog-backdrop{padding:10px}.radar-dialog{padding:16px}.radar-dialog-actions{display:grid;grid-template-columns:1fr 1fr}.radar-dialog-actions button{width:100%!important}}
+
+
+/* ========================================================================== */
+/* FUNCTIONAL RC20.36 · EXPLICIT FEEDBACK API + ASYNC STATE AUTHORITY         */
+/* Presentation-only: explicit feedback APIs and one Premium async language.  */
+/* ========================================================================== */
+.premium-table-loading{
+  min-height:74px!important;
+  padding:18px 16px!important;
+  text-align:center!important;
+  color:var(--premium-muted-2)!important;
+  background:rgba(8,27,42,.54)!important;
+  border-bottom:1px solid var(--premium-divider)!important;
+  font-size:11px!important;
+  font-weight:750!important;
+  letter-spacing:.015em!important;
+}
+.premium-table-loading .dash-mini-spinner{margin-right:8px!important;vertical-align:-2px!important}
+.premium-loader{
+  width:min(420px,calc(100vw - 32px))!important;
+  padding:18px!important;
+  border:1px solid var(--premium-border-strong)!important;
+  border-radius:var(--premium-radius)!important;
+  background:radial-gradient(circle at 100% 0,rgba(28,111,176,.10),transparent 40%),linear-gradient(145deg,var(--premium-raised),var(--premium-surface))!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.44)!important;
+}
+.premium-loader-head{display:flex!important;align-items:center!important;gap:12px!important}
+.premium-loader-head .dash-mini-spinner{width:18px!important;height:18px!important;flex:0 0 auto!important}
+.premium-loader-head small{display:block!important;margin-bottom:3px!important;color:var(--premium-blue)!important;font-size:10px!important;font-weight:900!important;letter-spacing:.13em!important}
+.premium-loader-head b{display:block!important;color:var(--premium-text-strong)!important;font-size:15px!important;line-height:1.25!important}
+.premium-loader>.sub{margin-top:10px!important;color:var(--premium-muted-2)!important;font-size:11px!important;line-height:1.45!important}
+.premium-loader-track{height:3px!important;margin-top:14px!important;overflow:hidden!important;border-radius:999px!important;background:rgba(74,143,190,.14)!important}
+.premium-loader-track i{display:block!important;width:38%!important;height:100%!important;border-radius:inherit!important;background:linear-gradient(90deg,rgba(63,161,226,.18),rgba(89,192,248,.82),rgba(63,161,226,.18))!important;animation:premiumLoaderSweep 1.25s ease-in-out infinite!important}
+@keyframes premiumLoaderSweep{0%{transform:translateX(-115%)}100%{transform:translateX(305%)}}
+@media(prefers-reduced-motion:reduce){.premium-loader-track i{animation:none!important;width:100%!important;opacity:.55!important}}
+
+/* RC20.37 · Premium busy state + concurrency guard */
+.radar-action-busy,.radar-action-peer-locked{position:relative;cursor:progress!important;user-select:none}
+.radar-action-busy{pointer-events:none;padding-right:max(38px,var(--premium-control-pad-x,14px))!important}
+.radar-action-busy::after{content:"";position:absolute;right:13px;top:50%;width:13px;height:13px;margin-top:-7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;opacity:.86;animation:radarActionSpin .72s linear infinite}
+.radar-action-peer-locked{pointer-events:none;opacity:.52;filter:saturate(.72)}
+.radar-action-busy[aria-disabled="true"],.radar-action-peer-locked[aria-disabled="true"]{box-shadow:none!important}
+@keyframes radarActionSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.radar-action-busy::after{animation-duration:1.6s}}
+
+/* RC20.39 · Native disabled + async recovery boundary */
+.radar-action-busy:disabled,.radar-action-peer-locked:disabled{cursor:progress!important}
+.radar-action-busy[aria-busy="true"]{opacity:.88}
+.radar-action-long-running{box-shadow:0 0 0 1px rgba(78,176,235,.34) inset,0 0 0 3px rgba(78,176,235,.07)!important}
+.radar-action-long-running::after{animation-duration:1.05s!important}
+
+
+
+/* RC20.41 · Portfolio analytics freshness guard */
+#portfolioRiskSection.analytics-stale{border-color:rgba(230,176,76,.34)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 0 0 1px rgba(230,176,76,.04)!important}
+#portfolioRiskSection.analytics-stale #riskIntelligenceNote,#portfolioRiskSection.analytics-stale~.performance-panel #performanceNote{border-color:rgba(230,176,76,.24)!important;background:rgba(230,176,76,.055)!important;color:#c8ad78!important}
+#portfolioRiskSection[data-risk-freshness="stale"] .risk-premium-kpis,#portfolioRiskSection[data-risk-freshness="stale"] .risk-premium-analysis-grid{opacity:.72}
+
+/* RC20.42 · Persistence truth + commit-aware freshness */
+.config-persistence-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px}
+.config-persistence-row .config-state{flex:1 1 320px;margin:0!important}
+#configState[data-persistence="error"]{color:#ff9a9f!important}
+#configState[data-persistence="ok"]{color:var(--premium-muted-2)!important}
+.config-retry{flex:0 0 auto;min-height:32px!important;padding:0 12px!important;font-size:10px!important}
+.config-retry[hidden]{display:none!important}
+
+
+/* ======================================================================== */
+/* RC20.85 RECOVERY · TECHNICAL PREMIUM AUTHORITY                            */
+/* ======================================================================== */
+.technical-premium-grid{display:grid!important;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)!important;gap:12px!important;margin:12px 0!important}
+.technical-premium-card{min-height:210px!important;background:radial-gradient(circle at 100% 0,rgba(47,156,255,.08),transparent 42%),linear-gradient(145deg,#0a1d2b,#071722)!important;border:1px solid rgba(73,151,205,.22)!important;box-shadow:0 16px 38px rgba(0,0,0,.22)!important}
+.technical-premium-visual{min-height:150px!important}.technical-premium-card .premium-donut-layout{grid-template-columns:145px minmax(0,1fr)!important;min-height:150px!important}.technical-premium-card .premium-donut{width:128px!important;height:128px!important}.technical-premium-card .premium-donut-hole{width:78px!important;height:78px!important}
+.technical-readiness-gauge{--readiness:0;--readiness-color:#e7b44f;width:128px;height:128px;border-radius:50%;display:grid;place-items:center;margin:0 auto 10px;background:conic-gradient(var(--readiness-color) calc(var(--readiness)*1%),#153043 0);box-shadow:0 12px 30px rgba(0,0,0,.25),0 0 24px color-mix(in srgb,var(--readiness-color) 18%,transparent);position:relative}
+.technical-readiness-gauge:after{content:"";position:absolute;inset:25px;border-radius:50%;background:linear-gradient(145deg,#081b29,#06131d);border:1px solid rgba(77,151,205,.2)}.technical-readiness-gauge>div{position:relative;z-index:2;text-align:center}.technical-readiness-gauge b{display:block;font-size:22px!important;color:#f0f9ff!important}.technical-readiness-gauge small{display:block;font-size:10px!important;color:#89a6b8!important;text-transform:uppercase;letter-spacing:.05em}
+.technical-gate-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.technical-gate{display:flex;justify-content:space-between;gap:8px;padding:7px 8px;border-radius:7px;border:1px solid rgba(255,255,255,.06);font-size:10px}.technical-gate.ok{background:rgba(40,200,138,.07);border-color:rgba(40,200,138,.22);color:#77e1b4}.technical-gate.wait{background:rgba(231,180,79,.055);border-color:rgba(231,180,79,.16);color:#d3b46f}.technical-gate b{font-size:10px!important;letter-spacing:.04em}.technical-entry-distance{margin-top:8px;padding:8px 10px;border-left:3px solid var(--readiness-color,#e7b44f);background:rgba(5,19,29,.45);border-radius:7px}.technical-entry-distance b,.technical-entry-distance span{display:block}.technical-entry-distance b{font-size:11px!important}.technical-entry-distance span{margin-top:3px;color:#89a6b8!important;font-size:10px!important}
+@media(max-width:1100px){.technical-premium-grid{grid-template-columns:1fr!important}}@media(max-width:720px){.technical-premium-card .premium-donut-layout{grid-template-columns:1fr!important;justify-items:center!important}.technical-gate-list{grid-template-columns:1fr!important}}
+
+/* First-fold technical decision authority */
+.right-stack .technical-premium-grid-side{grid-template-columns:1fr!important;margin:0!important;gap:10px!important}
+.right-stack .technical-premium-grid-side .technical-premium-card{min-height:0!important;padding:12px!important}
+.right-stack .technical-premium-grid-side .premium-analytics-head{margin-bottom:8px!important}
+.right-stack .technical-premium-grid-side .premium-donut-layout{grid-template-columns:112px minmax(0,1fr)!important;min-height:112px!important;align-items:center!important}
+.right-stack .technical-premium-grid-side .premium-donut{width:104px!important;height:104px!important}
+.right-stack .technical-premium-grid-side .premium-donut-hole{width:64px!important;height:64px!important}
+.right-stack .technical-premium-grid-side .premium-donut-hole b{font-size:20px!important}
+.right-stack .technical-premium-grid-side .premium-donut-legend-row{padding:4px 0!important;font-size:10px!important}
+.right-stack .technical-premium-grid-side .technical-readiness-gauge{width:104px;height:104px;margin:0 auto 8px!important}
+.right-stack .technical-premium-grid-side .technical-readiness-gauge:after{inset:21px!important}
+.right-stack .technical-premium-grid-side .technical-gate{padding:5px 7px!important}
+@media(max-width:1100px){.right-stack .technical-premium-grid-side{grid-template-columns:repeat(2,minmax(0,1fr))!important}.right-stack .technical-premium-grid-side .premium-donut-layout{grid-template-columns:100px minmax(0,1fr)!important}}
+@media(max-width:720px){.right-stack .technical-premium-grid-side{grid-template-columns:1fr!important}}

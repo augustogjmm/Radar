@@ -1,23 +1,22 @@
 # Radar Técnico G2
 
-Versión vigente: **v5.0.0 FINAL**  
-Phase: **12A**  
-Estado: **FINAL_FROZEN**
+Aplicación web estática desplegada en Vercel con APIs serverless en el mismo repositorio.
 
-## Release vigente
+## Estructura
 
-- Artefacto: `Radar_Tecnico_G2_v5.0.0_FINAL.zip`
-- SHA-256: `35b64cdc35c70eadb58dee99d42018a812e5153c040960c8efb335afaee036d4`
-- Archivos: 258
-- Baseline anterior: v4.78.0 FINAL / Phase 11U
-- SHA-256 baseline: `5893a8eb14a7aab976cdb43ebb84c66a51147fc961bf9207cbdacd769faaac4b`
+- `index.html`: shell mínimo y puntos de montaje.
+- `styles/01-base.css`: estilos base heredados.
+- `styles/02-theme-compat.css`: compatibilidad visual y overrides históricos aún necesarios.
+- `styles/03-premium-authority.css`: lenguaje visual principal.
+- `styles/04-portfolio-layout.css`: layout específico de cartera/riesgo.
+- `styles/05-responsive.css`: autoridad final de responsive y estabilidad de tablas/grillas.
+- `runtime/`: JavaScript browser separado por responsabilidad y cargado en orden determinístico.
+- `web-compat.js`: persistencia/localStorage y guardrails de compatibilidad.
+- `api/`: endpoints serverless y proveedores de datos.
+- `vercel.json`: rewrites y configuración de despliegue.
 
-## Flujo de despliegue
+## Regla de mantenimiento
 
-La rama de producción es `main`.
+No insertar bloques grandes de CSS o JavaScript en `index.html`. Los cambios visuales van a `styles/`; la lógica browser al módulo correspondiente de `runtime/`; datos y proveedores a `api/`.
 
-Objetivo de CI/CD:
-
-`push a main -> Vercel -> producción`
-
-El código de producción debe conservar la lógica funcional certificada de la release v5.0.0 FINAL.
+La rama `backup/pre-cleanup-2026-09-22` conserva el estado previo a esta refactorización.
