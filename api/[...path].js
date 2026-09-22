@@ -339,24 +339,37 @@ async function localRates(){
   return {source:available?'BCRA API v4.0 · BYMA · ArgentinaDatos':'Fuentes oficiales no disponibles',updated:new Date().toISOString(),available,caucion,tamar,badlar,tm20,deposit30,cer,uva};
 }
 async function mervalUsd(){
-  let value=null,changePct=null,source='';
+  let value=null,changePct=null,source='',date='';
   try{
-    const t=plain(await request('https://www.byma.com.ar/',{timeout:9000,headers:{accept:'text/html,*/*'}})),m=t.match(/S&P\s+Merval\s+USD\s+([0-9\.,]+)\s+([+-]?[0-9\.,]+)/i);
-    if(m){value=num(m[1]);changePct=num(m[2]);source='BYMA · SPMERVDT'}
+    const from=Math.floor((Date.now()-20*86400000)/1000),to=Math.floor((Date.now()+86400000)/1000);
+    const j=await getJson(BYMA+'/chart/index-historical-series/history?symbol=SPMERVDT&resolution=D&from='+from+'&to='+to,{timeout:15000});
+    const ts=Array.isArray(j?.t)?j.t:[],cl=Array.isArray(j?.c)?j.c:[],bars=[];
+    for(let i=0;i<Math.min(ts.length,cl.length);i++){const c=num(cl[i]);if(c!==null)bars.push({time:Number(ts[i]),close:c})}
+    const q=bars.at(-1),p=bars.length>1?bars.at(-2):null;
+    if(q){
+      value=q.close;
+      changePct=p&&p.close?(q.close/p.close-1)*100:null;
+      date=new Date(q.time*1000).toISOString().slice(0,10);
+      source='Open BYMADATA · SPMERVDT';
+    }
   }catch{}
   if(value===null||value<=0){
     try{
-      const t=plain(await request('https://www.max.capital/mercados/cotizaciones/indices/',{timeout:9000,headers:{accept:'text/html,*/*'}})),m=t.match(/SPMERVDT.*?([+-]?[0-9\.,]+)%.*?([0-9\.,]+)/i);
-      if(m){changePct=num(m[1]);value=num(m[2]);source='Max Capital / BYMA'}
+      const t=plain(await request('https://www.byma.com.ar/',{timeout:9000,headers:{accept:'text/html,*/*'}})),m=t.match(/S&P\s+Merval\s+USD\s+([0-9\.,]+)\s+([+-]?[0-9\.,]+)/i);
+      if(m){value=num(m[1]);changePct=num(m[2]);source='BYMA · SPMERVDT';date=arDate()}
     }catch{}
   }
   if(value===null||value<=0){
     const u=new URL('https://radar.local/api/yahoo');u.searchParams.set('symbol','^MERV');u.searchParams.set('range','5d');u.searchParams.set('interval','1d');
-    const q=compactYahooChart('^MERV',await yahoo(u),'Yahoo Finance'),fx=await fxCurrent(),mep=num(fx?.fx?.mep?.venta);
-    if(q.ok&&mep!==null&&mep>0){value=q.last/mep;changePct=q.changePct;source='Proxy ^MERV / MEP · Yahoo + DolarApi'}
+    const q=compactYahooChart('^MERV',await yahoo(u),'Yahoo Finance'),fx=await fxCurrent(),mep=num(fx?.fx?.mep?.venta),mepChg=num(fx?.fx?.mep?.changePct);
+    if(q.ok&&mep!==null&&mep>0){
+      value=q.last/mep;
+      changePct=q.changePct!==null&&mepChg!==null?(((1+q.changePct/100)/(1+mepChg/100))-1)*100:q.changePct;
+      source='Proxy ^MERV / MEP · Yahoo + DolarApi';date=arDate();
+    }
   }
   if(value===null||value<=0)throw new Error('SPMERVDT no disponible');
-  return {value,changePct,symbol:'SPMERVDT',name:'S&P Merval USD (MEP)',source,updated:new Date().toISOString(),official:/BYMA|Max Capital/.test(source)};
+  return {value,changePct,symbol:'SPMERVDT',name:'S&P Merval USD (MEP)',source,date,updated:new Date().toISOString(),official:/BYMA/.test(source)&&!/Proxy/.test(source)};
 }
 async function fixedIncomeCurve(){
   const x=await getJson('https://compararfondos.com.ar/api/bonos',{timeout:18000});
