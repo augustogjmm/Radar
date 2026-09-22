@@ -188,5 +188,23 @@ window.fetch=async function(input,init={}){
   });
   return NATIVE_FETCH(input,init);
 };
-window.__RADAR_WEB_RUNTIME__={version:'5.0.0-web.1',persistence:'localStorage',api:'vercel-serverless'};
+window.__RADAR_WEB_RUNTIME__={version:'5.0.0-web.2',persistence:'localStorage',api:'vercel-serverless'};
+})();
+
+
+/* UI hotfix loader: intentionally appended after document parsing so it wins the cascade. */
+(()=>{
+'use strict';
+const UI_HOTFIX_VERSION='20260922-1';
+function installUiHotfix(){
+  if(document.querySelector('link[data-radar-ui-hotfix]'))return;
+  const link=document.createElement('link');
+  link.rel='stylesheet';
+  link.href='/ui-hotfix.css?v='+UI_HOTFIX_VERSION;
+  link.dataset.radarUiHotfix=UI_HOTFIX_VERSION;
+  link.onload=()=>document.documentElement.setAttribute('data-radar-ui-hotfix',UI_HOTFIX_VERSION);
+  document.head.appendChild(link);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUiHotfix,{once:true});
+else installUiHotfix();
 })();
