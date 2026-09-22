@@ -56,6 +56,18 @@ async function riskFallback(){
   const previous=prev?.value??null;
   return {value,previous,change:value!==null&&previous!==null?value-previous:null,date,source:'ArgentinaDatos · directo',fallback:true,status:'ACTUAL',verifiedAt:new Date().toISOString()};
 }
+async function localRatesFallback(){
+  const j=await directJson('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias?Limit=3000',12000);
+  const rows=Array.isArray(j?.results)?j.results:[];
+  const find=(re)=>{
+    const x=rows.find(r=>re.test(String(r?.descripcion||'')));
+    const value=finite(x?.ultValorInformado);
+    return value===null?null:{value,date:String(x?.ultFechaInformada||''),source:'BCRA API v4.0 · directo',idVariable:x?.idVariable??null};
+  };
+  const tamar=find(/TAMAR/i),badlar=find(/BADLAR/i),tm20=find(/TM20|30.{0,12}d[ií]as/i),cer=find(/CER|Estabilizaci[oó]n de Referencia/i),uva=find(/UVA|Valor Adquisitivo/i);
+  const refs=[tamar,badlar,tm20,cer,uva].filter(Boolean).length;
+  return {source:'BCRA API v4.0 · directo',updated:new Date().toISOString(),available:refs,caucion:null,tamar,badlar,tm20,deposit30:null,cer,uva};
+}
 window.fetch=async function(input,init={}){
   const u=urlOf(input), p=u.pathname, method=String(init?.method||'GET').toUpperCase();
 
@@ -76,6 +88,10 @@ window.fetch=async function(input,init={}){
   if(method==='GET'&&p==='/api/dashboard/risk'){
     try{const j=await nativeJson(input,init);if(finite(j?.value)!==null)return json(j)}catch{}
     try{return json(await riskFallback())}catch(e){return json({value:null,error:'RISK_UNAVAILABLE',message:String(e?.message||e)},502)}
+  }
+  if(method==='GET'&&p==='/api/local-rates'){
+    try{const j=await nativeJson(input,init);if(Number(j?.available)>0)return json(j)}catch{}
+    try{return json(await localRatesFallback())}catch(e){return json({available:0,source:'BCRA no disponible',message:String(e?.message||e)})}
   }
   if(p==='/api/config'){
     if(method==='GET'){
