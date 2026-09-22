@@ -286,6 +286,27 @@ async function lastSeries(url,source){
     const q=rows.at(-1);return q?{value:q.value,date:q.date,source}:null;
   }catch{return null}
 }
+async function caucionByma(){
+  try{
+    const x=await postByma('cauciones',{page_size:5000});
+    const rows=arr(x).map(r=>{
+      const value=num(r.vwap_price??r.vwapPrice??r.vwap??r.trade??r.closing_price??r.closingPrice);
+      const currency=String(r.currency??r.denominationCcy??r.currencyCode??'').toUpperCase();
+      const symbol=String(r.symbol??'').toUpperCase();
+      const settle=String(r.settlDate??r.settlementDate??r.settlement_date??'').replace(/\D/g,'');
+      let days=999;
+      if(/^\d{8}$/.test(settle)){
+        const dt=Date.UTC(Number(settle.slice(0,4)),Number(settle.slice(4,6))-1,Number(settle.slice(6,8)));
+        days=Math.max(0,Math.round((dt-Date.now())/86400000));
+      }
+      return {value,currency,symbol,days,date:String(r.Date??r.date??arDate())};
+    }).filter(r=>r.value!==null&&r.value>0&&r.value<300&&(r.currency==='ARS'||!r.currency));
+    if(!rows.length)return null;
+    rows.sort((a,b)=>(a.symbol==='PESOS'?0:1)-(b.symbol==='PESOS'?0:1)||Math.abs(a.days-1)-Math.abs(b.days-1));
+    const q=rows[0];
+    return {value:q.value,date:q.date,source:'Open BYMADATA · caución ARS'};
+  }catch{return null}
+}
 async function localRates(){
   let catalog=null;
   try{catalog=await getJson('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias?Limit=3000',{timeout:12000,headers:{'accept-language':'es-AR'}})}catch{}
@@ -313,6 +334,7 @@ async function localRates(){
     const t=plain(await request('https://www.byma.com.ar/',{timeout:9000,headers:{accept:'text/html,*/*'}})),m=t.match(/[IÍ]ndice\s+Cauci[oó]n\s+BYMA\s+([0-9]+(?:[\.,][0-9]+)?)/i),value=m?num(m[1]):null;
     if(value!==null&&value>0&&value<300)caucion={value,date:dateAr(new Date()),source:'BYMA · Índice Caución BYMA'};
   }catch{}
+  if(!caucion)caucion=await caucionByma();
   const values=[caucion,tamar,badlar,tm20||deposit30,cer,uva],available=values.filter(Boolean).length;
   return {source:available?'BCRA API v4.0 · BYMA · ArgentinaDatos':'Fuentes oficiales no disponibles',updated:new Date().toISOString(),available,caucion,tamar,badlar,tm20,deposit30,cer,uva};
 }
