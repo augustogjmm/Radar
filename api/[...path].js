@@ -228,11 +228,36 @@ async function bymaCedears(url){
   if(liquidOnly&&liquidCount)items=items.filter(x=>(x.volume||0)>0||(x.tradeVolume||0)>0||(x.volumeAmount||0)>0);
   return {source:'Open BYMADATA /cedears',updated:new Date().toISOString(),liquidOnly,liquidCount,count:items.length,rawCount:rows.length,filterMode:'WEB+ARS+24hs',items};
 }
+function aggregateBymaUdf(j,mode){
+  if(!j||j.s!=='ok'||!Array.isArray(j.t)||!j.t.length||!['week','month'].includes(mode))return j;
+  const groups=new Map();
+  for(let i=0;i<j.t.length;i++){
+    const time=Number(j.t[i]),open=num(j.o?.[i]),high=num(j.h?.[i]),low=num(j.l?.[i]),close=num(j.c?.[i]),volume=num(j.v?.[i])||0;
+    if(!Number.isFinite(time)||[open,high,low,close].some(x=>x===null))continue;
+    const d=new Date(time*1000);
+    let key;
+    if(mode==='week'){
+      const day=(d.getUTCDay()+6)%7;
+      const monday=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-day));
+      key=monday.toISOString().slice(0,10);
+    }else key=d.toISOString().slice(0,7);
+    const g=groups.get(key);
+    if(!g)groups.set(key,{time,open,high,low,close,volume});
+    else{
+      g.high=Math.max(g.high,high);g.low=Math.min(g.low,low);g.close=close;g.volume+=volume;
+    }
+  }
+  const bars=[...groups.values()].sort((a,b)=>a.time-b.time);
+  return {s:'ok',t:bars.map(x=>x.time),o:bars.map(x=>x.open),h:bars.map(x=>x.high),l:bars.map(x=>x.low),c:bars.map(x=>x.close),v:bars.map(x=>x.volume)};
+}
 async function bymaHistory(url){
-  const symbol=String(url.searchParams.get('symbol')||'').toUpperCase().replace('.BA',''),days=Math.max(30,Number(url.searchParams.get('days'))||7300);
+  const symbol=String(url.searchParams.get('symbol')||'').toUpperCase().replace('.BA',''),days=Math.max(30,Number(url.searchParams.get('days'))||7300),tf=String(url.searchParams.get('tf')||'short').toLowerCase();
   if(!symbol)throw new Error('Ticker vacío');
   const from=Math.floor((Date.now()-days*86400000)/1000),to=Math.floor((Date.now()+86400000)/1000);
-  return await getJson(BYMA+'/chart/historical-series/history?symbol='+encodeURIComponent(symbol+' 24HS')+'&resolution=D&from='+from+'&to='+to,{timeout:18000});
+  const daily=await getJson(BYMA+'/chart/historical-series/history?symbol='+encodeURIComponent(symbol+' 24HS')+'&resolution=D&from='+from+'&to='+to,{timeout:18000});
+  if(tf==='medium')return aggregateBymaUdf(daily,'week');
+  if(tf==='macro')return aggregateBymaUdf(daily,'month');
+  return daily;
 }
 async function bymaQuote(url){
   const symbol=String(url.searchParams.get('symbol')||'').toUpperCase().replace('.BA','');if(!symbol)throw new Error('Ticker vacío');
@@ -412,7 +437,30 @@ async function handler(req,res){
     if(p==='/api/treasury-curve')return send(res,200,await treasuryCurve());
     if(p==='/api/fixed-income/curve')return send(res,200,await fixedIncomeCurve());
     if(p==='/api/local-rates')return send(res,200,await localRates());
-    if(p==='/api/fixed-income/analytics'){const cr=await riskNow();return send(res,200,{source:'Radar Web',countryRisk:cr,bonds:[],letters:[],warning:'Analítica RF avanzada usa el motor local en la release de escritorio.'})}
+    if(p==='/api/fixed-income/analytics'){
+      const [cr,rates,raw] = await Promise.all([
+        riskNow(),
+        localRates().catch(()=>null),
+        getJson('https://compararfondos.com.ar/api/bonos',{timeout:18000}).catch(()=>null)
+      ]);
+      const src=Array.isArray(raw?.bonds)?raw.bonds:arr(raw),bonds=[];
+      for(const b of src){
+        const ticker=String(b?.ticker||b?.simbolo||'').trim().toUpperCase();
+        if(!ticker)continue;
+        bonds.push({
+          ...b,
+          ticker,
+          tir:num(b?.tir),
+          paridad:num(b?.paridad),
+          duration:num(b?.duration),
+          precio:num(b?.precio??b?.price),
+          vencimiento:b?.vencimiento??b?.maturityDate??null,
+          tipo:b?.tipo??b?.type??'',
+          moneda:b?.moneda??b?.currency??''
+        });
+      }
+      return send(res,200,{source:'CompararFondos + BCRA/BYMA + Radar Web',countryRisk:cr,localRates:rates,bonds,letters:[],coverage:bonds.length});
+    }
     if(p==='/api/alphavantage/fundamentals')return send(res,200,{available:false,source:'Alpha Vantage',reason:'API key no configurada en Radar Web'});
     if(p==='/api/finviz')return send(res,200,{available:false,source:'Finviz',reason:'Scraping deshabilitado en runtime serverless'});
     if(p==='/api/yahoo/fundamentals')return send(res,200,{available:false,source:'Yahoo',reason:'Fundamentales avanzados no disponibles en este endpoint web'});
