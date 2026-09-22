@@ -188,7 +188,7 @@ window.fetch=async function(input,init={}){
   });
   return NATIVE_FETCH(input,init);
 };
-window.__RADAR_WEB_RUNTIME__={version:'5.0.0-web.2',persistence:'localStorage',api:'vercel-serverless'};
+window.__RADAR_WEB_RUNTIME__={version:'5.0.0-web.3',persistence:'localStorage',api:'vercel-serverless'};
 })();
 
 
@@ -207,4 +207,39 @@ function installUiHotfix(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUiHotfix,{once:true});
 else installUiHotfix();
+})();
+
+/* Scanner guardrails: do not offer unsupported BYMA intraday combinations. */
+(()=>{
+'use strict';
+function syncScannerTimeframe(){
+  const universe=document.getElementById('scanUniverse');
+  const tf=document.getElementById('scanTf');
+  if(!universe||!tf)return;
+  const byma=new Set(['cedear','cedear_liquid','arg_leading','arg_general','arg_all']);
+  const micro=tf.querySelector('option[value="micro"]');
+  const unsupported=byma.has(universe.value);
+  if(micro){
+    micro.disabled=unsupported;
+    micro.textContent=unsupported?'Micro · no disponible en BYMA':'Micro';
+  }
+  if(unsupported&&tf.value==='micro'){
+    tf.value='short';
+    tf.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  const info=document.getElementById('scanUniverseInfo');
+  if(info&&unsupported&&!info.dataset.radarTfHint){
+    info.dataset.radarTfHint='1';
+  }
+}
+function installScannerGuardrails(){
+  syncScannerTimeframe();
+  const u=document.getElementById('scanUniverse');
+  if(u&&!u.dataset.radarGuardBound){
+    u.dataset.radarGuardBound='1';
+    u.addEventListener('change',syncScannerTimeframe);
+  }
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installScannerGuardrails,{once:true});
+else installScannerGuardrails();
 })();
