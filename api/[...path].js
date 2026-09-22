@@ -48,7 +48,6 @@ function spanishDateIso(day,month,year){
   const m={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',setiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'}[String(month||'').toLowerCase()];
   return m?String(year).padStart(4,'0')+'-'+m+'-'+String(day).padStart(2,'0'):'';
 }
-async function request
 async function request(url,{method='GET',body,timeout=16000,headers={}}={}){
   const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);
   try{
@@ -98,7 +97,6 @@ async function fxCurrent(){
   }
   return {updated:new Date().toISOString(),fx};
 }
-async function history
 async function history(series,limit=240){
   const map={
     risk:['https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais','index'],
@@ -117,7 +115,6 @@ async function history(series,limit=240){
     .sort((a,b)=>a.date.localeCompare(b.date));
   return rows.slice(-limit);
 }
-async function riskNow
 async function riskNow(){
   const hist=await history('risk',10).catch(()=>[]);
   const previousFor=(date)=>[...hist].reverse().find(r=>r.date<date)?.value??(hist.length>1?hist.at(-2)?.value:null);
@@ -143,7 +140,6 @@ async function riskNow(){
   }
   return {value:null,previous:null,change:null,date:'',source:'No disponible',fallback:true,status:'STALE'};
 }
-async function inflationNow
 async function inflationNow(){
   const rows=await history('inflation',240);
   return {rows:rows.map(r=>({fecha:r.date,valor:r.value})),source:'ArgentinaDatos / BCRA'};
@@ -197,7 +193,6 @@ async function yahooBatch(url){
   }
   return {source:'Yahoo Finance',updated:new Date().toISOString(),count:items.length,items};
 }
-async function binanceKlines
 async function binanceKlines(url){
   const symbol=(url.searchParams.get('symbol')||'BTCUSDT').replace(/[\/-]/g,'').toUpperCase(),interval=url.searchParams.get('interval')||'1h';
   return await getJson('https://api.binance.com/api/v3/klines?symbol='+encodeURIComponent(symbol)+'&interval='+encodeURIComponent(interval)+'&limit=1000',{timeout:16000});
@@ -352,7 +347,6 @@ async function fixedIncomeCurve(){
   bonds.sort((a,b)=>a.duration-b.duration);
   return {source:'CompararFondos · curva soberana',updated:new Date().toISOString(),bonds};
 }
-async function handler
 async function handler(req,res){
   if(!['GET','POST','OPTIONS'].includes(req.method||''))return send(res,405,{error:'METHOD_NOT_ALLOWED'});
   if(req.method==='OPTIONS')return send(res,204,'',{'access-control-allow-origin':'*'});
