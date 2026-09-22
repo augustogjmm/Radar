@@ -68,6 +68,34 @@ async function bondCurveFallback(){
   bonds.sort((a,b)=>a.duration-b.duration);
   return {source:'CompararFondos · directo',updated:new Date().toISOString(),bonds};
 }
+async function binanceDirect(path,timeout=15000){
+  const hosts=['https://api.binance.com','https://api1.binance.com','https://api2.binance.com','https://api3.binance.com'];
+  let last='';
+  for(const host of hosts){
+    const c=new AbortController(),tm=setTimeout(()=>c.abort(),timeout);
+    try{
+      const r=await NATIVE_FETCH(host+path,{cache:'no-store',signal:c.signal,headers:{accept:'application/json'}});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){last=String(e?.message||e)}
+    finally{clearTimeout(tm)}
+  }
+  throw new Error('Binance no disponible: '+last);
+}
+async function binanceUniverseFallback(top=100){
+  const [ex,tickers]=await Promise.all([binanceDirect('/api/v3/exchangeInfo'),binanceDirect('/api/v3/ticker/24hr')]);
+  const vol=new Map((Array.isArray(tickers)?tickers:[]).map(x=>[x.symbol,Number(x.quoteVolume)||0]));
+  const items=(ex?.symbols||[])
+    .filter(x=>x?.status==='TRADING'&&x?.quoteAsset==='USDT'&&x?.isSpotTradingAllowed!==false)
+    .map(x=>({symbol:String(x.symbol||''),baseAsset:String(x.baseAsset||''),quoteAsset:'USDT',quoteVolume:vol.get(x.symbol)||0}))
+    .sort((a,b)=>b.quoteVolume-a.quoteVolume||a.symbol.localeCompare(b.symbol))
+    .slice(0,Math.max(1,Math.min(500,Number(top)||100)));
+  return {source:'Binance Spot · directo',updated:new Date().toISOString(),count:items.length,totalAvailable:(ex?.symbols||[]).length,top:Number(top)||100,items};
+}
+async function binanceKlinesFallback(symbol,interval){
+  const clean=String(symbol||'BTCUSDT').replace(/[\/-]/g,'').toUpperCase();
+  return await binanceDirect('/api/v3/klines?symbol='+encodeURIComponent(clean)+'&interval='+encodeURIComponent(interval||'1h')+'&limit=1000');
+}
 async function localRatesFallback(){
   const j=await directJson('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias?Limit=3000',12000);
   const rows=Array.isArray(j?.results)?j.results:[];
@@ -104,6 +132,22 @@ window.fetch=async function(input,init={}){
   if(method==='GET'&&p==='/api/local-rates'){
     try{const j=await nativeJson(input,init);if(Number(j?.available)>0)return json(j)}catch{}
     try{return json(await localRatesFallback())}catch(e){return json({available:0,source:'BCRA no disponible',message:String(e?.message||e)})}
+  }
+  if(method==='GET'&&p==='/api/binance/universe'){
+    try{
+      const j=await nativeJson(input,init);
+      if(Array.isArray(j?.items)&&j.items.length)return json(j);
+    }catch{}
+    try{return json(await binanceUniverseFallback(u.searchParams.get('top')||100))}
+    catch(e){return json({error:'BINANCE_UNIVERSE_UNAVAILABLE',message:String(e?.message||e)},502)}
+  }
+  if(method==='GET'&&p==='/api/binance'){
+    try{
+      const j=await nativeJson(input,init);
+      if(Array.isArray(j)&&j.length)return json(j);
+    }catch{}
+    try{return json(await binanceKlinesFallback(u.searchParams.get('symbol'),u.searchParams.get('interval')))}
+    catch(e){return json({error:'BINANCE_KLINES_UNAVAILABLE',message:String(e?.message||e)},502)}
   }
   if(method==='GET'&&p==='/api/fixed-income/curve'){
     try{const j=await nativeJson(input,init);if(Array.isArray(j?.bonds)&&j.bonds.length>=2)return json(j)}catch{}
