@@ -1,11 +1,80 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/router?route=health-root"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/router?route=health"
+    },
+    {
+      "source": "/api/yahoo",
+      "destination": "/api/router?route=yahoo"
+    },
+    {
+      "source": "/api/yahoo-batch",
+      "destination": "/api/router?route=yahoo-batch"
+    },
+    {
+      "source": "/api/local-rates",
+      "destination": "/api/router?route=local-rates"
+    },
+    {
+      "source": "/api/treasury-curve",
+      "destination": "/api/router?route=treasury-curve"
+    },
+    {
+      "source": "/api/treasury-series",
+      "destination": "/api/router?route=treasury-series"
+    },
+    {
+      "source": "/api/treasury-official-series",
+      "destination": "/api/router?route=treasury-official-series"
+    },
+    {
+      "source": "/api/finviz",
+      "destination": "/api/router?route=finviz"
+    },
+    {
+      "source": "/api/g2/features",
+      "destination": "/api/router?route=g2/features"
+    },
+    {
+      "source": "/api/byma/:path*",
+      "destination": "/api/router?ns=byma&path=:path*"
+    },
+    {
+      "source": "/api/dashboard/:path*",
+      "destination": "/api/router?ns=dashboard&path=:path*"
+    },
+    {
+      "source": "/api/fixed-income/:path*",
+      "destination": "/api/router?ns=fixed-income&path=:path*"
+    },
+    {
+      "source": "/api/cedear/:path*",
+      "destination": "/api/router?ns=cedear&path=:path*"
+    },
+    {
+      "source": "/api/alphavantage/:path*",
+      "destination": "/api/router?ns=alphavantage&path=:path*"
+    },
+    {
+      "source": "/api/yahoo/:path*",
+      "destination": "/api/router?ns=yahoo&path=:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
       ]
     }
   ]
