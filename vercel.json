@@ -1,13 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
+  "cleanUrls": true,
+  "headers": [
     {
-      "source": "/",
-      "destination": "https://radar-tecnico-g2-chamaquin.vercel.app/"
-    },
-    {
-      "source": "/:path*",
-      "destination": "https://radar-tecnico-g2-chamaquin.vercel.app/:path*"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
     }
   ]
 }
