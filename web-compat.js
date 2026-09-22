@@ -56,6 +56,18 @@ async function riskFallback(){
   const previous=prev?.value??null;
   return {value,previous,change:value!==null&&previous!==null?value-previous:null,date,source:'ArgentinaDatos · directo',fallback:true,status:'ACTUAL',verifiedAt:new Date().toISOString()};
 }
+async function bondCurveFallback(){
+  const x=await directJson('https://compararfondos.com.ar/api/bonos',15000);
+  const raw=Array.isArray(x?.bonds)?x.bonds:(Array.isArray(x)?x:[]),bonds=[];
+  const n=v=>{if(typeof v==='number')return Number.isFinite(v)?v:null;const z=Number(String(v??'').trim().replace(/\./g,'').replace(',','.'));return Number.isFinite(z)?z:null};
+  for(const b of raw){
+    const ticker=String(b?.ticker||'').trim().toUpperCase(),tir=n(b?.tir),duration=n(b?.duration),paridad=n(b?.paridad);
+    if(!/^(AL|GD|AE)/.test(ticker)||tir===null||duration===null||tir<=0||duration<=0)continue;
+    bonds.push({ticker,tir,duration,paridad});
+  }
+  bonds.sort((a,b)=>a.duration-b.duration);
+  return {source:'CompararFondos · directo',updated:new Date().toISOString(),bonds};
+}
 async function localRatesFallback(){
   const j=await directJson('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias?Limit=3000',12000);
   const rows=Array.isArray(j?.results)?j.results:[];
@@ -92,6 +104,10 @@ window.fetch=async function(input,init={}){
   if(method==='GET'&&p==='/api/local-rates'){
     try{const j=await nativeJson(input,init);if(Number(j?.available)>0)return json(j)}catch{}
     try{return json(await localRatesFallback())}catch(e){return json({available:0,source:'BCRA no disponible',message:String(e?.message||e)})}
+  }
+  if(method==='GET'&&p==='/api/fixed-income/curve'){
+    try{const j=await nativeJson(input,init);if(Array.isArray(j?.bonds)&&j.bonds.length>=2)return json(j)}catch{}
+    try{return json(await bondCurveFallback())}catch(e){return json({bonds:[],source:'CompararFondos no disponible',message:String(e?.message||e)},502)}
   }
   if(p==='/api/config'){
     if(method==='GET'){
