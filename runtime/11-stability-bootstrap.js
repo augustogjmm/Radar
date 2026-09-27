@@ -101,7 +101,7 @@ async function runStartupSelfTest(show=true){
 
  try{
    const h=await fetchJsonTimeout('/api/health',6000);
-   tests.push(selfTestResult('Servidor',h?.ok&&h?.version==='v93'?'ok':'warn',h?.ok?`v93 · uptime ${h.uptimeSeconds||0}s`:'Respuesta incompleta'));
+   tests.push(selfTestResult('Servidor',h?.ok?'ok':'bad',h?.ok?`${h.version||'web'} · ${h.runtime||'runtime web'} · ${h.time||'activo'}`:'Respuesta incompleta'));
  }catch(e){
    tests.push(selfTestResult('Servidor','bad',e.message||e));
  }
@@ -132,9 +132,6 @@ async function runStartupSelfTest(show=true){
    tests.push(selfTestResult('Portfolio Pro',
      typeof openReducePosition==='function'&&typeof diversificationAnalysis==='function'&&typeof ensureTransactionHistory==='function'?'ok':'bad',
      'Movimientos + reducción + diversificación'));
-   tests.push(selfTestResult('Laboratorio',
-     typeof runLabBacktest==='function'&&!!$('labView')?'ok':'bad',
-     'Replay / Backtest sin look-ahead'));
  }catch(e){
    tests.push(selfTestResult('Historial','warn','Archivo no disponible; queda fallback local.'));
  }
@@ -645,7 +642,7 @@ window.addEventListener('orientationchange',()=>scheduleAnalysisChartResize(180)
 
 
 // Phase 9L: Help Center presentation and event ownership moved to /g2/ui/help-center-ui.js
-const RADAR_ROUTE_LABELS=Object.freeze({home:'Inicio',scanner:'Escáner renta variable',rf:'Escáner renta fija',watchlist:'Seguimiento',portfolio:'Cartera 360',risk:'Riesgo & Performance',cedear:'Cartera USD',allocator:'Asignación',advisor:'Asesor',lab:'Laboratorio',signals:'Histórico'});
+const RADAR_ROUTE_LABELS=Object.freeze({home:'Inicio',scanner:'Escáner',rf:'Renta fija',watchlist:'Seguimiento',portfolio:'Cartera',risk:'Riesgo',signals:'Historial'});
 const radarNavigationState={current:'home',origin:null};
 function radarRouteFromView(activeId,title){
  const byId={homeViewBtn:'home',scannerViewBtn:'scanner',fixedIncomeBtn:'rf',watchlistViewBtn:'watchlist',portfolioViewBtn:'portfolio',cedearRotationViewBtn:'cedear',allocatorViewBtn:'allocator',advisorViewBtn:'advisor',labViewBtn:'lab',signalsViewBtn:'signals'};
@@ -677,9 +674,7 @@ function radarReturnToOrigin(fallback='home'){
 window.radarCaptureDrillOrigin=radarCaptureDrillOrigin;window.radarClearDrillOrigin=radarClearDrillOrigin;window.radarReturnToOrigin=radarReturnToOrigin;window.radarNavigationState=radarNavigationState;
 function setInstitutionalView(activeId,title,subtitle){
  document.querySelectorAll('.side-nav-item').forEach(b=>b.classList.toggle('active',!!activeId&&b.id===activeId));
- // Autoridad visual aprobada: la franja superior es institucional y NO replica
- // el nombre del módulo. El hero interno de cada vista conserva su identidad.
- if($('viewTitle'))$('viewTitle').textContent='Análisis técnico';
+ if($('viewTitle'))$('viewTitle').textContent=title||'Radar Técnico';
  if($('viewSubtitle'))$('viewSubtitle').textContent=subtitle||'';
  const command=document.querySelector('.command-search');
  if(command){
