@@ -1247,20 +1247,16 @@ const VERSION='9S';
 const SHELL_HTML=String.raw`<aside id="appSidebar" class="app-sidebar">
   <div class="sidebar-brand">
     <div class="sidebar-logo">RT</div>
-    <div class="sidebar-brand-copy"><b>Radar Técnico</b><small>Consola de Asesor y Mercados · G2 5.0.0</small></div>
+    <div class="sidebar-brand-copy"><b>Radar Técnico</b><small>Mercados · Cartera · Decisiones · G2 5.0.0</small></div>
   </div>
   <div class="sidebar-section-label">ESPACIO DE TRABAJO</div>
   <nav class="side-nav">
     <button id="homeViewBtn" class="side-nav-item active"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg></span><span class="nav-copy"><b>Inicio</b><small>Centro de Mercado</small></span></button>
-    <button id="scannerViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3"/><path d="M3 21h18"/></svg></span><span class="nav-copy"><b>Escáner renta variable</b><small>Acciones · CEDEARs · Cripto</small></span></button>
+    <button id="scannerViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3"/><path d="M3 21h18"/></svg></span><span class="nav-copy"><b>Escáner</b><small>Acciones · CEDEARs · Cripto</small></span></button>
     <button id="fixedIncomeBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="nav-copy"><b>Escáner renta fija</b><small>Bonos · Letras · ON</small></span></button>
     <button id="watchlistViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.3 6.7 19l1-5.8-4.2-4.1 5.9-.9z"/></svg></span><span class="nav-copy"><b>Seguimiento</b><small>Activos · Alertas · Disparadores</small></span></button>
     <button id="portfolioViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M8 7V5h8v2M4 11h16M10 11v2h4v-2"/></svg></span><span class="nav-copy"><b>Cartera</b><small>P&amp;L · Riesgo · Diversificación</small></span></button>
-    <button id="cedearRotationViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 18h16M6 15l4-4 3 2 5-7"/><path d="M15 6h3v3"/></svg></span><span class="nav-copy"><b>Cartera USD</b><small>CEDEARs · Profit · Rotación</small></span></button>
-    <button id="allocatorViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 18V6m16 12V6"/><path d="M7 15h4V9H7zM13 18h4V6h-4z"/><path d="M3 21h18"/></svg></span><span class="nav-copy"><b>Asignación</b><small>Capital · 3 perfiles · sin IA</small></span></button>
-    <button id="advisorViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><path d="M3 19c.7-3.2 2.5-5 5-5s4.3 1.8 5 5"/><path d="M16 5h5M18.5 2.5v5M15 13h6M15 17h6"/></svg></span><span class="nav-copy"><b>Asesor</b><small>Clientes · Mandatos · Adecuación</small></span></button>
-    <button id="labViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 8a2 2 0 0 0 1.7 3h10.6A2 2 0 0 0 19 17l-5-8V3"/><path d="M7.5 15h9"/></svg></span><span class="nav-copy"><b>Laboratorio</b><small>Replay · Backtest · Modelo</small></span></button>
-    <button id="signalsViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><path d="M4.9 5.3A9 9 0 1 1 3 12"/><path d="M3 5v5h5"/></svg></span><span class="nav-copy"><b>Histórico</b><small>Señales · Auditoría</small></span></button>
+    <button id="signalsViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><path d="M4.9 5.3A9 9 0 1 1 3 12"/><path d="M3 5v5h5"/></svg></span><span class="nav-copy"><b>Historial</b><small>Señales · Auditoría</small></span></button>
   </nav>
   <div class="sidebar-section-label sidebar-secondary-label">SISTEMA</div>
   <nav class="side-nav system-side-nav">
@@ -1275,7 +1271,7 @@ const SHELL_HTML=String.raw`<aside id="appSidebar" class="app-sidebar">
 <div id="technicalDrawerBackdrop" class="technical-drawer-backdrop" aria-hidden="true"></div>
 <aside id="technicalDrawer" class="technical-drawer" aria-hidden="true" aria-labelledby="technicalDrawerTitle">
   <div class="technical-drawer-head">
-    <div><div class="technical-drawer-eyebrow">SISTEMA</div><h2 id="technicalDrawerTitle">Menú técnico</h2><p>Salud, frescura, procedencia y controles de diagnóstico. No interfiere con el análisis principal.</p></div>
+    <div><div class="technical-drawer-eyebrow">SISTEMA</div><h2 id="technicalDrawerTitle">Menú técnico</h2><p>Salud de datos y diagnóstico operativo del núcleo de Radar.</p></div>
     <button id="technicalDrawerClose" class="technical-drawer-close" aria-label="Cerrar menú técnico">✕</button>
   </div>
   <div class="technical-drawer-body">
