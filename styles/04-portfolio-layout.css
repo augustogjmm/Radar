@@ -1,3 +1,51 @@
+/* v5 core product authority: each portfolio mode owns one clear workspace. */
+#watchlistView.mode-watchlist #portfolio360Section,
+#watchlistView.mode-watchlist #portfolioRiskSection,
+#watchlistView.mode-watchlist .performance-panel,
+#watchlistView.mode-watchlist .stress-panel,
+#watchlistView.mode-watchlist .portfolio-diversification,
+#watchlistView.mode-watchlist .portfolio-ledger{
+  display:none!important;
+}
+
+#watchlistView.mode-portfolio #portfolioEntryPanel,
+#watchlistView.mode-portfolio .watch-summary,
+#watchlistView.mode-portfolio .watch-table-wrap,
+#watchlistView.mode-portfolio #portfolioRiskSection,
+#watchlistView.mode-portfolio .performance-panel,
+#watchlistView.mode-portfolio .stress-panel{
+  display:none!important;
+}
+
+#watchlistView.mode-risk #portfolioEntryPanel,
+#watchlistView.mode-risk .watch-summary,
+#watchlistView.mode-risk .watch-table-wrap,
+#watchlistView.mode-risk #portfolio360Section,
+#watchlistView.mode-risk .portfolio-diversification,
+#watchlistView.mode-risk .portfolio-ledger{
+  display:none!important;
+}
+
+#watchlistView.mode-watchlist #watchlistSection,
+#watchlistView.mode-portfolio #watchlistSection,
+#watchlistView.mode-risk #watchlistSection{
+  margin-bottom:16px!important;
+}
+
+#watchlistView.mode-portfolio .portfolio360,
+#watchlistView.mode-risk .risk-intelligence,
+#watchlistView.mode-risk .performance-panel,
+#watchlistView.mode-risk .stress-panel{
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  float:none!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+
 /* Radar Tecnico G2 - INDEX STYLE BLOCK 4 */
 /* v94 · Web layout authority: Cartera 360 / Risk */
 #watchlistView.mode-portfolio,
