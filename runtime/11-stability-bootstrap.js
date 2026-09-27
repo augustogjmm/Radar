@@ -668,7 +668,7 @@ function radarCaptureDrillOrigin(){
 function radarClearDrillOrigin(){radarNavigationState.origin=null;radarSyncDrillNavigation()}
 function radarReturnToOrigin(fallback='home'){
  const route=radarNavigationState.origin||fallback||'home';radarNavigationState.origin=null;radarSyncDrillNavigation();
- const go={home:()=>showDashboardView(),scanner:()=>showScannerView(),rf:()=>showFixedIncomeScanner(),watchlist:()=>showWatchlistView(),portfolio:()=>showPortfolioView(),risk:()=>showPortfolioRiskView(),cedear:()=>window.RadarCedearRotationRuntime?.show?.(),allocator:()=>showAllocatorView(),advisor:()=>window.showAdvisorView?.(),lab:()=>showLabView(),signals:()=>showSignalsView()};
+ const go={home:()=>showDashboardView(),scanner:()=>showScannerView(),rf:()=>showFixedIncomeScanner(),watchlist:()=>showWatchlistView(),portfolio:()=>showPortfolioView(),risk:()=>showPortfolioRiskView(),signals:()=>showSignalsView()};
  (go[route]||go.home)();
 }
 window.radarCaptureDrillOrigin=radarCaptureDrillOrigin;window.radarClearDrillOrigin=radarClearDrillOrigin;window.radarReturnToOrigin=radarReturnToOrigin;window.radarNavigationState=radarNavigationState;
