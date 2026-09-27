@@ -1,22 +1,31 @@
-# Radar Técnico G2
+# Radar Técnico G2 · v5 web
 
-Aplicación web estática desplegada en Vercel con APIs serverless en el mismo repositorio.
+Radar es un producto personal de análisis de mercados y cartera. La versión web publicada se concentra en un flujo corto y auditable:
 
-## Estructura
+**Inicio → análisis individual → escáner RV/cripto → escáner renta fija → seguimiento → cartera/riesgo → historial.**
 
-- `index.html`: shell mínimo y puntos de montaje.
-- `styles/01-base.css`: estilos base heredados.
-- `styles/02-theme-compat.css`: compatibilidad visual y overrides históricos aún necesarios.
-- `styles/03-premium-authority.css`: lenguaje visual principal.
-- `styles/04-portfolio-layout.css`: layout específico de cartera/riesgo.
-- `styles/05-responsive.css`: autoridad final de responsive y estabilidad de tablas/grillas.
-- `runtime/`: JavaScript browser separado por responsabilidad y cargado en orden determinístico.
-- `web-compat.js`: persistencia/localStorage y guardrails de compatibilidad.
-- `api/`: endpoints serverless y proveedores de datos.
-- `vercel.json`: rewrites y configuración de despliegue.
+## Núcleo publicado
 
-## Regla de mantenimiento
+- Datos de mercado: Yahoo Finance, Binance, Open BYMADATA, DolarApi, ArgentinaDatos, BCRA, FRED/Treasury y CompararFondos.
+- Análisis técnico individual para acciones/ADRs, CEDEAR/acciones argentinas y cripto.
+- Escáner de renta variable/cripto.
+- Escáner y ficha de renta fija.
+- Seguimiento, cartera, riesgo, performance e historial de señales/decisiones.
+- Persistencia web local para configuración, cartera e historial cuando no existe backend persistente.
 
-No insertar bloques grandes de CSS o JavaScript en `index.html`. Los cambios visuales van a `styles/`; la lógica browser al módulo correspondiente de `runtime/`; datos y proveedores a `api/`.
+## Arquitectura web
 
-La rama `backup/pre-cleanup-2026-09-22` conserva el estado previo a esta refactorización.
+- `index.html`: shell mínimo.
+- `runtime/02-workspace-shells.js`: DOM del producto núcleo.
+- `runtime/03-browser-market.js`: dashboard, mercado y escáner RV.
+- `runtime/04-fixed-income-scanner.js`: renta fija.
+- `runtime/05-portfolio-runtime.js`: seguimiento, cartera, riesgo y QA núcleo.
+- `runtime/06-technical-core.js`: motor técnico y proveedores.
+- `runtime/07-asset-intelligence.js`: metadata del activo.
+- `runtime/08-portfolio-pro.js`: movimientos y analítica de cartera.
+- `runtime/11-stability-bootstrap.js`: bootstrap, salud y navegación.
+- `runtime/13-decision-intelligence.js`: Centro de Decisión.
+- `api/router.js` + `api/[...path].js`: backend serverless único.
+- `web-compat.js`: persistencia/fallbacks web.
+
+Los módulos experimentales de Asesor, Asignador, Rotación CEDEAR y Laboratorio no forman parte del producto publicado y no deben condicionar el QA del núcleo.

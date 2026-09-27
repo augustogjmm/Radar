@@ -1300,10 +1300,7 @@ function hideAllMainViews(preserveScanner=false){
  if($('dashboardView'))$('dashboardView').classList.remove('active');
  $('scannerView').classList.remove('active');
  $('watchlistView').classList.remove('active');
- if($('labView'))$('labView').classList.remove('active');
  if($('signalsView'))$('signalsView').classList.remove('active');
- if($('advisorView'))$('advisorView').classList.remove('active');
- if($('allocatorView'))$('allocatorView').classList.remove('active');
  $('rfScannerView').classList.remove('active');
  $('bondView').classList.remove('active');
 }

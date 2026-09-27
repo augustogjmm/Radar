@@ -782,34 +782,31 @@ function qaPureTransactionCalc(item){
 }
 function qaLocalChecks(){
  const tests=[],add=(name,state,detail,group='Local')=>tests.push({name,state,detail:String(detail||''),group});
- const required=['dashboardView','analysisView','watchlistView','scannerView','rfScannerView','labView','signalsView','helpOverlay','portfolio360Section','portfolioRiskSection','refreshWatchlistBtn','provenancePanel','toggleProvenanceBtn'];const missing=required.filter(id=>!$(id));add('DOM esencial',missing.length?'bad':'ok',missing.length?`Faltan: ${missing.join(', ')}`:`${required.length} componentes presentes`,'UI');
- const ownedIds=[...document.querySelectorAll('[id]')].filter(el=>!el.closest('.tv-lightweight-charts')&&!['tv-attr-logo','a'].includes(el.id)).map(x=>x.id),dup=[...new Set(ownedIds.filter((x,i)=>ownedIds.indexOf(x)!==i))];add('IDs únicos',dup.length?'bad':'ok',dup.length?`Duplicados Radar: ${dup.slice(0,8).join(', ')}`:'Sin IDs duplicados propios','UI');
- add('Selects legibles',getComputedStyle(document.querySelector('select')||document.body).color!=='rgba(0, 0, 0, 0)'?'ok':'warn','Modo oscuro forzado para select y option','UI');
- add('Resizer análisis',typeof scheduleAnalysisChartResize==='function'&&typeof resizeAnalysisCharts==='function'?'ok':'bad','ResizeObserver + resizeAnalysisCharts disponibles','UI');
- add('Data Quality colapsable',typeof setProvenanceExpanded==='function'&&!!$('toggleProvenanceBtn')&&!!$('provenancePanel')?'ok':'bad','Salud y procedencia colapsable/persistente','UI');
- add('Help Center',window.RadarHelpCenterUI?.VERSION==='9L'?'ok':'bad','9L external owner · F1/contextual/prev-next','UI');
- add('Asignador de Capital',typeof runCapitalAllocator==='function'&&typeof allocBuildProfile==='function'&&!!$('allocatorView')&&!!$('allocatorViewBtn')?'ok':'bad','Motor determinístico Conservadora / Moderada / Agresiva · IA OFF','Asignador');
- add('Asignador · seguridad',typeof allocatorSavePlan==='function'?'ok':'bad','Guardar plan usa localStorage y no crea BUY/SELL ni modifica la cartera','Asignador');
- const wl=Array.isArray(state.config?.watchlist)?state.config.watchlist:[];add('Configuración watchlist',Array.isArray(state.config?.watchlist)?'ok':'bad',`${wl.length} registro(s)`,'Config');
- const keys=new Map(),dups=[];for(const x of wl){const k=watchKey(x);if(keys.has(k))dups.push(k);keys.set(k,1)}add('Duplicados watchlist',dups.length?'warn':'ok',dups.length?`${[...new Set(dups)].slice(0,6).join(', ')}`:'Sin duplicados exactos','Config');
+ const required=['dashboardView','analysisView','watchlistView','scannerView','rfScannerView','signalsView','helpOverlay','portfolio360Section','portfolioRiskSection','refreshWatchlistBtn','provenancePanel','toggleProvenanceBtn'];
+ const missing=required.filter(id=>!$(id));
+ add('Interfaz núcleo',missing.length?'bad':'ok',missing.length?`Faltan: ${missing.join(', ')}`:`${required.length} componentes principales presentes`,'UI');
+ const ownedIds=[...document.querySelectorAll('[id]')].filter(el=>!el.closest('.tv-lightweight-charts')&&!['tv-attr-logo','a'].includes(el.id)).map(x=>x.id);
+ const dup=[...new Set(ownedIds.filter((x,i)=>ownedIds.indexOf(x)!==i))];
+ add('IDs únicos',dup.length?'bad':'ok',dup.length?`Duplicados Radar: ${dup.slice(0,8).join(', ')}`:'Sin IDs duplicados propios','UI');
+ add('Escáner RV / Cripto',typeof startScanner==='function'&&typeof scannerUniverseItems==='function'?'ok':'bad','Universo + históricos + análisis técnico','Motor');
+ add('Escáner renta fija',typeof startRfScanner==='function'&&typeof rfScannerUniverse==='function'?'ok':'bad','Bonos, Letras y ON','Motor');
+ add('Análisis individual',typeof loadAll==='function'&&typeof analyzeSeriesRuntime==='function'?'ok':'bad','Ficha técnica multi-mercado','Motor');
+ add('Data Quality',typeof setProvenanceExpanded==='function'&&!!$('toggleProvenanceBtn')&&!!$('provenancePanel')?'ok':'bad','Procedencia y frescura visibles','Datos');
+ add('Help Center',window.RadarHelpCenterUI?.VERSION==='9L'?'ok':'warn','Ayuda contextual del producto núcleo','UI');
+ const wl=Array.isArray(state.config?.watchlist)?state.config.watchlist:[];
+ add('Configuración',Array.isArray(state.config?.watchlist)?'ok':'bad',`${wl.length} activo(s) en seguimiento`,'Persistencia');
+ const keys=new Map(),dups=[];for(const x of wl){const k=watchKey(x);if(keys.has(k))dups.push(k);keys.set(k,1)}
+ add('Seguimiento sin duplicados',dups.length?'warn':'ok',dups.length?`${[...new Set(dups)].slice(0,6).join(', ')}`:'Sin duplicados exactos','Seguimiento');
  let invalidTx=0,mismatch=0,cryptoIncome=0,negative=0,positions=0,priced=0;
  for(const item of wl){const calc=qaPureTransactionCalc(item);invalidTx+=calc.invalid;if(calc.qty<0||calc.cost<0)negative++;if(item.type==='crypto'&&(item.transactions||[]).some(t=>['DIVIDEND','COUPON'].includes(String(t.type||'').toUpperCase())))cryptoIncome++;if(item.inPortfolio){positions++;if(Number.isFinite(currentWatchPrice(state.watchResults[watchKey(item)],item)))priced++}const dq=Math.abs((Number(item.quantity)||0)-calc.qty),dc=Math.abs((Number(item.positionSize)||0)-calc.cost);if((item.transactions||[]).length&&(dq>1e-7||dc>Math.max(.01,calc.cost*.000001)))mismatch++}
- add('Ledger válido',invalidTx||negative?'bad':'ok',invalidTx?`${invalidTx} movimiento(s) con tipo inválido`:negative?'Saldo negativo detectado':'Tipos y saldos válidos','Cartera');
- add('Consistencia cartera',mismatch?'warn':'ok',mismatch?`${mismatch} posición(es) no coinciden con su libro de movimientos`:'Tenencia/costo coinciden con movimientos','Cartera');
- add('Crypto sin dividendos',cryptoIncome?'bad':'ok',cryptoIncome?`${cryptoIncome} posición(es) crypto contienen dividendo/cupón`:'Regla correcta','Cartera');
- add('Cobertura precios',positions&&priced<positions?'warn':'ok',positions?`${priced}/${positions} posiciones con precio utilizable`:'Sin posiciones abiertas','Cartera');
- add('Refresh contextual',typeof refreshCurrentPortfolioContext==='function'?'ok':'bad',portfolioUiMode==='watchlist'?'Actualizar seguimiento':'Actualizar cartera','Cartera');
- add('Reducción / cierre',typeof openReducePosition==='function'&&typeof reductionQtyFromInputs==='function'?'ok':'bad','Control de tenencia disponible','Cartera');
- add('Cashflow elegible',typeof syncCashFlowType==='function'&&typeof addPortfolioIncome==='function'?'ok':'bad','Dividendos acciones / cupones RF; crypto excluida','Cartera');
- add('Portfolio G2 shadow',typeof g2PortfolioShadowSync==='function'&&typeof g2PortfolioParity==='function'?'ok':'bad',g2PortfolioShadowState?.updatedAt?(g2PortfolioShadowState.ok?`Paridad OK · rev ${g2PortfolioShadowState.revision}`:`Desvíos: ${g2PortfolioShadowState.issues?.length||0}`):'Bridge disponible; espera primera sincronización','Cartera');
- add('Portfolio G2 live',typeof g2PortfolioRefreshLive==='function'?'ok':'bad',g2PortfolioLiveState?.updatedAt?(g2PortfolioLiveState.ok?`Snapshot ${g2PortfolioLiveState.result?.snapshot?.dataStatus||'N/D'} · cobertura ${Number(g2PortfolioLiveState.result?.snapshot?.coveragePct||0).toFixed(0)}%`:`Fallback G1 · ${g2PortfolioLiveState.error||'sin detalle'}`):'Live valuation disponible; espera primera lectura','Cartera');
- add('Portfolio G2 dual-write',typeof g2PortfolioDualWriteTransaction==='function'?'ok':'bad',g2PortfolioDualWriteState?.updatedAt?(g2PortfolioDualWriteState.ok?`Última TX ${g2PortfolioDualWriteState.transactionId} · rev ${g2PortfolioDualWriteState.revision}`:`Pendiente/reintento · ${g2PortfolioDualWriteState.error||''}`):'G1 sigue autoritativo; operaciones nuevas pueden replicarse a G2','Cartera');
- add('Portfolio autoridad',typeof g2PortfolioTransitionAuthority==='function'?'ok':'bad',`Modo ${g2PortfolioAuthorityMode()} · ${g2PortfolioAuthorityMode()==='G2_FIRST'?'G2 source of truth; G1 mirror':'G1 source of truth; G2 shadow'}`,'Cartera');
- add('Benchmark',typeof refreshPortfolioPerformance==='function'&&typeof choosePortfolioBenchmark==='function'?'ok':'bad','Motor y fallback inicial disponibles','Performance');
- add('Stress Test',typeof runStressScenario==='function'&&typeof STRESS_SCENARIOS==='object'?'ok':'bad',`${Object.keys(STRESS_SCENARIOS||{}).length} escenarios configurados`,'Performance');
- add('Inteligencia de Riesgo',typeof refreshPortfolioRisk==='function'&&typeof correlationDiversificationPenalty==='function'?'ok':'bad','Correlación + contribución al riesgo','Performance');
- add('Backup / restore',typeof exportRadarBackup==='function'&&typeof restoreRadarBackup==='function'?'ok':'bad','Persistencia y migración','Persistencia');
- add('Monitor',typeof applyMonitorMode==='function'&&['OFF','RADAR','24X7'].includes(state.config?.monitorMode||'RADAR')?'ok':'bad',`Modo ${state.config?.monitorMode||'RADAR'}`,'Monitor');
+ add('Libro de cartera',invalidTx||negative?'bad':'ok',invalidTx?`${invalidTx} movimiento(s) inválido(s)`:negative?'Saldo negativo detectado':'Movimientos y saldos válidos','Cartera');
+ add('Consistencia cartera',mismatch?'warn':'ok',mismatch?`${mismatch} posición(es) no coinciden con movimientos`:'Tenencia y costo consistentes','Cartera');
+ add('Reglas por activo',cryptoIncome?'bad':'ok',cryptoIncome?`${cryptoIncome} posición(es) crypto con dividendo/cupón`:'Clases de activo coherentes','Cartera');
+ add('Cobertura de precios',positions&&priced<positions?'warn':'ok',positions?`${priced}/${positions} posiciones con precio utilizable`:'Sin posiciones abiertas','Cartera');
+ add('Gestión de posiciones',typeof openReducePosition==='function'&&typeof reductionQtyFromInputs==='function'?'ok':'bad','Alta, reducción y cierre disponibles','Cartera');
+ add('Riesgo y performance',typeof refreshPortfolioRisk==='function'&&typeof refreshPortfolioPerformance==='function'?'ok':'bad','Riesgo, benchmark y rendimiento','Cartera');
+ add('Stress Test',typeof runStressScenario==='function'&&typeof STRESS_SCENARIOS==='object'?'ok':'warn',`${Object.keys(STRESS_SCENARIOS||{}).length} escenarios`,'Cartera');
+ add('Backup / restore',typeof exportRadarBackup==='function'&&typeof restoreRadarBackup==='function'?'ok':'warn','Respaldo de configuración y cartera','Persistencia');
  add('Treasury 2Y retirado',MARKET_ASSETS.some(a=>a.id==='ust2y'||/Treasury 2Y/i.test(a.name||''))?'bad':'ok','No debe reaparecer','Mercados');
  return tests;
 }

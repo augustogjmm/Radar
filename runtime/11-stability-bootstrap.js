@@ -591,22 +591,6 @@ window.RadarScannerWorkspaceUI?.bind({
  },
  rfCurrencyChanged:()=>{rearmRfScanner('Moneda modificada. Presioná Escanear para actualizar.');$('rfUniverseInfo').textContent='Moneda modificada. Presioná Escanear para actualizar.'}
 });
-window.RadarLabHistoryUI?.bind({
- showLab:showLabView,
- showSignals:showSignalsView,
- showDashboard:showDashboardView,
- runReplay:runLabReplay,
- runBacktest:runLabBacktest,
- exportLab:exportLabCsv,
- generateModelProposal,
- applyModelProposal,
- resetModelWeights,
- auditSignals:auditAllSignals,
- exportSignals:exportSignalCsv,
- clearSignals:clearSignalHistory,
- renderSignals:renderSignalHistory,
- exportDecisionAudit
-});
 window.RadarFixedIncomeAllocatorUI?.bindBond({back:()=>radarReturnToOrigin('rf'),scenario:calculateBondScenario,addWatch:addCurrentBondToWatchlist,addPortfolio:()=>{if(bondState.symbol&&bondState.type)openQuickPortfolio(bondState.symbol,bondState.type,'medium','Ficha de renta fija')},reducePortfolio:()=>{if(bondState.symbol&&bondState.type)openPortfolioReduction(bondState.symbol,bondState.type,'medium',false)},closePortfolio:()=>{if(bondState.symbol&&bondState.type)openPortfolioReduction(bondState.symbol,bondState.type,'medium',true)}});
 window.RadarPortfolioWorkspaceUI?.bind({
  showWatchlist:showWatchlistView,
@@ -645,7 +629,7 @@ window.addEventListener('orientationchange',()=>scheduleAnalysisChartResize(180)
 const RADAR_ROUTE_LABELS=Object.freeze({home:'Inicio',scanner:'Escáner',rf:'Renta fija',watchlist:'Seguimiento',portfolio:'Cartera',risk:'Riesgo',signals:'Historial'});
 const radarNavigationState={current:'home',origin:null};
 function radarRouteFromView(activeId,title){
- const byId={homeViewBtn:'home',scannerViewBtn:'scanner',fixedIncomeBtn:'rf',watchlistViewBtn:'watchlist',portfolioViewBtn:'portfolio',cedearRotationViewBtn:'cedear',allocatorViewBtn:'allocator',advisorViewBtn:'advisor',labViewBtn:'lab',signalsViewBtn:'signals'};
+ const byId={homeViewBtn:'home',scannerViewBtn:'scanner',fixedIncomeBtn:'rf',watchlistViewBtn:'watchlist',portfolioViewBtn:'portfolio',signalsViewBtn:'signals'};
  if(activeId&&byId[activeId]){
   if(activeId==='portfolioViewBtn'&&title==='Riesgo & Performance')return'risk';
   if(activeId==='fixedIncomeBtn'&&title==='Renta fija · detalle')return'bond';

@@ -545,107 +545,12 @@
       </div>
     </div>
   </div>`;
-  const ALLOCATOR_HTML=`  <div id="allocatorView" class="allocator-view">
-    <div class="alloc-toolbar">
-      <div>
-        <h2>Asignador de cartera</h2>
-        <p>Podés asignar capital de forma independiente o para un cliente ya definido en Asesor. En modo cliente, Radar toma su perfil, mandato, monedas, plazos, límites y cartera actual para decidir cómo incorporar el capital nuevo sin desarmar innecesariamente las tenencias existentes. Las propuestas Conservadora, Moderada y Agresiva siempre respetan los límites duros del cliente.</p>
-      </div>
-      <span class="alloc-engine-badge"><i></i>MOTOR DETERMINÍSTICO · IA DESACTIVADA</span>
-    </div>
-
-    <div class="card alloc-config">
-      <div class="alloc-config-title"><div><h3>Capital y restricciones</h3><div class="sub">El objetivo es asignar el 100% del capital. Los límites de riesgo y concentración siguen siendo máximos y nunca se vulneran para completar la cartera.</div></div><button class="context-help" data-open-help="allocator" title="Ayuda del Asignador">?</button></div>
-      <div class="alloc-config-grid">
-        <div class="alloc-field"><label>MODO DE ASIGNACIÓN</label><select id="allocatorAssignmentMode"><option value="standalone" selected>Capital independiente</option><option value="client">Cliente existente</option></select></div>
-        <div class="alloc-field alloc-client-field"><label>CLIENTE</label><select id="allocatorClientSelect" disabled><option value="">Elegí un cliente</option></select></div>
-        <div id="allocatorClientContext" class="alloc-client-context"><b>Asignación independiente</b><span>Usa las restricciones cargadas manualmente en esta pantalla.</span></div>
-        <div class="alloc-field"><label>CAPITAL EN PESOS · ARS</label><input id="allocatorArs" type="number" min="0" step="any" value="0" placeholder="Ej: 20000000"></div>
-        <div class="alloc-field"><label>CAPITAL EN DÓLARES · USD</label><input id="allocatorUsd" type="number" min="0" step="any" value="0" placeholder="Ej: 10000"></div>
-        <div class="alloc-field"><label>CAPITAL EN USDT</label><input id="allocatorUsdt" type="number" min="0" step="any" value="0" placeholder="Ej: 5000"></div>
-        <div class="alloc-field"><label>MONEDA BASE DE CARTERA</label><select id="allocatorBaseCurrency"><option value="auto" selected>Auto según capital</option><option value="USD">USD</option><option value="ARS">ARS</option></select></div>
-        <div class="alloc-field"><label>TIPO DE BÚSQUEDA</label><select id="allocatorSearchUniverse"><option value="mixed" selected>Mixto</option><option value="variable">Renta variable</option><option value="fixed">Renta fija</option></select></div>
-        <div class="alloc-field"><label>HORIZONTE</label><select id="allocatorHorizon"><option value="all">Indiferente / mejor oportunidad</option><option value="short">Corto</option><option value="medium" selected>Medio</option><option value="long">Largo</option></select></div>
-                <div class="alloc-field"><label>MÁXIMO CRIPTO % · 0 = NO ASIGNAR</label><input id="allocatorMaxCrypto" type="number" min="0" max="80" step="1" value="20"></div>
-        <div class="alloc-field"><label>MÁXIMO EXPOSICIÓN ARGENTINA % · 0 = NO ASIGNAR</label><input id="allocatorMaxArgentina" type="number" min="0" max="100" step="1" value="65"></div>
-        <div class="alloc-field"><label>CAMBIO DE MONEDA</label><label class="alloc-check"><input id="allocatorAllowFx" type="checkbox" checked> Permitir ARS ↔ USD/USDT usando MEP</label></div>
-        <div class="alloc-field"><label>CARTERA ACTUAL</label><label class="alloc-check"><input id="allocatorUsePortfolio" type="checkbox" checked> Considerar posiciones existentes al diversificar</label></div>
-        <div class="alloc-help"><b>Modo cliente:</b> hereda del Asesor las clases de activos, monedas, plazo, riesgo máximo, límites por posición/sector/cripto y la cartera vinculada. El capital ingresado acá es <b>capital nuevo</b>: las tres propuestas lo distribuyen considerando la cartera actual para evitar concentraciones y corregir desbalances gradualmente. No vende ni modifica automáticamente tenencias existentes. <b>Oportunidad ≠ Entrada ≠ Encaje de cartera.</b></div>
-      </div>
-      <div class="alloc-actions">
-        <button id="allocatorRunBtn" class="alloc-run" type="button">Buscar mejores oportunidades</button>
-        <button id="allocatorStopBtn" class="alloc-stop secondary-action" disabled>Detener</button>
-        <span id="allocatorConfigNote" class="sub">Todavía no se ejecutó el optimizador.</span>
-      </div>
-    </div>
-
-    <div class="alloc-summary">
-      <div class="card alloc-kpi"><small>CAPITAL NUEVO EQUIVALENTE</small><b id="allocCapitalEq">—</b><span id="allocCapitalBreakdown">ARS + USD + USDT</span></div>
-      <div class="card alloc-kpi"><small>MEP UTILIZADO</small><b id="allocMep">—</b><span id="allocMepSource">Se usa sólo si hace falta convertir.</span></div>
-      <div class="card alloc-kpi"><small>CARTERA ACTUAL CONSIDERADA</small><b id="allocExisting">—</b><span id="allocExistingSub">Según configuración.</span></div>
-      <div class="card alloc-kpi"><small>ESTADO DEL MOTOR</small><b id="allocEngineState">LISTO</b><span id="allocEngineSub">IA desactivada · reglas auditables.</span></div>
-    </div>
-
-    <div class="card alloc-progress">
-      <div class="alloc-progress-head"><b id="allocProgressText">Listo para buscar.</b><span id="allocProgressCount">0%</span></div>
-      <div class="alloc-progress-track"><i id="allocProgressBar"></i></div>
-      <div class="alloc-stage-row"><span class="alloc-stage" data-alloc-stage="macro">Contexto / MEP</span><span class="alloc-stage" data-alloc-stage="arg">Argentina</span><span class="alloc-stage" data-alloc-stage="cedear">CEDEAR</span><span class="alloc-stage" data-alloc-stage="usa">USA c/CEDEAR</span><span class="alloc-stage" data-alloc-stage="adr">ADRs ARG</span><span class="alloc-stage" data-alloc-stage="crypto">Cripto</span><span class="alloc-stage" data-alloc-stage="rf">Renta fija</span><span class="alloc-stage" data-alloc-stage="opt">Optimización</span></div>
-    </div>
-
-    <div class="alloc-diagnostics">
-      <div class="card alloc-diag"><small>ACTIVOS REVISADOS</small><b id="allocReviewed">0</b><span>Universo procesado</span></div>
-      <div class="card alloc-diag"><small>CANDIDATOS VÁLIDOS</small><b id="allocCandidates">0</b><span>Oportunidad + datos suficientes</span></div>
-      <div class="card alloc-diag"><small>RENTA VARIABLE</small><b id="allocRvCandidates">0</b><span>ARG + CEDEAR + USA</span></div>
-      <div class="card alloc-diag"><small>RENTA FIJA</small><b id="allocRfCandidates">0</b><span>Datos completos</span></div>
-      <div class="card alloc-diag"><small>CRIPTO</small><b id="allocCryptoCandidates">0</b><span>Top 100 de Binance</span></div>
-      <div class="card alloc-diag"><small>CONTROL DEL MOTOR</small><b id="allocV93Tests">—</b><span>Pruebas determinísticas</span></div>
-    </div>
-
-    <details id="g2OpportunityPanel" class="card g2-opportunity-panel alloc-evidence">
-      <summary><span><b>Detalle del universo evaluado</b><small>Auditoría opcional de candidatos y calidad de datos. No hace falta abrirla para usar el Asignador.</small></span><span id="g2OpportunityStatus" class="g2-opportunity-status">No evaluado</span></summary>
-      <div class="alloc-evidence-body">
-        <div class="g2-opportunity-head"><div><h3>Candidatos revisados</h3><div class="sub">Muestra cómo quedó el universo después de los controles de datos, riesgo y entrada.</div></div><div><button id="g2OpportunityDiscoverBtn" class="secondary-action" type="button">Ampliar escaneo</button><button id="g2OpportunityCancelBtn" class="secondary-action" type="button" style="display:none">Cancelar</button></div></div>
-        <div id="g2OpportunityRows" class="g2-opportunity-list"><div class="alloc-empty">Al buscar mejores oportunidades, Radar completa este detalle automáticamente.</div></div>
-        <div id="g2OpportunityDiscoveryNote" class="g2-opportunity-note">El puntaje ordena candidatos para revisión interna; no representa probabilidad de ganancia ni retorno esperado.</div>
-      </div>
-    </details>
-
-    <div id="allocRecommendation" class="card alloc-recommend">
-      <div><small>PERFIL CON MEJOR ENCAJE EN ESTA SIMULACIÓN</small><h3 id="allocRecommendedTitle">—</h3><p id="allocRecommendedWhy">—</p></div><div><span class="alloc-recommend-score-label">MÉRITO INTERNO</span><div id="allocRecommendedScore" class="alloc-recommend-score">—</div></div>
-    </div>
-
-    <section id="allocatorClientReport" class="card alloc-client-report is-disabled" aria-live="polite">
-      <div class="alloc-report-toolbar">
-        <div class="alloc-report-title">
-          <span class="alloc-report-icon">▤</span>
-          <div><h3>Informe comercial de cartera</h3><p>Presentación ejecutiva, trazable y lista para el cliente. No modifica la asignación calculada.</p></div>
-        </div>
-        <div class="alloc-report-controls">
-          <label>PERFIL A PRESENTAR<select id="allocatorReportProfile" disabled><option value="">Calculá una propuesta</option></select></label>
-          <span id="allocatorReportState" class="alloc-report-state">SIN PROPUESTA</span>
-        </div>
-      </div>
-      <div class="alloc-report-actions">
-        <button id="allocatorGenerateReportBtn" class="alloc-report-primary" type="button" disabled><span>▤</span><b>Generar informe comercial</b><small>Informe listo para el cliente</small></button>
-        <button id="allocatorExportExcelBtn" class="alloc-report-action" type="button" disabled><span>▦</span>Exportar Excel</button>
-        <button id="allocatorExportPdfBtn" class="alloc-report-action" type="button" disabled><span>PDF</span>Exportar PDF</button>
-        <button id="allocatorBrochureBtn" class="alloc-report-action" type="button" disabled><span>◫</span>Brochure de marketing</button>
-      </div>
-      <div id="allocatorReportPreview" class="alloc-report-preview">
-        <div class="alloc-report-empty"><b>Vista previa del informe</b><span>Primero calculá el Asignador. Después elegí Conservadora, Moderada o Agresiva y generá la presentación.</span></div>
-      </div>
-    </section>
-
-    <div id="allocatorProfiles" class="alloc-profiles"><div class="card alloc-empty">Cargá tu capital y ejecutá <b>Buscar mejores oportunidades</b>. Radar no utiliza IA para construir estas propuestas.</div></div>
-  </div>`;
   function mount(){
     const bondHost=document.getElementById('fixedIncomeDetailMount');
     if(bondHost&&!document.getElementById('bondView'))bondHost.outerHTML=BOND_HTML;
-    const allocatorHost=document.getElementById('allocatorWorkspaceMount');
-    if(allocatorHost&&!document.getElementById('allocatorView'))allocatorHost.outerHTML=ALLOCATOR_HTML;
-    return {bond:document.getElementById('bondView'),allocator:document.getElementById('allocatorView')};
+    return document.getElementById('bondView');
   }
-  let bondBound=false,allocatorBound=false;
+  let bondBound=false;
   function bindBond(handlers={}){
     if(bondBound)return false;
     const on=(id,event,fn)=>{const el=document.getElementById(id);if(el&&typeof fn==='function')(window.radarBindAction?window.radarBindAction(el,event,fn,{key:id}):el.addEventListener(event,fn))};
@@ -657,25 +562,8 @@
     on('bondClosePortfolioBtn','click',handlers.closePortfolio);
     bondBound=true;return true;
   }
-  function bindAllocator(handlers={}){
-    if(allocatorBound)return false;
-    const on=(id,event,fn)=>{const el=document.getElementById(id);if(el&&typeof fn==='function')(window.radarBindAction?window.radarBindAction(el,event,fn,{key:id}):el.addEventListener(event,fn))};
-    on('allocatorViewBtn','click',handlers.show);
-    on('allocatorRunBtn','click',handlers.run);
-    on('allocatorStopBtn','click',handlers.stop);
-    for(const id of ['allocatorAssignmentMode','allocatorClientSelect','allocatorArs','allocatorUsd','allocatorUsdt','allocatorSearchUniverse','allocatorHorizon','allocatorMaxCrypto','allocatorMaxArgentina','allocatorAllowFx','allocatorUsePortfolio','allocatorBaseCurrency'])on(id,'change',handlers.configChanged);
-    on('g2OpportunityDiscoverBtn','click',handlers.discoverG2);
-    on('g2OpportunityCancelBtn','click',handlers.cancelG2);
-    on('allocatorReportProfile','change',handlers.reportProfileChanged);
-    on('allocatorGenerateReportBtn','click',handlers.generateReport);
-    on('allocatorExportExcelBtn','click',handlers.exportExcel);
-    on('allocatorExportPdfBtn','click',handlers.exportPdf);
-    on('allocatorBrochureBtn','click',handlers.brochure);
-    const reportPreview=document.getElementById('allocatorReportPreview');
-    if(reportPreview&&typeof handlers.shareReport==='function')reportPreview.addEventListener('click',e=>{const btn=e.target?.closest?.('[data-allocator-share-report]');if(btn&&!btn.disabled){const run=window.radarGuardAction?window.radarGuardAction(handlers.shareReport,{key:'allocatorShareReportBtn',control:btn}):handlers.shareReport;return run(e)}});
-    allocatorBound=true;return true;
-  }
-  window.RadarFixedIncomeAllocatorUI=Object.freeze({VERSION,version:VERSION,mount,bindBond,bindAllocator});
+  window.RadarFixedIncomeUI=Object.freeze({VERSION,version:VERSION,mount,bindBond});
+  window.RadarFixedIncomeAllocatorUI=window.RadarFixedIncomeUI;
   mount();
 })();
 
@@ -718,104 +606,6 @@
   }
   window.RadarScannerWorkspaceUI=Object.freeze({version:VERSION,mount,bind});
   mount();
-})();
-
-;
-
-/* ===== RUNTIME BLOCK 10 ===== */
-(()=>{
-'use strict';
-const VERSION='RC20.13_LIQUIDITY_BLACKLIST';
-const HTML=String.raw`<section id="cedearRotationView" class="cedear-rotation-view">
-  <div class="cedar-hero">
-    <div><div class="cedar-eyebrow">ADMINISTRACIÓN ACTIVA EN DÓLARES</div><h2>Cartera USD / Rotación CEDEARs</h2><p>Escaneá el universo CEDEAR, operá sólo instrumentos con liquidez suficiente, separá calidad de activo de timing de entrada y rotá capital únicamente hacia alternativas superiores y ejecutables.</p></div>
-    <div class="cedar-hero-actions"><button id="cedarRefreshBtn">Actualizar todo</button><button id="cedarImportBtn" class="secondary-action">Importar CEDEARs de Cartera</button></div>
-  </div>
-  <div id="cedarSourceStatus" class="cedar-source-status">Sin actualizar. Radar no genera órdenes.</div><div id="cedarUniverseDiag" class="cedar-source-status cedar-universe-diag">Universo todavía no evaluado.</div>
-  <section class="cedar-intelligence-strip" aria-label="Inteligencia de cartera"><div><small>Universo detectado</small><b id="cedarIntelUniverse">0</b></div><div><small>Elegibles A/B</small><b id="cedarIntelEligible">0</b></div><div><small>Comprar ahora</small><b id="cedarIntelExecutable">0</b></div><div><small>Esperar confirmación</small><b id="cedarIntelConfirm">0</b></div><div><small>Rotar ahora</small><b id="cedarIntelRotate">0</b></div><div><small>Preparar rotación</small><b id="cedarIntelPrepare">0</b></div><div><small>Blacklist</small><b id="cedarIntelBlacklist">0</b></div></section>
-  <section id="cedarProgressPanel" class="cedar-progress-panel idle" aria-live="polite" aria-busy="false">
-    <div class="cedar-progress-head"><span id="cedarProgressSpinner" class="cedar-progress-spinner" aria-hidden="true"></span><div class="cedar-progress-copy"><b id="cedarProgressTitle">Listo para analizar</b><small id="cedarProgressDetail">Temporalidades auditadas: semanal (macro) + diaria (estructura/timing) + 4H como confirmación secundaria.</small></div><b id="cedarProgressPct" class="cedar-progress-pct">0%</b></div>
-    <div class="cedar-progress-track" aria-hidden="true"><span id="cedarProgressFill"></span></div>
-    <div class="cedar-progress-steps">
-      <span id="cedarProgressStepSources">1 · Fuentes / CCL</span><span id="cedarProgressStepUniverse">2 · Universo BYMA</span><span id="cedarProgressStepLiquidity">3 · Liquidez / Tier</span><span id="cedarProgressStepDaily">4 · Diario</span><span id="cedarProgressStepWeekly">5 · Semanal</span><span id="cedarProgressStepFundamental">6 · Fundamentales / Score</span><span id="cedarProgressStepPositions">7 · Cartera / Alertas</span>
-    </div>
-    <div class="cedar-progress-counts"><span>Diario <b id="cedarProgressDailyCount">0/0</b></span><span>Semanal <b id="cedarProgressWeeklyCount">0/0</b></span><span>Fundamentales / score <b id="cedarProgressFundCount">0/0</b></span><span>Incidencias <b id="cedarProgressFailCount">0</b></span></div>
-  </section>
-  <div class="cedar-kpis">
-    <div><small>Capital inicial USD</small><b id="cedarKpiInitial">—</b></div><div><small>USD realizables ahora</small><b id="cedarKpiCurrent">—</b></div>
-    <div><small>Ganancia USD acumulada</small><b id="cedarKpiGain">—</b></div><div><small>Rentabilidad USD</small><b id="cedarKpiUsdPct">—</b></div>
-    <div><small>Rentabilidad ARS</small><b id="cedarKpiArsPct">—</b></div><div><small>CCL actual</small><b id="cedarKpiCcl">—</b></div>
-    <div><small>Posiciones</small><b id="cedarKpiPositions">0</b></div><div><small>Capital invertido</small><b id="cedarKpiInvested">—</b></div>
-    <div><small>Capital disponible</small><b id="cedarKpiCash">—</b></div><div><small>Profit materializable</small><b id="cedarKpiProfit">—</b></div>
-    <div><small>Alertas activas</small><b id="cedarKpiAlerts">0</b></div>
-  </div>
-  <div class="cedar-grid cedar-config-grid">
-    <article class="cedar-card"><h3>Parámetros de gestión USD</h3><div class="cedar-form-grid">
-      <label>Hurdle mínimo %<input id="cedarHurdle" type="number" step="0.1" min="0"></label><label>Potencial / caída a soporte mín.<input id="cedarMinPotentialDownside" type="number" step="0.1" min="0"></label>
-      <label>Delta score rotación mín.<input id="cedarRotationDelta" type="number" step="1" min="0"></label><label>Ventaja neta rotación mín. %<input id="cedarRotationNetEdge" type="number" step="0.1" min="0"></label>
-      <label>Persistencia mínima (ciclos)<input id="cedarRotationPersistence" type="number" step="1" min="1" max="10"></label><label>Capital disponible USD<input id="cedarCashUsd" type="number" step="0.01" min="0"></label>
-      <label>CORE %<input id="cedarCorePct" type="number" step="1" min="0" max="100"></label><label>TACTICAL %<input id="cedarTacticalPct" type="number" step="1" min="0" max="100"></label>
-      <label>Percentil mínimo ADTV20<input id="cedarMinAdtvPercentile" type="number" step="1" min="0" max="100"></label><label>Persistencia volumen mínima %<input id="cedarMinLiquidityPersistence" type="number" step="1" min="0" max="100"></label><label>Spread máximo %<input id="cedarMaxSpreadPct" type="number" step="0.1" min="0"></label><label class="cedar-check-label"><span>Monitor inteligente</span><input id="cedarAutoMonitor" type="checkbox"></label><label>Refresco universo (min)<input id="cedarMonitorMinutes" type="number" step="15" min="15" max="240"></label>
-    </div><div class="cedar-form-actions"><button id="cedarSaveSettingsBtn" class="secondary-action">Guardar parámetros</button><span id="cedarEffectiveHurdle"></span><span>La cartera no usa stop-loss automático. El riesgo técnico se mide contra soportes estructurales y costo de oportunidad.</span></div></article>
-    <article class="cedar-card"><h3>Registrar posición</h3><div class="cedar-form-grid compact">
-      <label>CEDEAR<input id="cedarPosSymbol" placeholder="VIST"></label><label>Subyacente USD<input id="cedarPosUnderlying" placeholder="VIST"></label><label>Cantidad<input id="cedarPosQty" type="number" step="any" min="0"></label>
-      <label>Compra ARS<input id="cedarPosEntryArs" type="number" step="any" min="0"></label><label>Subyacente entrada USD<input id="cedarPosEntryUsd" type="number" step="any" min="0"></label><label>CCL entrada<input id="cedarPosEntryCcl" type="number" step="any" min="0"></label>
-      <label>USD invertidos<input id="cedarPosUsdInvested" type="number" step="any" min="0" placeholder="Opcional si hay CCL"></label><label>Ratio CEDEAR<input id="cedarPosRatio" type="number" step="any" min="0" placeholder="Opcional"></label><label>CORE / Tactical<select id="cedarPosBucket"><option>CORE</option><option>TACTICAL</option></select></label>
-    </div><div class="cedar-form-actions"><button id="cedarAddPositionBtn">Guardar posición</button><span>Los datos históricos de entrada nunca se reconstruyen desde el costo si faltan.</span></div></article>
-  </div>
-  <article class="cedar-card cedar-blacklist-card"><div class="cedar-section-head"><div><h3>Universo operativo / Blacklist</h3><p>El filtro de liquidez es duro: un CEDEAR ilíquido no puede entrar ni ser destino de rotación. La blacklist sirve para excluir manualmente tesis que no querés que Radar siga priorizando; si ya está en cartera, se sigue monitoreando pero no se aumenta.</p></div></div><div class="cedar-blacklist-add"><label>CEDEAR<input id="cedarBlacklistSymbol" placeholder="NKE"></label><label>Motivo<input id="cedarBlacklistReason" placeholder="Tesis débil / no priorizar"></label><label>Duración<select id="cedarBlacklistDuration"><option value="30">30 días</option><option value="90" selected>90 días</option><option value="180">180 días</option><option value="PERM">Permanente</option></select></label><button id="cedarBlacklistAddBtn" class="secondary-action">Agregar a blacklist</button></div><div id="cedarBlacklistList" class="cedar-blacklist-list"><div class="cedar-empty">Blacklist vacía.</div></div></article>
-  <article class="cedar-card"><div class="cedar-section-head"><div><h3>Posiciones · USD realizables</h3><p>El PnL USD usa venta efectiva estimada del CEDEAR, costos de salida y recompra de USD por CCL.</p></div></div><div class="cedar-table-wrap"><table class="cedar-table positions"><thead><tr><th>CEDEAR</th><th>Sector</th><th>Tier</th><th>Cant.</th><th>Compra ARS</th><th>Actual ARS</th><th>PnL ARS</th><th>USD realizables</th><th>PnL USD real</th><th>Score activo</th><th>Costo oportunidad</th><th>Estado cartera</th><th>Mejor alternativa</th><th>Ventaja neta</th><th>Decisión / acción</th><th>Alarma</th></tr></thead><tbody id="cedarPositionsBody"><tr><td colspan="16" class="cedar-empty">Sin posiciones registradas.</td></tr></tbody></table></div></article>
-  <article class="cedar-card"><div class="cedar-section-head"><div><h3>Mejores oportunidades ahora</h3><p>Radar evalúa el universo CEDEAR completo por liquidez histórica y Tier. Sólo los operables A/B pasan a técnica y fundamentales; la blacklist se omite antes del análisis costoso. Score de activo/cartera y score operativo/entrada se muestran separados; COMPRAR AHORA sólo existe con plan LONG operable.</p></div><div class="cedar-opportunity-tools"><button id="cedarWatchAllBtn" class="secondary-action">Sumar todo a Seguimiento</button><div class="cedar-filter-row"><select id="cedarTierFilter"><option value="AB">Tier A+B</option><option value="A">Tier A</option><option value="B">Tier B</option></select><select id="cedarStateFilter"><option value="ALL">Todos los estados</option><option value="BUY">Comprar ahora</option><option value="ENTRY_ZONE">Zona de entrada</option><option value="WAIT_CONFIRMATION">Esperar confirmación</option><option value="WAIT">Esperar</option><option value="WATCHLIST">Seguimiento</option></select><select id="cedarBucketFilter"><option value="ALL">Core + Tactical</option><option value="CORE">Core</option><option value="TACTICAL">Tactical</option><option value="PENDIENTE">Sin clasificar</option></select><select id="cedarEligibilityFilter"><option value="OPERABLE">Sólo operables</option><option value="NON_OPERABLE">Posiciones no operables</option><option value="ALL">Todos los analizados</option></select><select id="cedarSort"><option value="EFFICIENCY">Mayor eficiencia total</option><option value="SCORE">Mayor score activo</option><option value="ENTRY">Mejor score entrada</option><option value="UPSIDE">Máximo upside</option><option value="STRUCTURAL">Mejor potencial / caída</option><option value="LIQUIDITY">Mayor liquidez</option><option value="DRAWDOWN">Mayor caída desde máximos</option><option value="ACCELERATION">Mayor aceleración de volumen</option></select><input id="cedarSectorFilter" placeholder="Filtrar sector"></div></div></div><div class="cedar-table-wrap"><table class="cedar-table"><thead><tr><th>CEDEAR</th><th>Subyacente</th><th>Sector</th><th>Tier</th><th>Liquidez</th><th>ADTV 20</th><th>Score activo / cartera</th><th>Score operativo / entrada</th><th>Eficiencia</th><th>Cobertura</th><th>Potencial / caída</th><th>Estado</th><th>Motivo</th><th></th></tr></thead><tbody id="cedarOpportunitiesBody"><tr><td colspan="14" class="cedar-empty">Presioná Actualizar todo.</td></tr></tbody></table></div></article>
-  <div class="cedar-grid">
-    <article class="cedar-card"><h3>Alarmas tempranas</h3><div id="cedarAlertsList" class="cedar-alert-list"><div class="cedar-empty">Sin alertas calculadas.</div></div></article>
-    <article class="cedar-card"><h3>Detalle / auditoría de score</h3><div id="cedarAssetDetail" class="cedar-detail"><div class="cedar-empty">Abrí una oportunidad o posición para ver componentes, técnica, CCL y decisión.</div></div></article>
-  </div>
-  <article class="cedar-card"><h3>Simular rotación</h3><div class="cedar-form-grid simulator"><label>Posición a reducir<select id="cedarSimSource"><option value="">Seleccionar</option></select></label><label>Vender %<input id="cedarSimSellPct" type="number" min="0" max="100" value="40"></label><label>Destino 1<input id="cedarSimDest1" placeholder="GOOGL"></label><label>Peso 1 %<input id="cedarSimWeight1" type="number" value="60"></label><label>Destino 2<input id="cedarSimDest2" placeholder="JPM"></label><label>Peso 2 %<input id="cedarSimWeight2" type="number" value="40"></label></div><div class="cedar-form-actions"><button id="cedarSimulateBtn">Simular rotación</button><span>No ejecuta operaciones reales.</span></div><div id="cedarSimulationResult" class="cedar-simulation"><div class="cedar-empty">Sin simulación.</div></div></article>
-  <article class="cedar-card"><div class="cedar-section-head"><div><h3>Histórico de decisiones</h3><p>Compras, alertas, materializaciones y rotaciones quedan trazables para evaluar si agregaron USD frente a mantener.</p></div><button id="cedarExportHistoryBtn" class="secondary-action">Exportar CSV</button></div><div id="cedarHistoryMetrics" class="cedar-history-metrics"></div><div class="cedar-table-wrap"><table class="cedar-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Activo</th><th>USD</th><th>Score</th><th>Motivo</th></tr></thead><tbody id="cedarHistoryBody"><tr><td colspan="6" class="cedar-empty">Sin decisiones registradas.</td></tr></tbody></table></div></article>
-</section>`;
-function mount(){const host=document.getElementById('cedearRotationWorkspaceMount');if(host)host.outerHTML=HTML}
-function on(id,ev,fn){const el=document.getElementById(id);if(!el||typeof fn!=='function')return;const key=`cedarBound${ev}${id}`;if(el.dataset[key])return;if(window.radarBindAction)window.radarBindAction(el,ev,fn,{key:id});else el.addEventListener(ev,fn);el.dataset[key]='1'}
-function bind(api={}){
- on('cedarRefreshBtn','click',api.refresh);on('cedarImportBtn','click',api.importPortfolio);on('cedarWatchAllBtn','click',api.sendAllToWatchlist);on('cedarSaveSettingsBtn','click',api.saveSettings);on('cedarAddPositionBtn','click',api.addPosition);on('cedarSimulateBtn','click',api.simulate);on('cedarExportHistoryBtn','click',api.exportHistory);on('cedarBlacklistAddBtn','click',api.addToBlacklist);
- for(const id of ['cedarTierFilter','cedarStateFilter','cedarBucketFilter','cedarEligibilityFilter','cedarSort','cedarSectorFilter']){on(id,'change',api.renderOpportunities);on(id,'input',api.renderOpportunities)}
-}
-window.RadarCedearRotationUI={version:VERSION,mount,bind};mount();
-})();
-
-;
-
-/* ===== RUNTIME BLOCK 11 ===== */
-(()=>{
-'use strict';
-const VERSION='9O';
-const LAB_HISTORY_HTML="  <div id=\"labView\" class=\"lab-view\">\n    <div class=\"lab-toolbar\">\n      <div><h2>Laboratorio · Replay &amp; Backtest</h2><div class=\"sub\">Prueba la estrategia con información disponible hasta cada momento. Sin mirar velas futuras para decidir.</div></div>\n      <div class=\"watch-actions\"><button id=\"labExportBtn\" class=\"secondary-action\">Exportar resultados</button><button id=\"labBackBtn\" class=\"secondary-action\">Volver al inicio</button></div>\n    </div>\n\n    <div class=\"card lab-controls\">\n      <div><label>Activo</label><input id=\"labSymbol\" value=\"AAPL\"></div>\n      <div><label>Tipo</label><select id=\"labType\"><option value=\"stock\">Acción / ADR USA</option><option value=\"crypto\">Crypto</option><option value=\"argstock\">Acción Argentina</option><option value=\"cedear\">CEDEAR / BYMA</option></select></div>\n      <div><label>Timeframe</label><select id=\"labTf\"><option value=\"short\">Corto</option><option value=\"medium\" selected>Medio</option><option value=\"macro\">Macro</option></select></div>\n      <div><label>Replay hasta fecha</label><input id=\"labDate\" type=\"date\"></div>\n      <button id=\"labReplayBtn\">Replay</button>\n      <button id=\"labBacktestBtn\">Backtest</button>\n    </div>\n\n    <div id=\"labStatus\" class=\"signal-note\">Elegí activo y timeframe. El backtest usa la serie histórica que la fuente gratuita pueda entregar.</div>\n    <div class=\"card lab-advanced-controls\">\n      <div><label>Comisión por lado (bps)</label><input id=\"labCommissionBps\" type=\"number\" min=\"0\" step=\"0.5\" value=\"5\"></div><div><label>Slippage por lado (bps)</label><input id=\"labSlippageBps\" type=\"number\" min=\"0\" step=\"0.5\" value=\"3\"></div><div><label>In-sample</label><select id=\"labTrainPct\"><option value=\"60\">60%</option><option value=\"70\" selected>70%</option><option value=\"80\">80%</option></select></div><div><label>Baseline aleatorio</label><select id=\"labRandomTrials\"><option value=\"10\">10 pruebas</option><option value=\"25\" selected>25 pruebas</option><option value=\"50\">50 pruebas</option></select></div><div><label>Horizonte máx.</label><select id=\"labMaxBars\"><option value=\"40\">40 barras</option><option value=\"80\" selected>80 barras</option><option value=\"120\">120 barras</option></select></div>\n    </div>\n    <div class=\"validation-panel\"><div class=\"model-head\"><div><b>Validación avanzada</b><div class=\"sub\">OOS, walk-forward, costos, buy &amp; hold y timing aleatorio.</div></div><span id=\"labValidationChip\" class=\"intel-chip neutral\">Pendiente</span></div><div class=\"validation-grid\"><div class=\"validation-box\"><small>IS · R prom.</small><b id=\"labIsR\">—</b></div><div class=\"validation-box\"><small>OOS · R prom.</small><b id=\"labOosR\">—</b></div><div class=\"validation-box\"><small>Buy &amp; Hold</small><b id=\"labBuyHold\">—</b></div><div class=\"validation-box\"><small>Baseline random</small><b id=\"labRandomBaseline\">—</b></div></div><div id=\"labWalkForward\" class=\"fold-grid\"></div><div id=\"labValidationNote\" class=\"lab-note\">Todavía no hay validación.</div></div>\n\n\n    <div class=\"lab-summary\">\n      <div class=\"lab-kpi\"><small>Señales</small><b id=\"labSignals\">0</b></div>\n      <div class=\"lab-kpi\"><small>Resueltas</small><b id=\"labResolved\">0</b></div>\n      <div class=\"lab-kpi\"><small>Win rate</small><b id=\"labWinRate\">—</b></div>\n      <div class=\"lab-kpi\"><small>R promedio</small><b id=\"labAvgR\">—</b></div>\n      <div class=\"lab-kpi\"><small>Profit factor R</small><b id=\"labProfitFactor\">—</b></div>\n      <div class=\"lab-kpi\"><small>Max drawdown R</small><b id=\"labMaxDd\">—</b></div>\n      <div class=\"lab-kpi\"><small>Ambiguas</small><b id=\"labAmbiguous\">0</b></div>\n    </div>\n\n    <div class=\"lab-grid\">\n      <div class=\"lab-box\">\n        <h3>Replay en la fecha elegida</h3>\n        <div id=\"labReplayResult\" class=\"signal-note\">Sin replay.</div>\n      </div>\n      <div class=\"lab-box\">\n        <h3>Lectura metodológica</h3>\n        <div class=\"lab-note\">La señal se genera usando sólo las barras hasta el instante evaluado. Luego se recorre el futuro para medir TP/stop. Si ambos se tocan en la misma vela, el resultado es AMBIGUO. Se aplica cooldown para no contar la misma idea en cada vela.</div>\n      </div>\n    </div>\n\n    <div class=\"lab-box lab-box-spaced\">\n      <h3>Operaciones históricas</h3>\n      <div class=\"lab-table-wrap\"><table class=\"lab-table\"><thead><tr><th>Fecha señal</th><th>Señal</th><th>Score</th><th>Entrada</th><th>Stop</th><th>TP1</th><th>Resultado</th><th>R</th><th>MFE</th><th>MAE</th></tr></thead><tbody id=\"labBody\"><tr><td colspan=\"10\" class=\"signal-empty\">Todavía no ejecutaste un backtest.</td></tr></tbody></table></div>\n    </div>\n    <div class=\"model-validation\"><div class=\"model-head\"><div><b>Model Validation · Recalibración controlada del Score</b><div class=\"sub\">Propone cambios sólo con muestra suficiente y nunca los aplica sin confirmación.</div></div><div class=\"model-actions\"><button id=\"modelProposalBtn\" class=\"secondary-action\">Generar propuesta</button><button id=\"applyModelProposalBtn\" disabled>Aplicar propuesta</button><button id=\"resetModelWeightsBtn\" class=\"secondary-action\">Pesos base</button></div></div><div id=\"modelValidationSummary\" class=\"signal-note\">Modelo actual: pesos base.</div><div class=\"model-table-wrap\"><table class=\"model-table\"><thead><tr><th>Componente</th><th>Peso actual</th><th>Correlación con R neta</th><th>Peso propuesto</th><th>Lectura</th></tr></thead><tbody id=\"modelWeightsBody\"><tr><td colspan=\"5\" class=\"signal-empty\">Sin propuesta.</td></tr></tbody></table></div></div>\n\n  </div>\n\n<div id=\"signalsView\" class=\"signals-view\">\n    <div class=\"signal-toolbar\">\n      <div>\n        <h2>Historial y Auditoría de Señales</h2>\n        <div class=\"sub ui-mt-1\">Radar registra hallazgos accionables y mide qué ocurrió después sin reescribir el pasado.</div>\n      </div>\n      <div class=\"signal-actions\">\n        <div id=\"signalAuditProgress\" class=\"signal-progress\"><span class=\"dash-mini-spinner\"></span><span id=\"signalAuditText\">Auditando…</span><span class=\"signal-progress-bar\"><i id=\"signalAuditBar\"></i></span></div>\n        <button id=\"signalAuditBtn\">Actualizar resultados</button>\n        <button id=\"signalExportBtn\" class=\"secondary-action\">Exportar CSV</button>\n        <button id=\"signalBackBtn\" class=\"secondary-action\">Volver al inicio</button>\n      </div>\n    </div>\n\n    <div class=\"signal-note\">\n      <b>Regla de auditoría:</b> cada señal conserva los niveles originales. COMPRA / SHORT se evalúan contra TP1 y stop usando velas posteriores.\n      OPORTUNIDAD CERCA primero debe tocar la zona de entrada. Si TP y stop ocurren en la misma vela, se marca <b>AMBIGUO</b> y no entra en el win rate.\n      Renta fija y gestión de cartera se registran como evidencia, pero no se mezclan con el win rate técnico.\n    </div>\n\n    <div class=\"signal-summary\">\n      <div class=\"signal-metric\"><small>Eventos registrados</small><b id=\"sigTotal\">0</b></div>\n      <div class=\"signal-metric\"><small>Señales técnicas</small><b id=\"sigAuditable\">0</b></div>\n      <div class=\"signal-metric\"><small>Resueltas</small><b id=\"sigResolved\">0</b></div>\n      <div class=\"signal-metric\"><small>Win rate</small><b id=\"sigWinRate\">—</b></div>\n      <div class=\"signal-metric\"><small>Abiertas</small><b id=\"sigOpen\">0</b></div>\n      <div class=\"signal-metric\"><small>Near sin trigger</small><b id=\"sigUntriggered\">0</b></div>\n      <div class=\"signal-metric\"><small>R promedio resuelto</small><b id=\"sigAvgR\">—</b></div>\n    </div>\n\n    <div class=\"signal-controls card signal-controls-premium\">\n      <div><label>Fuente</label><select id=\"signalSourceFilter\"><option value=\"all\">Todas</option><option value=\"scanner-rv\">Escáner RV</option><option value=\"scanner-rf\">Escáner RF</option><option value=\"watchlist\">Seguimiento</option></select></div>\n      <div><label>Estado</label><select id=\"signalOutcomeFilter\"><option value=\"all\">Todos</option><option value=\"open\">Abiertas / pendientes</option><option value=\"resolved\">Resueltas</option><option value=\"win\">Ganadoras</option><option value=\"loss\">Perdedoras</option><option value=\"untriggered\">Near sin trigger</option><option value=\"info\">Informativas</option></select></div>\n      <div><label>Período</label><select id=\"signalPeriodFilter\"><option value=\"all\">Todo</option><option value=\"30\">Últimos 30 días</option><option value=\"90\">Últimos 90 días</option><option value=\"180\">Últimos 180 días</option></select></div>\n      <div><button id=\"signalClearBtn\" class=\"secondary-action danger-action\">Limpiar historial</button></div>\n    </div>\n\n    <div id=\"signalEvidenceNote\" class=\"signal-note\">Todavía no hay suficientes señales resueltas para evaluar la calidad estadística del scanner.</div>\n\n    <div class=\"signal-table-wrap\">\n      <table class=\"signal-table\">\n        <thead><tr>\n          <th>Fecha</th><th>Activo</th><th>Fuente</th><th>Señal</th><th>TF</th><th>Precio señal</th>\n          <th>Entrada</th><th>Stop</th><th>TP1</th><th>Score</th><th>Resultado</th><th>MFE</th><th>MAE</th><th>R</th><th>Motivo original</th>\n        </tr></thead>\n        <tbody id=\"signalBody\"><tr><td colspan=\"15\" class=\"signal-empty\">Todavía no hay señales registradas.</td></tr></tbody>\n      </table>\n    </div>\n    <div class=\"strategy-analytics\">\n      <h3>Analytics de estrategia</h3>\n      <div id=\"strategyAnalyticsSummary\" class=\"signal-note\">Todavía no hay suficiente evidencia.</div>\n      <div id=\"strategyAnalyticsGrid\" class=\"strategy-analytics-grid\"></div>\n      <div class=\"lab-table-wrap lab-table-wrap-compact\"><table class=\"lab-table\"><thead><tr><th>Segmento</th><th>Resueltas</th><th>Win rate</th><th>R prom.</th><th>MFE prom.</th><th>MAE prom.</th></tr></thead><tbody id=\"strategyAnalyticsBody\"><tr><td colspan=\"6\" class=\"signal-empty\">Sin segmentos.</td></tr></tbody></table></div>\n    </div>\n    <div class=\"audit-panel\"><div class=\"model-head\"><div><b>Auditoría completa de decisiones</b><div class=\"sub\">Decisión, datos, score y versión del algoritmo.</div></div><button id=\"exportDecisionAuditBtn\" class=\"secondary-action\">Exportar auditoría</button></div><div class=\"audit-table-wrap\"><table class=\"audit-table\"><thead><tr><th>Fecha</th><th>Activo</th><th>Origen</th><th>Decisión</th><th>Acción</th><th>Score</th><th>Modelo</th><th>Radar</th><th>Motivo / datos</th></tr></thead><tbody id=\"decisionAuditBody\"><tr><td colspan=\"9\" class=\"signal-empty\">Sin decisiones auditadas.</td></tr></tbody></table></div></div>\n  </div>\n";
-function mount(){
- const host=document.getElementById('labHistoryWorkspaceMount');
- if(host)host.outerHTML=LAB_HISTORY_HTML;
-}
-function on(id,event,handler){
- const el=document.getElementById(id);
- if(el&&typeof handler==='function')(window.radarBindAction?window.radarBindAction(el,event,handler,{key:id}):el.addEventListener(event,handler));
-}
-function bind(api={}){
- on('labViewBtn','click',api.showLab);
- on('labBackBtn','click',api.showDashboard);
- on('labReplayBtn','click',api.runReplay);
- on('labBacktestBtn','click',api.runBacktest);
- on('labExportBtn','click',api.exportLab);
- on('modelProposalBtn','click',api.generateModelProposal);
- on('applyModelProposalBtn','click',api.applyModelProposal);
- on('resetModelWeightsBtn','click',api.resetModelWeights);
- on('signalsViewBtn','click',api.showSignals);
- on('signalBackBtn','click',api.showDashboard);
- on('signalAuditBtn','click',api.auditSignals);
- on('signalExportBtn','click',api.exportSignals);
- on('signalClearBtn','click',api.clearSignals);
- for(const id of ['signalSourceFilter','signalOutcomeFilter','signalPeriodFilter'])on(id,'change',api.renderSignals);
- on('exportDecisionAuditBtn','click',api.exportDecisionAudit);
-}
-window.RadarLabHistoryUI={VERSION,version:VERSION,mount,bind};
-mount();
 })();
 
 ;
