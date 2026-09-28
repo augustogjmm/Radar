@@ -3,13 +3,13 @@
    Retired Allocator / experimental Decision Engine removed from the published web runtime. */
 
 /* ===== RUNTIME BLOCK 47 ===== */
-/* Radar Técnico G2 v5.0.0 — Investment Intelligence Layer
+/* Radar Técnico G2 v5.2.0 — Investment Intelligence Layer
    Integrates: decision journal, multi-benchmark board, P&L attribution,
    actionable alerts, regime visibility and multi-asset decision backtest.
    Deterministic browser runtime. No order execution. */
 (function(G){
 'use strict';
-const VERSION='5.0.0';
+const VERSION='5.2.0';
 const JOURNAL_KEY='radar_v5_decision_journal';
 const JOURNAL_MAX=2000;
 const $=id=>G.document?.getElementById(id);
