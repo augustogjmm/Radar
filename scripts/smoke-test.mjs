@@ -158,6 +158,25 @@ try{
   });
   await assert(portfolioVisual.narrow.length===0,'Cartera tiene estados vacíos comprimidos: '+JSON.stringify(portfolioVisual.narrow));
   await assert(!portfolioVisual.noPositions||portfolioVisual.topDonutDisplay==='none','Top 5 vacío debe ocultar donut explicativo');
+  const emptyPortfolio=await page.evaluate(()=>{
+    const section=document.getElementById('portfolio360Section');
+    const dashboard=section?.querySelector('.p360-master-dashboard');
+    const noPositions=(document.getElementById('p360Positions')?.textContent||'').trim()==='0';
+    return {
+      noPositions,
+      compactClass:!!section?.classList.contains('is-empty-portfolio'),
+      sectionHeight:section?.getBoundingClientRect().height||0,
+      dashboardDisplay:dashboard?getComputedStyle(dashboard).display:null,
+      riskDisplay:document.getElementById('portfolioRiskSection')?getComputedStyle(document.getElementById('portfolioRiskSection')).display:null
+    };
+  });
+  if(emptyPortfolio.noPositions){
+    await assert(emptyPortfolio.compactClass,'Cartera vacía no activó estado compacto');
+    await assert(emptyPortfolio.dashboardDisplay==='none','Cartera vacía sigue mostrando dashboards sin datos');
+    await assert(emptyPortfolio.riskDisplay==='none','Cartera vacía sigue mostrando riesgo sin posiciones');
+    await assert(emptyPortfolio.sectionHeight<900,'Cartera vacía demasiado larga: '+emptyPortfolio.sectionHeight+'px');
+  }
+  await fs.writeFile('artifacts/portfolio-empty-state.json',JSON.stringify(emptyPortfolio,null,2));
   await fs.writeFile('artifacts/portfolio-visual-check.json',JSON.stringify(portfolioVisual,null,2));
   const layout=await page.evaluate(()=>{
     const v=document.getElementById('watchlistView');
