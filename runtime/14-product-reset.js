@@ -2,7 +2,7 @@
    Keeps the certified engines intact and turns the home into a decision workspace. */
 (()=>{
   'use strict';
-  const VERSION='1.0.0';
+  const VERSION='1.1.0';
 
   function text(el,value){ if(el) el.textContent=value; }
 
@@ -125,6 +125,124 @@
     });
   }
 
+
+  function simplifyScanner(){
+    const view=document.getElementById('scannerView');
+    if(!view) return;
+    view.classList.add('product-scanner');
+
+    const title=view.querySelector('.scan-toolbar h2');
+    const sub=view.querySelector('.scan-toolbar .sub');
+    text(title,'Oportunidades');
+    text(sub,'Filtrá un universo y quedate con lo accionable. El detalle técnico aparece sólo cuando lo necesitás.');
+
+    const diagnostic=document.getElementById('scanDiagnostic');
+    if(diagnostic) diagnostic.classList.add('product-muted-diagnostic');
+
+    const analytics=view.querySelector('.scanner-analytics-card');
+    if(analytics) analytics.hidden=true;
+
+    const filter=document.getElementById('scanFilter');
+    if(filter && filter.value==='all') filter.value='actionable';
+
+    const summary=view.querySelector('.scan-summary');
+    if(summary) summary.classList.add('product-scan-summary');
+
+    const table=view.querySelector('.scan-table');
+    if(table) table.classList.add('product-scan-table');
+  }
+
+  function simplifyAnalysis(){
+    const view=document.getElementById('analysisView');
+    if(!view) return;
+    view.classList.add('product-analysis');
+
+    const right=view.querySelector('.right-stack');
+    if(!right) return;
+
+    const cards=[...right.children];
+    const decision=cards.find(el=>el.querySelector?.('h3')?.textContent?.trim()==='DECISIÓN OPERATIVA');
+    const levels=cards.find(el=>el.querySelector?.('h3')?.textContent?.trim()==='NIVELES RELEVANTES');
+    if(decision && right.firstElementChild!==decision) right.prepend(decision);
+    if(levels && decision && decision.nextElementSibling!==levels) decision.insertAdjacentElement('afterend',levels);
+
+    for(const el of cards){
+      if(el===decision||el===levels) continue;
+      el.classList.add('product-analysis-secondary');
+    }
+
+    const below=[...view.querySelectorAll('.below-grid')];
+    below.forEach(el=>el.classList.add('product-analysis-secondary'));
+
+    const fundamentals=document.getElementById('fundamentalsCard');
+    if(fundamentals) fundamentals.classList.add('product-fundamentals');
+
+    const h=decision?.querySelector('h3');
+    text(h,'DECISIÓN');
+    const why=decision?.querySelector('#decisionWhy')?.closest('.reason-box');
+    if(why) why.classList.add('product-primary-reason');
+  }
+
+  function foldPortfolioAdvanced(){
+    const root=document.getElementById('portfolio360Section');
+    if(!root||document.getElementById('productPortfolioAdvanced')) return;
+    root.classList.add('product-portfolio');
+
+    const headline=root.querySelector('.p360-master-head h2');
+    text(headline,'Cartera');
+    const subtitle=root.querySelector('.p360-master-head p');
+    text(subtitle,'Valor, resultado, concentración y posiciones. Lo avanzado queda disponible sin invadir la vista principal.');
+
+    const dashboard=root.querySelector('.p360-master-dashboard');
+    if(dashboard){
+      const positionCard=dashboard.querySelector('.p360-master-positions');
+      [...dashboard.children].forEach(el=>{
+        if(el!==positionCard) el.classList.add('product-portfolio-secondary-card');
+      });
+    }
+
+    const advanced=[
+      root.querySelector('#g2PortfolioCutoverPanel'),
+      root.querySelector('.portfolio-diversification'),
+      root.querySelector('.portfolio-ledger'),
+      root.querySelector('#portfolioRiskSection'),
+      root.querySelector('.performance-panel'),
+      root.querySelector('.stress-panel')
+    ].filter(Boolean);
+
+    if(advanced.length){
+      const details=document.createElement('details');
+      details.id='productPortfolioAdvanced';
+      details.className='product-advanced-context product-portfolio-advanced';
+      details.innerHTML=`
+        <summary>
+          <span>
+            <b>Análisis avanzado de cartera</b>
+            <small>Riesgo, performance, stress, diversificación, movimientos y conciliación</small>
+          </span>
+          <span class="product-summary-action">Abrir detalle</span>
+        </summary>
+        <div class="product-advanced-body"></div>`;
+      root.appendChild(details);
+      const body=details.querySelector('.product-advanced-body');
+      advanced.forEach(el=>body.appendChild(el));
+      details.addEventListener('toggle',()=>{
+        const a=details.querySelector('.product-summary-action');
+        if(a) a.textContent=details.open?'Cerrar detalle':'Abrir detalle';
+      });
+    }
+  }
+
+  function simplifyWatchlist(){
+    const view=document.getElementById('watchlistView');
+    if(!view) return;
+    view.classList.add('product-watchlist');
+    const monitor=document.getElementById('portfolioMonitorPanel');
+    if(monitor) monitor.classList.add('product-watch-secondary');
+    const entry=document.getElementById('portfolioEntryPanel');
+    if(entry) entry.classList.add('product-watch-entry');
+  }
+
   function simplifyNavigation(){
     const labels={
       homeViewBtn:['Resumen','Prioridades y contexto'],
@@ -159,6 +277,10 @@
     simplifyDecisionCenter();
     buildContextBlock();
     foldAdvancedContext();
+    simplifyScanner();
+    simplifyAnalysis();
+    foldPortfolioAdvanced();
+    simplifyWatchlist();
     simplifyNavigation();
     tuneTopbar();
   }
