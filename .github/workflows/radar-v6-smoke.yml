@@ -1,0 +1,39 @@
+name: Radar v6 Smoke
+
+on:
+  push:
+    branches: [v6-rebuild]
+  workflow_dispatch:
+
+concurrency:
+  group: radar-v6-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Start local Radar v6
+        run: |
+          node scripts/qa-server.mjs > /tmp/radar-v6.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/radar-v6.log
+          exit 1
+      - name: Run v6 smoke
+        run: node scripts/v6-smoke.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-v6-smoke-artifacts
+          path: artifacts/
+          if-no-files-found: ignore
