@@ -1315,7 +1315,7 @@ function showScannerView(){
 async function startScanner(){
  if(state.scan.running)return;
  const key=$('scanTf').value;
- state.scan={running:true,stop:false,results:[],skipped:0};
+ state.scan={running:true,stop:false,results:[],skipped:0,okCount:0,errorCount:0,fallbackCount:0};
  $('stopScanBtn').disabled=false;
  $('scanProgressBar').style.width='0%';
  $('scanProgressText').textContent='Resolviendo universo completo…';
@@ -1359,17 +1359,22 @@ async function startScanner(){
      if(i>=total)return;
      const item=items[i];
      try{
+       let result;
        if(isFixedIncomeUniverse(u)){
-         state.scan.results.push(scanFixedIncomeOne(item));
+         result=scanFixedIncomeOne(item);
        }else{
-         state.scan.results.push(await scanOne(item,key));
+         result=await scanOne(item,key);
        }
+       state.scan.results.push(result);
+       state.scan.okCount=(state.scan.okCount||0)+1;
+       if(result?.providerFallback)state.scan.fallbackCount=(state.scan.fallbackCount||0)+1;
      }catch(e){
        const isCedearUs=(u==='usa_cedear');
        const msg=String(e.message||e);
        if(isCedearUs && /Yahoo Finance|Sin datos Yahoo|Historial insuficiente/i.test(msg)){
          state.scan.skipped=(state.scan.skipped||0)+1;
        }else{
+         state.scan.errorCount=(state.scan.errorCount||0)+1;
          state.scan.results.push({
            item:{symbol:item.symbol,type:resolveWatchType(item.symbol,item.type)},
            status:{kind:'none',label:'SIN DATOS',oppScore:0},
@@ -1399,10 +1404,10 @@ async function startScanner(){
  try{scannerOpportunityAlerts()}catch{}
  $('stopScanBtn').disabled=true;
  setTimeout(()=>{if(!state.scan.running&&$('startScanBtn'))$('startScanBtn').disabled=false},0);
- const skipped=state.scan.skipped||0;
+ const skipped=state.scan.skipped||0,okCount=state.scan.okCount||0,errorCount=state.scan.errorCount||0,fallbackCount=state.scan.fallbackCount||0;
  $('scanProgressText').textContent=state.scan.stop
-   ? `Escaneo detenido por el usuario en ${done}/${total}.`
-   : `Escaneo completo: ${done}/${total} procesados${skipped?` · ${skipped} códigos no USA/no resolubles omitidos`:''}.`;
+   ? `Escaneo detenido por el usuario en ${done}/${total} · ${okCount} con datos · ${errorCount} sin datos.`
+   : `Escaneo completo: ${done}/${total} procesados · ${okCount} con datos · ${errorCount} sin datos${fallbackCount?` · ${fallbackCount} con fuente alternativa`:''}${skipped?` · ${skipped} códigos no USA/no resolubles omitidos`:''}.`;
 }
 function stopScanner(){state.scan.stop=true;$('scanProgressText').textContent='Deteniendo…'}
 
