@@ -269,13 +269,30 @@ async function bymaFixedIncome(url){
   const kind=(url.searchParams.get('kind')||'all').toLowerCase(),currency=(url.searchParams.get('currency')||'ALL').toUpperCase(),liquid=url.searchParams.get('liquid')==='1';
   const [pub,on]=await Promise.allSettled([postByma('public-bonds',{page_size:5000,T1:true}),postByma('negociable-obligations',{page_size:5000,T1:true})]);
   const publicRows=pub.status==='fulfilled'?arr(pub.value):[],onRows=on.status==='fulfilled'?arr(on.value):[];
-  const norm=(x,type)=>({symbol:String(x.symbol||'').trim().toUpperCase(),type,category:type==='on'?'ON':'Soberano',securityType:String(x.securityType||''),denominationCcy:String(x.denominationCcy||''),settlementType:String(x.settlementType||''),maturityDate:String(x.maturityDate||''),daysToMaturity:num(x.daysToMaturity),trade:num(x.trade),closingPrice:num(x.closingPrice),volume:num(x.volume),tradeVolume:num(x.tradeVolume),volumeAmount:num(x.volumeAmount)});
-  let items=[...publicRows.map(x=>norm(x,'bond')),...onRows.map(x=>norm(x,'on'))].filter(x=>x.symbol);
-  if(kind==='on')items=items.filter(x=>x.type==='on'); else if(kind!=='all')items=items.filter(x=>x.type!=='on');
+  const isLetterSymbol=s=>/^S[A-Z0-9]{4}$/.test(s)||/^T(?:[0-9]{2}[A-Z][0-9]|[0-9][A-Z][0-9])$/.test(s);
+  const publicCategory=s=>{
+    if(isLetterSymbol(s))return'LECAP/BONCAP';
+    if(/^T?ZX|^X\d|^TX\d/.test(s))return'CER';
+    if(/^D[A-Z0-9]/.test(s))return'Dollar-linked';
+    if(/^TT[SD]/.test(s))return'Dual';
+    return'Bono soberano';
+  };
+  const norm=(x,type)=>{
+    const symbol=String(x.symbol||'').trim().toUpperCase();
+    return {symbol,type,category:type==='on'?'ON':publicCategory(symbol),securityType:String(x.securityType||''),denominationCcy:String(x.denominationCcy||''),settlementType:String(x.settlementType||''),maturityDate:String(x.maturityDate||''),daysToMaturity:num(x.daysToMaturity),trade:num(x.trade),closingPrice:num(x.closingPrice),volume:num(x.volume),tradeVolume:num(x.tradeVolume),volumeAmount:num(x.volumeAmount)};
+  };
+  const publicItems=uniqueBest(publicRows.map(x=>norm(x,'bond')).filter(x=>x.symbol));
+  const onItems=uniqueBest(onRows.map(x=>norm(x,'on')).filter(x=>x.symbol));
+  let items=[...publicItems,...onItems];
+  if(kind==='on')items=items.filter(x=>x.type==='on');
+  else if(kind==='letters')items=items.filter(x=>x.type==='bond'&&x.category==='LECAP/BONCAP');
+  else if(kind==='sovereign')items=items.filter(x=>x.type==='bond'&&x.category!=='LECAP/BONCAP');
+  else if(kind==='public')items=items.filter(x=>x.type==='bond');
+  else if(kind!=='all')items=items.filter(x=>x.type==='bond');
   if(currency!=='ALL')items=items.filter(x=>String(x.denominationCcy).toUpperCase()===currency);
   if(liquid)items=items.filter(x=>(x.volume||0)>0||(x.tradeVolume||0)>0||(x.volumeAmount||0)>0);
   items=uniqueBest(items).sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
-  return {source:'Open BYMADATA public-bonds + negociable-obligations',updated:new Date().toISOString(),count:items.length,kind,currency,liquidOnly:liquid,items};
+  return {source:'Open BYMADATA public-bonds + negociable-obligations',updated:new Date().toISOString(),count:items.length,publicCount:publicItems.length,onCount:onItems.length,kind,currency,liquidOnly:liquid,items};
 }
 async function cedearPrograms(){
   const html=await request('https://www.comafi.com.ar/Programas-CEDEARs-2483.note.aspx',{timeout:18000,headers:{accept:'text/html,*/*'}});
@@ -495,10 +512,11 @@ async function handler(req,res){
     if(p==='/api/fixed-income/curve')return send(res,200,await fixedIncomeCurve());
     if(p==='/api/local-rates')return send(res,200,await localRates());
     if(p==='/api/fixed-income/analytics'){
-      const [cr,rates,raw] = await Promise.all([
+      const [cr,rates,raw,fx] = await Promise.all([
         riskNow(),
         localRates().catch(()=>null),
-        getJson('https://compararfondos.com.ar/api/bonos',{timeout:18000}).catch(()=>null)
+        getJson('https://compararfondos.com.ar/api/bonos',{timeout:18000}).catch(()=>null),
+        fxCurrent().catch(()=>null)
       ]);
       const src=Array.isArray(raw?.bonds)?raw.bonds:arr(raw),bonds=[];
       for(const b of src){
@@ -516,7 +534,7 @@ async function handler(req,res){
           moneda:b?.moneda??b?.currency??''
         });
       }
-      return send(res,200,{source:'CompararFondos + BCRA/BYMA + Radar Web',countryRisk:cr,localRates:rates,bonds,letters:[],coverage:bonds.length});
+      return send(res,200,{source:'CompararFondos + BCRA/BYMA + DolarApi + Radar Web',countryRisk:cr,localRates:rates,fx:fx?.fx||null,bonds,letters:[],coverage:bonds.length});
     }
     if(p==='/api/alphavantage/fundamentals')return send(res,200,{available:false,source:'Alpha Vantage',reason:'API key no configurada en Radar Web'});
     if(p==='/api/finviz')return send(res,200,{available:false,source:'Finviz',reason:'Scraping deshabilitado en runtime serverless'});
