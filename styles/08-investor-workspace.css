@@ -1,0 +1,102 @@
+/* Radar Técnico G2 · v7 Investor Workspace
+   Institutional layer. No core functionality is hidden. */
+.radar-v7 body{background:#071018}
+.radar-v7 .wrap{max-width:1740px}
+.radar-v7 .app-sidebar{background:#08121a;border-color:#1d303a}
+.radar-v7 .sidebar-section-label{color:#536c7b;letter-spacing:.14em}
+.radar-v7 .side-nav-item{min-height:50px}
+.radar-v7 .side-nav-item.active{background:#0e1d27;border-color:#29404d}
+.radar-v7 .side-nav-item .nav-copy b{font-size:11.5px}
+.radar-v7 .side-nav-item .nav-copy small{font-size:9px;color:#637b89}
+.radar-v7 .top{min-height:64px;background:rgba(7,16,24,.95);backdrop-filter:blur(12px)}
+.radar-v7 .view-title{font-size:18px}
+.radar-v7 .view-subtitle{color:#6e8694}
+.radar-v7 .dashboard-view{display:flex!important;flex-direction:column!important;gap:14px!important}
+.radar-v7 .dash-head{order:5}
+.radar-v7 .dash-kpis{order:6}
+.radar-v7 .dash-official-strip{order:7}
+.radar-v7 .daily-brief{order:8}
+.radar-v7 .intel-wrap{order:9}
+.radar-v7 .market-board{order:10}
+
+.investor-brief{order:0;border:1px solid #213641;border-radius:14px;background:#0a151d;overflow:hidden}
+.investor-brief-head{display:flex;align-items:flex-end;justify-content:space-between;gap:26px;padding:23px 24px 18px;border-bottom:1px solid #182b35;background:linear-gradient(180deg,#0d1a23 0%,#0a151d 100%)}
+.investor-eyebrow{display:block;color:#657f8e;font-size:8.5px;font-weight:750;letter-spacing:.14em}
+.investor-brief-head h1{margin:5px 0 0!important;color:#eef4f7!important;font-size:24px!important;line-height:1.1!important;letter-spacing:-.025em!important;font-weight:670!important}
+.investor-brief-head p{max-width:760px;margin:8px 0 0!important;color:#8296a2!important;font-size:11.5px!important;line-height:1.5!important}
+.investor-brief-actions{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.investor-brief-actions>span{color:#667f8d;font-size:9px}
+.investor-brief-actions button{min-height:35px;padding:0 12px}
+
+.investor-context-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-bottom:1px solid #182b35}
+.investor-context-grid article{min-height:91px;padding:13px 15px;border-right:1px solid #182b35}
+.investor-context-grid article:last-child{border-right:0}
+.investor-context-grid small{display:block;color:#5e7887;font-size:8px;font-weight:700;letter-spacing:.07em}
+.investor-context-grid b{display:block;margin-top:7px;color:#e3edf1;font-size:19px;font-weight:650}
+.investor-context-grid span{display:block;margin-top:3px;color:#607887;font-size:8.5px;line-height:1.35}
+
+.investor-brief-status{padding:8px 15px;border-bottom:1px solid #152730;background:#08131a;color:#6c8492;font-size:9.5px}
+.investor-brief-main{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(340px,.85fr)}
+.investor-panel{background:#0a151d}
+.investor-opportunities{border-right:1px solid #182b35}
+.investor-brief-side>.investor-panel+.investor-panel{border-top:1px solid #182b35}
+.investor-panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:14px 15px;border-bottom:1px solid #152730}
+.investor-panel-head h2{margin:3px 0 0!important;color:#cbd8df!important;font-size:12px!important;font-weight:650!important}
+.investor-link{min-height:auto!important;padding:0!important;border:0!important;background:transparent!important;color:#83a7bc!important;font-size:9px!important}
+
+.investor-opportunity-list,.investor-bond-list,.investor-portfolio-list{padding:7px}
+.investor-opportunity{width:100%;display:grid!important;grid-template-columns:112px 88px minmax(0,1fr) 100px;align-items:center;gap:10px;min-height:63px!important;padding:9px 10px!important;border:1px solid transparent!important;border-radius:8px!important;background:transparent!important;color:inherit!important;text-align:left!important}
+.investor-opportunity:hover,.investor-bond:hover,.investor-portfolio-item:hover{background:#0e1d26!important;border-color:#223a46!important}
+.investor-op-state{font-size:8px;font-weight:750;letter-spacing:.035em;color:#8da0ab}
+.investor-opportunity.buy .investor-op-state{color:#68c997}
+.investor-opportunity.sell .investor-op-state{color:#db818d}
+.investor-opportunity.near .investor-op-state{color:#d0ab68}
+.investor-op-asset b{display:block;color:#edf4f7;font-size:11px}
+.investor-op-asset small{display:block;margin-top:2px;color:#5f7785;font-size:7.8px}
+.investor-op-reading{color:#8197a3;font-size:9.4px;line-height:1.42}
+.investor-op-metrics{text-align:right}
+.investor-op-metrics small{display:block;color:#5b7483;font-size:7.5px}
+.investor-op-metrics b{display:block;margin-top:1px;color:#c9d7dd;font-size:13px}
+.investor-op-metrics em{display:block;margin-top:2px;color:#667e8c;font-size:7.8px;font-style:normal}
+
+.investor-bond{width:100%;display:grid!important;grid-template-columns:82px repeat(3,1fr);gap:8px;align-items:center;min-height:51px!important;padding:8px!important;border:1px solid transparent!important;border-radius:7px!important;background:transparent!important;color:inherit!important;text-align:left!important}
+.investor-bond span b{display:block;color:#dce7ec;font-size:10px}
+.investor-bond span small{display:block;color:#5c7584;font-size:7.6px}
+
+.investor-portfolio-item{width:100%;display:grid!important;grid-template-columns:82px 86px minmax(0,1fr);gap:8px;align-items:center;min-height:52px!important;padding:8px!important;border:1px solid transparent!important;border-radius:7px!important;background:transparent!important;color:inherit!important;text-align:left!important}
+.investor-portfolio-item span b{display:block;font-size:10px}.investor-portfolio-item span small{display:block;color:#5e7684;font-size:7.5px}
+.investor-portfolio-item strong{font-size:8px;color:#d0aa68}.investor-portfolio-item strong.exit{color:#db818d}.investor-portfolio-item em{font-size:8.6px;color:#748b98;font-style:normal;line-height:1.35}
+.investor-empty{padding:15px;border:1px dashed #1c303a;border-radius:8px;color:#657d8b;font-size:9.5px;line-height:1.45}.investor-empty.strong{color:#8ba0ab;background:#09151c}
+
+.investor-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid #182b35}
+.investor-tools button{min-height:69px!important;padding:12px 14px!important;border:0!important;border-right:1px solid #182b35!important;border-radius:0!important;background:#09141b!important;color:inherit!important;text-align:left!important}
+.investor-tools button:last-child{border-right:0!important}.investor-tools button:hover{background:#0d1b24!important}
+.investor-tools b{display:block;color:#b9c9d1;font-size:10px}.investor-tools span{display:block;margin-top:4px;color:#627a88;font-size:8.5px;line-height:1.35}
+
+/* Preserve and professionalize the full workspaces instead of hiding them */
+.radar-v7 #scannerView,.radar-v7 #rfScannerView,.radar-v7 #analysisView,.radar-v7 #watchlistView,.radar-v7 #portfolioView,.radar-v7 #signalsView{max-width:none}
+.radar-v7 .scan-toolbar,.radar-v7 .workspace-context-shell,.radar-v7 .p360-master-head{border-radius:11px!important}
+.radar-v7 .scan-config-card,.radar-v7 .scanner-analytics-card,.radar-v7 .scan-table-wrap,.radar-v7 .card{border-color:#1e323d!important}
+.radar-v7 .scan-table th{font-size:8.5px!important;color:#667f8d!important;background:#0b171f!important}
+.radar-v7 .scan-table td{font-size:9.5px!important;border-color:#152730!important}
+.radar-v7 .scan-table tbody tr:hover{background:#0e1b24!important}
+.radar-v7 #analysisView .workspace{grid-template-columns:minmax(0,1.65fr) minmax(360px,.8fr)!important;gap:12px!important}
+.radar-v7 #analysisView .right-stack{position:sticky;top:76px;align-self:start}
+.radar-v7 #analysisView .below-grid{gap:12px!important}
+.radar-v7 #analysisView .chart-card{border-radius:11px!important}
+.radar-v7 #watchlistView .portfolio-subnav{position:sticky;top:64px;z-index:8;background:#071018;padding:8px 0}
+.radar-v7 #portfolioView .portfolio-subnav{position:sticky;top:64px;z-index:8;background:#071018;padding:8px 0}
+.radar-v7 #technicalDrawer{z-index:80}
+
+@media(max-width:1180px){
+  .investor-context-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .investor-context-grid article:nth-child(3){border-right:0}.investor-context-grid article:nth-child(-n+3){border-bottom:1px solid #182b35}
+  .investor-brief-main{grid-template-columns:1fr}.investor-opportunities{border-right:0;border-bottom:1px solid #182b35}
+  .investor-tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .radar-v7 #analysisView .workspace{grid-template-columns:1fr!important}.radar-v7 #analysisView .right-stack{position:static}
+}
+@media(max-width:720px){
+  .investor-brief-head{align-items:flex-start;flex-direction:column}.investor-context-grid{grid-template-columns:1fr 1fr}.investor-context-grid article{border-bottom:1px solid #182b35}
+  .investor-opportunity{grid-template-columns:96px 76px minmax(0,1fr)}.investor-op-metrics{display:none}
+  .investor-tools{grid-template-columns:1fr}.investor-tools button{border-right:0!important;border-bottom:1px solid #182b35!important}
+}
