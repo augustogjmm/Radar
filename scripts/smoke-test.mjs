@@ -57,6 +57,9 @@ try{
     const sr=sidebar?.getBoundingClientRect(),wr=wrap?.getBoundingClientRect(),tr=top?.getBoundingClientRect();
     return {
       productCss:css.some(x=>x.includes('/styles/06-product-design.css')),
+      resetCss:css.some(x=>x.includes('/styles/07-product-reset.css')),
+      productHero:!!document.getElementById('productHomeHero'),
+      dailyRadar:!!document.getElementById('dailyRadarPanel'),
       bodyBg:getComputedStyle(document.body).backgroundColor,
       sidebarWidth:sr?.width||0,
       sidebarRight:sr?.right||0,
@@ -67,10 +70,14 @@ try{
     };
   });
   await assert(design.productCss,'Product design stylesheet no cargó');
+  await assert(design.resetCss,'Product reset stylesheet no cargó');
+  await assert(design.productHero,'Home de producto no se montó');
+  await assert(design.dailyRadar,'Radar de Hoy no se montó');
   await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
   await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
   await assert(design.topHeight>=60&&design.topHeight<=90,'Topbar fuera de diseño: '+design.topHeight);
   await assert(design.bodyOverflow<=4,'Overflow horizontal global: '+design.bodyOverflow);
+  await assert(await page.evaluate(()=>document.getElementById('dailyRadarPanel')?.getBoundingClientRect().height>150),'Radar de Hoy no tiene layout visible');
   await assert(design.navCount>=8,'Navegación incompleta');
   await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
   await shot('01-home');
