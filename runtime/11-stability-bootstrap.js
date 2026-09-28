@@ -185,10 +185,24 @@ function healthStale(n,l='LKG',e='',dataAt=0){healthMark(n,'stale',l,e,dataAt)}
 function healthError(n,e,l='error',dataAt=0){healthMark(n,'error',l,e,dataAt)}
 function healthAge(ts){if(!ts)return'—';const m=Math.max(0,Math.round((Date.now()-ts)/60000));return m<1?'ahora':m<60?`${m}m`:m<1440?`${Math.round(m/60)}h`:`${Math.round(m/1440)}d`}
 function healthDataTimestamp(x){if(!x)return 0;const direct=Number(x.lastTime)*1000||Number(x.loadedAt)||Number(x.receivedAt)||Number(x.fetchedAt);if(Number.isFinite(direct)&&direct>0)return direct;for(const k of ['asOf','verifiedAt','sourceTimestamp','date','period']){const t=Date.parse(String(x[k]||''));if(Number.isFinite(t))return t}return 0}
+function renderTopDataHealth(){
+ const el=$('topDataHealth');if(!el)return;
+ const critical=['dollar','yahoo','byma','rf','crypto'];
+ const states=critical.map(k=>sourceHealth[k]?.state||'unknown');
+ let cls='testing',label='VALIDANDO DATOS';
+ if(states.some(x=>x==='error')){cls='bad';label='DATOS DEGRADADOS'}
+ else if(states.some(x=>x==='stale')){cls='warn';label='DATOS PARCIALES'}
+ else if(states.every(x=>x==='ok')){cls='ok';label='DATOS EN LÍNEA'}
+ else if(states.some(x=>x==='ok')){cls='testing';label='VALIDANDO FUENTES'}
+ el.className=`realtime-pill ${cls}`;
+ const b=el.querySelector('b');if(b)b.textContent=label;
+ el.title=critical.map(k=>`${k}: ${sourceHealth[k]?.label||sourceHealth[k]?.state||'sin validar'}`).join(' · ');
+}
 function renderDataHealth(){
  const map={dollar:'healthDollar',risk:'healthRisk',yahoo:'healthYahoo',byma:'healthByma',rf:'healthRf',indices:'healthIndices',crypto:'healthCrypto',config:'healthConfig'};
  for(const [k,id] of Object.entries(map)){const h=sourceHealth[k]||{},el=$(id);if(!el)continue;let cls=h.state||'unknown';if(h.lastOk&&Date.now()-h.lastOk>1800000&&cls==='ok')cls='stale';el.className=`health-chip ${cls}`;const shownTs=h.lastDataAt||h.lastOk||0;const sp=el.querySelector('span');if(sp)sp.textContent=shownTs?`${h.label||'OK'} · ${healthAge(shownTs)}`:(h.label||'—');el.title=[h.error,h.lastDataAt?`Dato: ${new Date(h.lastDataAt).toLocaleString('es-AR')}`:''].filter(Boolean).join(' · ')}
  const q=$('healthQuality');if(q){const sc=dataValidation.score,cls=sc>=90?'ok':sc>=70?'busy':'error';q.className=`health-chip ${cls}`;const sp=q.querySelector('span');if(sp)sp.textContent=`${sc}/100`}
+ renderTopDataHealth();
 }
 function loadDataLkg(){
  try{const raw=localStorage.getItem(DATA_LKG_KEY)||localStorage.getItem(DATA_LKG_FALLBACK)||'{}';const x=JSON.parse(raw);dataLkg={market:x.market||{},macro:x.macro||{},savedAt:x.savedAt||0}}catch{}
