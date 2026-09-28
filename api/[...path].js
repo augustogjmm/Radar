@@ -496,7 +496,7 @@ async function deepHealth(){
     })
   ]);
   const criticalFailures=checks.filter(x=>x.critical&&!x.ok);
-  return {ok:criticalFailures.length===0,status:criticalFailures.length?'DEGRADED':'OK',release:'5.1.0',gitSha:process.env.VERCEL_GIT_COMMIT_SHA||null,checkedAt:new Date().toISOString(),durationMs:Date.now()-started,criticalFailures:criticalFailures.length,checks};
+  return {ok:criticalFailures.length===0,status:criticalFailures.length?'DEGRADED':'OK',release:'5.2.0',gitSha:process.env.VERCEL_GIT_COMMIT_SHA||null,checkedAt:new Date().toISOString(),durationMs:Date.now()-started,criticalFailures:criticalFailures.length,checks};
 }
 
 async function handler(req,res){
@@ -504,7 +504,7 @@ async function handler(req,res){
   if(req.method==='OPTIONS')return send(res,204,'',{'access-control-allow-origin':'*'});
   const url=new URL(req.url,'https://radar.local'),p=url.pathname;
   try{
-    if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'v93',radarVersion:'v93',release:'5.1.0',gitSha:process.env.VERCEL_GIT_COMMIT_SHA||null,phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
+    if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'v93',radarVersion:'v93',release:'5.2.0',gitSha:process.env.VERCEL_GIT_COMMIT_SHA||null,phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
     if(p==='/api/health/deep')return send(res,200,await deepHealth());
     if(p==='/api/yahoo')return send(res,200,await yahoo(url));
     if(p==='/api/yahoo-batch')return send(res,200,await yahooBatch(url));
@@ -560,7 +560,7 @@ async function handler(req,res){
     if(p==='/api/finviz')return send(res,200,{available:false,source:'Finviz',reason:'Scraping deshabilitado en runtime serverless'});
     if(p==='/api/yahoo/fundamentals')return send(res,200,{available:false,source:'Yahoo',reason:'Fundamentales avanzados no disponibles en este endpoint web'});
     if(p==='/api/byma/merval-usd')return send(res,200,await mervalUsd());
-    if(p==='/api/g2/features')return send(res,200,{marketData:true,webRuntime:true,version:'5.1.0',phase:'12A',technical:false,fixedIncome:false,portfolio:false,risk:false,opportunity:false,advisor:false});
+    if(p==='/api/g2/features')return send(res,200,{marketData:true,webRuntime:true,version:'5.2.0',phase:'12A',technical:false,fixedIncome:false,portfolio:false,risk:false,opportunity:false,advisor:false});
     return send(res,404,{error:'NOT_FOUND',path:p});
   }catch(e){
     return send(res,502,{error:'UPSTREAM_ERROR',path:p,message:String(e?.message||e)});
