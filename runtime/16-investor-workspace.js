@@ -19,6 +19,49 @@ const liquidity=x=>{
   return 0;
 };
 
+function mountSignalsView(){
+  if($('signalsView'))return;
+  const wrap=document.querySelector('.wrap');if(!wrap)return;
+  const view=document.createElement('div');
+  view.id='signalsView';
+  view.className='signals-view v7-signals-view';
+  view.innerHTML=`
+    <div class="v7-workspace-head">
+      <div><span class="investor-eyebrow">TRAZABILIDAD</span><h2>Historial y auditoría de decisiones</h2><p>Señales capturadas por los scanners y seguimiento, con resultado observado, MFE/MAE y R múltiple.</p></div>
+      <div class="v7-head-actions"><button id="signalAuditBtn">Auditar señales</button><button id="signalExportBtn" class="secondary-action">Exportar CSV</button><button id="signalClearBtn" class="secondary-action">Limpiar historial</button></div>
+    </div>
+    <div class="v7-signal-kpis">
+      <div><small>TOTAL</small><b id="sigTotal">0</b></div>
+      <div><small>AUDITABLES</small><b id="sigAuditable">0</b></div>
+      <div><small>RESUELTAS</small><b id="sigResolved">0</b></div>
+      <div><small>WIN RATE</small><b id="sigWinRate">—</b></div>
+      <div><small>ABIERTAS</small><b id="sigOpen">0</b></div>
+      <div><small>SIN TRIGGER</small><b id="sigUntriggered">0</b></div>
+      <div><small>R PROMEDIO</small><b id="sigAvgR">—</b></div>
+    </div>
+    <div id="signalEvidenceNote" class="v7-evidence-note">Sin evidencia suficiente todavía.</div>
+    <div class="v7-signal-toolbar">
+      <label>Origen<select id="signalSourceFilter"><option value="all">Todos</option><option value="scanner-rv">Escáner RV</option><option value="scanner-rf">Escáner RF</option><option value="watchlist">Seguimiento</option></select></label>
+      <label>Resultado<select id="signalOutcomeFilter"><option value="all">Todos</option><option value="open">Abiertas</option><option value="resolved">Resueltas</option><option value="win">TP1</option><option value="loss">STOP</option><option value="untriggered">Sin trigger</option><option value="info">Informativas</option></select></label>
+      <label>Período<select id="signalPeriodFilter"><option value="0">Todo</option><option value="7">7 días</option><option value="30">30 días</option><option value="90">90 días</option></select></label>
+      <div id="signalAuditProgress" class="v7-audit-progress"><span id="signalAuditBar"></span><b id="signalAuditText">Listo</b></div>
+    </div>
+    <div class="v7-signal-table-wrap">
+      <table class="v7-signal-table"><thead><tr><th>Fecha</th><th>Activo</th><th>Origen</th><th>Señal</th><th>TF</th><th>Precio</th><th>Entrada</th><th>Stop</th><th>TP1</th><th>Score</th><th>Resultado</th><th>MFE</th><th>MAE</th><th>R</th><th>Motivo</th></tr></thead><tbody id="signalBody"><tr><td colspan="15" class="signal-empty">Sin señales registradas.</td></tr></tbody></table>
+    </div>
+    <section class="v7-decision-audit">
+      <div class="investor-panel-head"><div><span class="investor-eyebrow">AUDITORÍA</span><h2>Decisiones registradas</h2></div><button id="decisionAuditExportBtn" class="investor-link">Exportar auditoría</button></div>
+      <div class="v7-signal-table-wrap"><table class="v7-signal-table"><thead><tr><th>Fecha</th><th>Activo</th><th>Origen</th><th>Decisión</th><th>Acción</th><th>Score</th><th>Modelo</th><th>Radar</th><th>Motivo / datos</th></tr></thead><tbody id="decisionAuditBody"><tr><td colspan="9" class="signal-empty">Sin decisiones auditadas.</td></tr></tbody></table></div>
+    </section>`;
+  wrap.appendChild(view);
+  $('signalsViewBtn')?.addEventListener('click',()=>typeof window.showSignalsView==='function'?window.showSignalsView():null);
+  for(const id of ['signalSourceFilter','signalOutcomeFilter','signalPeriodFilter'])$(id)?.addEventListener('change',()=>typeof window.renderSignalHistory==='function'&&window.renderSignalHistory());
+  $('signalAuditBtn')?.addEventListener('click',()=>typeof window.auditAllSignals==='function'&&window.auditAllSignals());
+  $('signalExportBtn')?.addEventListener('click',()=>typeof window.exportSignalCsv==='function'&&window.exportSignalCsv());
+  $('signalClearBtn')?.addEventListener('click',()=>typeof window.clearSignalHistory==='function'&&window.clearSignalHistory());
+  $('decisionAuditExportBtn')?.addEventListener('click',()=>typeof window.exportDecisionAudit==='function'&&window.exportDecisionAudit());
+}
+
 function relabelNavigation(){
   const map={
     homeViewBtn:['Resumen','Mercado, oportunidades y cartera'],
@@ -331,7 +374,7 @@ function improveWorkspaceHeaders(){
 
 function apply(){
   document.documentElement.classList.add('radar-v7');
-  relabelNavigation();mountBrief();improveWorkspaceHeaders();renderContext();renderPortfolio();
+  mountSignalsView();relabelNavigation();mountBrief();improveWorkspaceHeaders();renderContext();renderPortfolio();
   setTimeout(()=>refresh(false),4500);
   setInterval(()=>{renderContext();renderPortfolio()},30000);
 }
