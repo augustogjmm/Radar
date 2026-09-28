@@ -108,6 +108,30 @@ try{
   }
   await fs.writeFile('artifacts/probes.json',JSON.stringify({probes:probeResults},null,2));
 
+  const sidebarHit=await page.evaluate(()=>{
+    const ids=['appSidebar','homeViewBtn','scannerViewBtn','fixedIncomeBtn','watchlistViewBtn','portfolioViewBtn','signalsViewBtn','helpBtn','technicalMenuBtn','sidebarCollapseBtn'];
+    const out={};
+    for(const id of ids){
+      const el=document.getElementById(id);
+      if(!el){out[id]={missing:true};continue}
+      const r=el.getBoundingClientRect();
+      const x=Math.max(0,Math.min(innerWidth-1,r.left+r.width/2));
+      const y=Math.max(0,Math.min(innerHeight-1,r.top+r.height/2));
+      const hit=document.elementFromPoint(x,y);
+      out[id]={
+        rect:{left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height},
+        display:getComputedStyle(el).display,
+        position:getComputedStyle(el).position,
+        pointerEvents:getComputedStyle(el).pointerEvents,
+        zIndex:getComputedStyle(el).zIndex,
+        hit:{id:hit?.id||'',className:typeof hit?.className==='string'?hit.className:'',tag:hit?.tagName||''},
+        selfOrChild:!!(hit&&(hit===el||el.contains(hit)))
+      };
+    }
+    return out;
+  });
+  await fs.writeFile('artifacts/sidebar-hit-test.json',JSON.stringify(sidebarHit,null,2));
+
   await page.click('#scannerViewBtn');
   await page.waitForFunction(()=>document.getElementById('scannerView')?.classList.contains('active'));
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Escáner genera overflow global');
