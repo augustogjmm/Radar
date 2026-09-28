@@ -362,6 +362,34 @@ async function refresh(force=false){
   }
 }
 
+
+function foldLegacyMarketWorkspace(){
+  const dashboard=$('dashboardView');
+  if(!dashboard||$('v7AdvancedMarket'))return;
+  const details=document.createElement('details');
+  details.id='v7AdvancedMarket';
+  details.className='v7-advanced-market';
+  details.innerHTML=`
+    <summary>
+      <span>
+        <b>Mercado e inteligencia avanzada</b>
+        <small>Centro de decisión, panorama macro, breadth, tasas, curvas, mercados de referencia e informe diario</small>
+      </span>
+      <span class="v7-advanced-action">Abrir workspace completo</span>
+    </summary>
+    <div class="v7-advanced-market-body"></div>`;
+  dashboard.appendChild(details);
+  const body=details.querySelector('.v7-advanced-market-body');
+  [...dashboard.children].forEach(el=>{
+    if(el!==$('investorBrief')&&el!==details)body.appendChild(el);
+  });
+  details.addEventListener('toggle',()=>{
+    const action=details.querySelector('.v7-advanced-action');
+    if(action)action.textContent=details.open?'Cerrar workspace completo':'Abrir workspace completo';
+    if(details.open)setTimeout(()=>window.dispatchEvent(new Event('resize')),60);
+  });
+}
+
 function improveWorkspaceHeaders(){
   const scannerTitle=document.querySelector('#scannerView .scan-toolbar h2');
   if(scannerTitle)scannerTitle.textContent='Oportunidades · Renta variable y cripto';
@@ -374,7 +402,7 @@ function improveWorkspaceHeaders(){
 
 function apply(){
   document.documentElement.classList.add('radar-v7');
-  mountSignalsView();relabelNavigation();mountBrief();improveWorkspaceHeaders();renderContext();renderPortfolio();
+  mountSignalsView();relabelNavigation();mountBrief();foldLegacyMarketWorkspace();improveWorkspaceHeaders();renderContext();renderPortfolio();
   setTimeout(()=>refresh(false),4500);
   setInterval(()=>{renderContext();renderPortfolio()},30000);
 }
