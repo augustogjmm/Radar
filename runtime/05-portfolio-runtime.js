@@ -833,16 +833,17 @@ async function runRegressionSuite(){
  await get('Watcher 24x7','/api/watcher/status',6000,x=>x?.ok===true,true,'Monitor');
  await get('Dólar','/api/dashboard/fx-current',9000,x=>!!x,true,'Mercados');
  await get('Riesgo país','/api/dashboard/risk',9000,x=>!!x,true,'Mercados');
- await get('Yahoo · SPY','/api/yahoo?symbol=SPY&interval=1d&range=1mo&quiet=1',10000,x=>!!x?.chart?.result?.[0],true,'Mercados');
- await get('Binance · BTC','/api/binance?symbol=BTCUSDT&interval=1h',10000,x=>Array.isArray(x)&&x.length>20,true,'Mercados');
- await get('BYMA universo','/api/byma/equities',12000,x=>!!x,true,'Mercados');
- await get('Binance universo','/api/binance/universe?top=5',10000,x=>Array.isArray(x?.items)&&x.items.length>0,true,'Escáner');
- await get('CEDEAR universo','/api/byma/cedears?liquid=1',12000,x=>Array.isArray(x?.items)&&x.items.length>0,true,'Escáner');
- await get('BYMA histórico scanner','/api/byma/scan-history?symbol=GGAL&tf=short',12000,x=>x?.s==='ok'&&Array.isArray(x?.t)&&x.t.length>=30,true,'Escáner');
+ await get('Yahoo · SPY','/api/yahoo?symbol=SPY&interval=1d&range=1mo&quiet=1',10000,x=>!!x?.chart?.result?.[0],false,'Mercados');
+ await get('Binance · BTC','/api/binance?symbol=BTCUSDT&interval=1h',10000,x=>Array.isArray(x)&&x.length>20,false,'Mercados');
+ await get('BYMA universo','/api/byma/equities?mode=all',12000,x=>Array.isArray(x?.items)&&x.items.length>0,false,'Escáner');
+ await get('Binance universo','/api/binance/universe?top=5',10000,x=>Array.isArray(x?.items)&&x.items.length>0,false,'Escáner');
+ await get('CEDEAR universo','/api/byma/cedears?liquid=1',12000,x=>Array.isArray(x?.items)&&x.items.length>0,false,'Escáner');
+ await get('BYMA histórico scanner','/api/byma/scan-history?symbol=GGAL&tf=short',12000,x=>x?.s==='ok'&&Array.isArray(x?.t)&&x.t.length>=30,false,'Escáner');
+ await get('CEDEAR histórico scanner','/api/byma/scan-history?symbol=AAPL&tf=short',12000,x=>x?.s==='ok'&&Array.isArray(x?.t)&&x.t.length>=30,false,'Escáner');
  await get('Merval USD','/api/byma/merval-usd',12000,x=>Number.isFinite(Number(x?.value)),true,'Mercados');
  await get('Treasury curve','/api/treasury-curve',12000,x=>Array.isArray(x?.points)&&x.points.length>=3,true,'Mercados');
  await get('Tasas locales','/api/local-rates',12000,x=>Number(x?.available)>0,true,'Mercados');
- await get('Renta fija','/api/fixed-income/analytics',12000,x=>Array.isArray(x?.bonds),true,'Mercados');
+ await get('Renta fija','/api/fixed-income/analytics',12000,x=>Array.isArray(x?.bonds)&&x.bonds.length>0,false,'Renta fija');
  const result=qaRenderResult(tests,Math.round(performance.now()-started),true);renderSystemHealth();return result;
 }
 
