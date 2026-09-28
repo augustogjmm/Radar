@@ -11,6 +11,10 @@
       "destination": "/api/router?route=health"
     },
     {
+      "source": "/api/health/deep",
+      "destination": "/api/router?route=health/deep"
+    },
+    {
       "source": "/api/yahoo",
       "destination": "/api/router?route=yahoo"
     },
