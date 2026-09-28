@@ -394,8 +394,17 @@
 .radar-product-reset .product-analysis .reason-box strong{font-size:8.5px!important;color:#6c8797!important}
 .radar-product-reset .product-analysis .reason-box div{font-size:10.5px!important;line-height:1.45!important;color:#a7b6bf!important}
 .radar-product-reset .product-analysis .position-panel{margin-top:10px!important}
-.radar-product-reset .product-analysis .product-analysis-secondary{display:none!important}
-.radar-product-reset .product-analysis .product-fundamentals{display:none!important}
+.radar-product-reset .product-analysis-advanced{margin-top:12px!important}
+.radar-product-reset .product-analysis-advanced .product-advanced-body>.below-grid,
+.radar-product-reset .product-analysis-advanced .product-advanced-body>.card,
+.radar-product-reset .product-analysis-advanced .product-advanced-body>.technical-premium-grid{
+  margin:12px 0 0!important;
+}
+.radar-product-reset .product-analysis-advanced .product-advanced-body>.below-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+}
 .radar-product-reset #technicalStatusGrid{
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
   gap:7px!important;
@@ -694,4 +703,9 @@
     grid-template-columns:86px minmax(70px,.5fr) minmax(0,1fr)!important;
   }
   .radar-product-reset .daily-radar-score{display:none}
+}
+
+.radar-product-reset .product-portfolio.is-empty-portfolio .p360-master-dashboard,
+.radar-product-reset .product-portfolio.is-empty-portfolio .product-portfolio-advanced{
+  display:none!important;
 }
