@@ -355,6 +355,27 @@ body.sidebar-collapsed .wrap{margin-left:72px!important}
   letter-spacing:.05em!important;
 }
 .realtime-pill i{width:6px!important;height:6px!important;box-shadow:none!important}
+.realtime-pill b{font:inherit!important;font-weight:700!important;letter-spacing:inherit!important}
+.realtime-pill.testing{
+  border-color:rgba(125,149,168,.25)!important;
+  background:rgba(125,149,168,.07)!important;
+  color:#95a8b7!important;
+}
+.realtime-pill.ok{
+  border-color:rgba(66,199,131,.23)!important;
+  background:rgba(66,199,131,.06)!important;
+  color:#7ecaa3!important;
+}
+.realtime-pill.warn{
+  border-color:rgba(243,183,77,.28)!important;
+  background:rgba(243,183,77,.07)!important;
+  color:#d7b56d!important;
+}
+.realtime-pill.bad{
+  border-color:rgba(255,107,122,.28)!important;
+  background:rgba(255,107,122,.07)!important;
+  color:#e58a96!important;
+}
 .top-clock{color:#6f8291!important;font-size:11px!important;font-variant-numeric:tabular-nums!important}
 
 /* ===== Core component language ===== */
