@@ -5,8 +5,9 @@ const base=process.env.RADAR_URL||'http://127.0.0.1:4173';
 await fs.mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:1440,height:1000}});
-const errors=[];
+const errors=[],consoleErrors=[];
 page.on('pageerror',e=>errors.push(String(e?.stack||e)));
+page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text())});
 
 function bars(count=280,start=100,step=.18,seconds=86400){
  const now=Math.floor(Date.now()/1000),out=[];
@@ -61,7 +62,18 @@ try{
  const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
  assert(response?.ok(),`Home HTTP ${response?.status()}`);
  await page.waitForSelector('#todayView.active',{timeout:15000});
- await page.waitForFunction(()=>document.querySelectorAll('#todayPriorities .priority-item').length>0,{timeout:30000});
+ try{
+  await page.waitForFunction(()=>document.querySelectorAll('#todayPriorities .priority-item').length>0,{timeout:30000});
+ }catch(e){
+  const diag=await page.evaluate(()=>({
+    priorityHtml:document.getElementById('todayPriorities')?.innerHTML||'',
+    coverage:document.getElementById('radarCoverage')?.textContent||'',
+    status:document.getElementById('systemStatusDetail')?.textContent||'',
+    bodyText:document.body.innerText.slice(0,4000)
+  }));
+  console.error('V6_BOOT_DIAGNOSTIC',JSON.stringify({diag,errors,consoleErrors},null,2));
+  throw e;
+ }
 
  const home=await page.evaluate(()=>({
   views:document.querySelectorAll('.view').length,
@@ -121,6 +133,7 @@ try{
  await page.screenshot({path:'artifacts/v6-04-portfolio.png',fullPage:true});
 
  assert(errors.length===0,'Errores JavaScript: '+errors.join(' | '));
+ assert(consoleErrors.length===0,'Errores de consola: '+consoleErrors.join(' | '));
  console.log(JSON.stringify({ok:true,home,analysis,portfolio,errors},null,2));
 }finally{
  await browser.close();
