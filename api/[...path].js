@@ -413,6 +413,25 @@ async function mervalUsd(){
   if(value===null||value<=0)throw new Error('SPMERVDT no disponible');
   return {value,changePct,symbol:'SPMERVDT',name:'S&P Merval USD (MEP)',source,date,updated:new Date().toISOString(),official:/BYMA/.test(source)&&!/Proxy/.test(source)};
 }
+async function ecoBond(url){
+  const ticker=String(url.searchParams.get('ticker')||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!ticker)throw new Error('ticker requerido');
+  const html=await request('https://bonos.ecovalores.com.ar/eco/ticker.php?t='+encodeURIComponent(ticker),{timeout:16000,headers:{accept:'text/html,*/*'}});
+  const text=plain(html);
+  if(!new RegExp('(?:^|\\s)'+ticker+'(?:\\s|-)','i').test(text))throw new Error('Eco Valores no devolvió ficha para '+ticker);
+  const field=(label)=>{
+    const m=text.match(new RegExp(label+'\\s+([+-]?[0-9][0-9.]*?(?:,[0-9]+)?%?)','i'));
+    return m?num(m[1]):null;
+  };
+  const date=(label)=>{
+    const m=text.match(new RegExp(label+'\\s+(\\d{2}\\/\\d{2}\\/\\d{4})','i'));
+    return m?m[1]:null;
+  };
+  const tir=field('TIR'),duration=field('Duration'),paridad=field('Paridad'),residual=field('Valor\\s+Residual'),technicalValue=field('Valor\\s+T[eé]cnico'),accruedInterest=field('Int\\.?\\s*Corrido'),nextPayment=date('Pr[oó]x\\.?\\s*Cup[oó]n');
+  if([tir,duration,paridad,technicalValue].every(x=>x===null))throw new Error('Eco Valores: ficha sin métricas para '+ticker);
+  return {ticker,tir,duration,paridad,residual,technicalValue,accruedInterest,nextPayment,source:'Eco Valores',sourceUrl:'https://bonos.ecovalores.com.ar/eco/ticker.php?t='+ticker,updated:new Date().toISOString()};
+}
+
 async function fixedIncomeCurve(){
   const x=await getJson('https://compararfondos.com.ar/api/bonos',{timeout:18000});
   const rows=Array.isArray(x?.bonds)?x.bonds:arr(x),bonds=[];
@@ -510,6 +529,7 @@ async function handler(req,res){
     if(p==='/api/treasury-official-series'){const field=String(url.searchParams.get('field')||'10Y').toUpperCase(),map={'1M':'DGS1MO','3M':'DGS3MO','6M':'DGS6MO','1Y':'DGS1','2Y':'DGS2','3Y':'DGS3','5Y':'DGS5','7Y':'DGS7','10Y':'DGS10','20Y':'DGS20','30Y':'DGS30'},series=map[field]||'DGS10';return send(res,200,{source:'FRED / Treasury',field,rows:await fred(series,url.searchParams.get('range')||'1y')})}
     if(p==='/api/treasury-curve')return send(res,200,await treasuryCurve());
     if(p==='/api/fixed-income/curve')return send(res,200,await fixedIncomeCurve());
+    if(p==='/api/eco/bond')return send(res,200,await ecoBond(url));
     if(p==='/api/local-rates')return send(res,200,await localRates());
     if(p==='/api/fixed-income/analytics'){
       const [cr,rates,raw,fx] = await Promise.all([
