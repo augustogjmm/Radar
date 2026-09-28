@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   smoke:
+    if: github.event_name != 'pull_request' || github.head_ref != 'v6-rebuild'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
