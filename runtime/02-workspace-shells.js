@@ -1036,25 +1036,25 @@ bind();
 const VERSION='9S';
 const SHELL_HTML=String.raw`<aside id="appSidebar" class="app-sidebar">
   <div class="sidebar-brand">
-    <div class="sidebar-logo">RT</div>
-    <div class="sidebar-brand-copy"><b>Radar Técnico</b><small>Mercados · Cartera · Decisiones · G2 5.0.0</small></div>
+    <div class="sidebar-logo">R</div>
+    <div class="sidebar-brand-copy"><b>Radar Técnico</b><small>Análisis · Mercado · Cartera</small></div>
   </div>
-  <div class="sidebar-section-label">ESPACIO DE TRABAJO</div>
+  <div class="sidebar-section-label">INVERSIÓN</div>
   <nav class="side-nav">
-    <button id="homeViewBtn" class="side-nav-item active"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg></span><span class="nav-copy"><b>Inicio</b><small>Centro de Mercado</small></span></button>
-    <button id="scannerViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3"/><path d="M3 21h18"/></svg></span><span class="nav-copy"><b>Escáner</b><small>Acciones · CEDEARs · Cripto</small></span></button>
-    <button id="fixedIncomeBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="nav-copy"><b>Escáner renta fija</b><small>Bonos · Letras · ON</small></span></button>
-    <button id="watchlistViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.3 6.7 19l1-5.8-4.2-4.1 5.9-.9z"/></svg></span><span class="nav-copy"><b>Seguimiento</b><small>Activos · Alertas · Disparadores</small></span></button>
-    <button id="portfolioViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M8 7V5h8v2M4 11h16M10 11v2h4v-2"/></svg></span><span class="nav-copy"><b>Cartera</b><small>P&amp;L · Riesgo · Diversificación</small></span></button>
-    <button id="signalsViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><path d="M4.9 5.3A9 9 0 1 1 3 12"/><path d="M3 5v5h5"/></svg></span><span class="nav-copy"><b>Historial</b><small>Señales · Auditoría</small></span></button>
+    <button id="homeViewBtn" class="side-nav-item active"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg></span><span class="nav-copy"><b>Inicio</b><small>Panorama de mercado</small></span></button>
+    <button id="scannerViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3"/><path d="M3 21h18"/></svg></span><span class="nav-copy"><b>Escáner</b><small>Renta variable y cripto</small></span></button>
+    <button id="fixedIncomeBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="nav-copy"><b>Renta fija</b><small>Bonos · Letras · ON</small></span></button>
+    <button id="watchlistViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.3 6.7 19l1-5.8-4.2-4.1 5.9-.9z"/></svg></span><span class="nav-copy"><b>Seguimiento</b><small>Activos y alertas</small></span></button>
+    <button id="portfolioViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M8 7V5h8v2M4 11h16M10 11v2h4v-2"/></svg></span><span class="nav-copy"><b>Cartera</b><small>Posiciones y riesgo</small></span></button>
+    <button id="signalsViewBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><path d="M4.9 5.3A9 9 0 1 1 3 12"/><path d="M3 5v5h5"/></svg></span><span class="nav-copy"><b>Historial</b><small>Señales y decisiones</small></span></button>
   </nav>
   <div class="sidebar-section-label sidebar-secondary-label">SISTEMA</div>
   <nav class="side-nav system-side-nav">
     <button id="helpBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 1 1 3.8 2.1c-.9.5-1.5 1-1.5 2.2M12 17h.01"/></svg></span><span class="nav-copy"><b>Ayuda</b><small>Guía completa de Radar</small></span></button>
-    <button id="technicalMenuBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M8 14v6"/></svg></span><span class="nav-copy"><b>Menú técnico</b><small>Datos · Frescura · QA</small></span></button>
+    <button id="technicalMenuBtn" class="side-nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M8 14v6"/></svg></span><span class="nav-copy"><b>Estado del sistema</b><small>Fuentes y diagnóstico</small></span></button>
   </nav>
   <div class="sidebar-footer">
-    <div class="local-engine-card"><span class="engine-dot"></span><div><b>Motor local</b><small>Datos reales · sin sintéticos</small></div></div>
+    <div class="local-engine-card"><span class="engine-dot"></span><div><b>Sistema operativo</b><small>Fuentes verificables</small></div></div>
     <button id="sidebarCollapseBtn" class="sidebar-collapse" title="Contraer menú"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></span><span>Contraer</span></button>
   </div>
 </aside>
@@ -1138,9 +1138,9 @@ const SHELL_HTML=String.raw`<aside id="appSidebar" class="app-sidebar">
 </aside>`;
 const TOP_HTML=String.raw`<div class="top">
     <div class="top-context">
-      <div class="top-eyebrow">RADAR / ESPACIO DE INVERSIÓN</div>
-      <div id="viewTitle" class="view-title">Centro de Mercado</div>
-      <div id="viewSubtitle" class="view-subtitle">Contexto, inteligencia de mercado y decisiones prioritarias</div>
+      <div class="top-eyebrow">RADAR</div>
+      <div id="viewTitle" class="view-title">Mercados</div>
+      <div id="viewSubtitle" class="view-subtitle">Contexto, oportunidades y riesgo</div>
     </div>
     <div class="search command-search" data-label="ACTIVO / SÍMBOLO" aria-label="Análisis individual de activo">
       <span class="search-symbol-mark">⌕</span>
@@ -1157,11 +1157,11 @@ const TOP_HTML=String.raw`<div class="top">
       <button id="analyzeBtn">Analizar</button>
     </div>
     <div class="top-utilities">
-      <span class="realtime-pill"><i></i> DATOS REALES</span>
+      <span class="realtime-pill"><i></i> DATOS EN LÍNEA</span>
       <span id="topClock" class="top-clock">--:--</span>
     </div>
   </div>`;
-const FOOTER_HTML=String.raw`<div class="footer"><span>Datos técnicos y fundamentales · Open BYMADATA / Binance / Yahoo / Finviz / Alpha Vantage · Renta fija: compararfondos.com.ar / Eco Valores / argen.bond · Macro: BondTerminal / INDEC / DolarApi / ArgentinaDatos · Riesgo país: ArgentinaDatos · Dólar: DolarApi · Uso personal · No constituye asesoramiento financiero.</span><span id="statusLine">Listo.</span></div>`;
+const FOOTER_HTML=String.raw`<div class="footer"><span>Fuentes de mercado: BYMA, Binance, Yahoo, Eco Valores, DolarApi, ArgentinaDatos e INDEC. La procedencia y frescura se muestran dentro de Radar. Uso personal · No constituye asesoramiento financiero.</span><span id="statusLine">Listo.</span></div>`;
 const LOADING_HTML=String.raw`<div id="loading" class="loading" role="status" aria-live="polite" aria-busy="true"><div class="loader premium-loader"><div class="premium-loader-head"><span class="dash-mini-spinner" aria-hidden="true"></span><div><small>RADAR · PROCESANDO</small><b>Analizando activo…</b></div></div><div class="sub" id="loadingText">Descargando datos.</div><div class="premium-loader-track" aria-hidden="true"><i></i></div></div></div>`;
 const TOAST_HTML=String.raw`<div id="radarToastHost" class="radar-toast-host" aria-live="polite" aria-atomic="false"></div>`;
 const DIALOG_HTML=String.raw`<div id="radarDialogHost" class="radar-dialog-backdrop" aria-hidden="true"><section class="radar-dialog" role="dialog" aria-modal="true" aria-labelledby="radarDialogTitle" aria-describedby="radarDialogMessage"><div class="radar-dialog-kicker">RADAR · ACCIÓN</div><h3 id="radarDialogTitle">Confirmar acción</h3><p id="radarDialogMessage" class="radar-dialog-message"></p><label id="radarDialogInputWrap" class="radar-dialog-input-wrap" hidden><span id="radarDialogInputLabel">Valor</span><input id="radarDialogInput" autocomplete="off" /></label><div class="radar-dialog-actions"><button id="radarDialogCancel" type="button" class="secondary-action">Cancelar</button><button id="radarDialogConfirm" type="button">Confirmar</button></div></section></div>`;
