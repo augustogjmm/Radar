@@ -420,7 +420,7 @@ async function ecoBond(url){
   const text=plain(html);
   if(!new RegExp('(?:^|\\s)'+ticker+'(?:\\s|-)','i').test(text))throw new Error('Eco Valores no devolvió ficha para '+ticker);
   const field=(label)=>{
-    const m=text.match(new RegExp(label+'\\s+([+-]?[0-9][0-9.]*?(?:,[0-9]+)?%?)','i'));
+    const m=text.match(new RegExp(label+'\\s+([+-]?[0-9][0-9.]*(?:,[0-9]+)?%?)(?=\\s|$)','i'));
     return m?num(m[1]):null;
   };
   const date=(label)=>{
