@@ -690,3 +690,111 @@ label{color:#7c8f9f!important;font-weight:600!important}
   .scan-toolbar,.watch-toolbar{padding:10px!important}
   :is(.watch-table,.scan-table,.rf-table) td{font-size:11px!important}
 }
+
+
+
+/* ===== Portfolio 360 visual normalization =====
+   Legacy layers used .is-empty as a generic flex state and gave the geo card
+   its own inner grid. Restore one geometry for all portfolio distribution cards. */
+#watchlistView.mode-portfolio .p360-master-dashboard{
+  align-items:start!important;
+}
+#watchlistView.mode-portfolio .p360-master-dashboard>.p360-master-card{
+  display:block!important;
+  align-self:start!important;
+  height:auto!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+#watchlistView.mode-portfolio .alloc-rpt-geo{
+  display:block!important;
+  grid-template-columns:none!important;
+}
+#watchlistView.mode-portfolio .p360-master-visual{
+  width:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:auto!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-layout,
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-layout.is-empty{
+  display:grid!important;
+  grid-template-columns:minmax(108px,128px) minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:center!important;
+  justify-items:stretch!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-height:138px!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-shell{
+  width:128px!important;
+  min-width:0!important;
+  max-width:100%!important;
+  justify-self:center!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut{
+  width:112px!important;
+  height:112px!important;
+  box-shadow:none!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-hole{
+  width:66px!important;
+  height:66px!important;
+  background:#0a151f!important;
+  box-shadow:none!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-hole b{
+  font-size:20px!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-empty{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:76px!important;
+  height:auto!important;
+  padding:12px 14px!important;
+  margin:0!important;
+  text-align:left!important;
+  border:1px dashed #263b4b!important;
+  border-radius:8px!important;
+  background:#09141d!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-empty b{
+  font-size:11px!important;
+  color:#aebdc8!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-empty span{
+  max-width:38rem!important;
+  font-size:10.5px!important;
+  line-height:1.45!important;
+  color:#708493!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+#watchlistView.mode-portfolio .p360-master-card .premium-donut-legend{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+}
+@media(max-width:980px){
+  #watchlistView.mode-portfolio .p360-master-card .premium-donut-layout,
+  #watchlistView.mode-portfolio .p360-master-card .premium-donut-layout.is-empty{
+    grid-template-columns:1fr!important;
+    justify-items:center!important;
+  }
+  #watchlistView.mode-portfolio .p360-master-card .premium-donut-empty{
+    align-items:center!important;
+    text-align:center!important;
+  }
+}
