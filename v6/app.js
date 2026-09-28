@@ -221,7 +221,9 @@ async function loadHealth(){
 }
 
 function todayUniverse(){
- const watch=(appState.watch||[]).map(x=>({symbol:x.symbol,type:x.type||detectType(x.symbol),tf:x.tf||((x.type||'')==='crypto'?'1h':'1d')}));
+ const watch=(appState.watch||[])
+  .map(x=>({symbol:x.symbol,type:x.type||detectType(x.symbol),tf:x.tf||((x.type||'')==='crypto'?'1h':'1d')}))
+  .filter(x=>x.type!=='bond');
  return uniqueBy([...CORE,...watch],x=>`${x.type}|${x.symbol}`);
 }
 function todaySnapshot(rows,bonds){
@@ -338,7 +340,7 @@ async function analyzeSymbol(raw,typeSel='auto',tf='1d'){
  $('analysisTf').value=tf==='1h'||tf==='4h'||tf==='1d'?tf:'1d';
  showView('analysis');setAnalysisError('');
  if(type==='bond'){await analyzeBond(symbol);return}
- $('marketAnalysisLayout').hidden=false;$('bondAnalysisLayout').hidden=true;$('analysisAdvanced').hidden=false;
+ $('marketAnalysisLayout').hidden=false;$('bondAnalysisLayout').hidden=true;$('analysisAdvanced').hidden=false;$('addWatch').hidden=false;
  $('assetSymbol').textContent=symbol;$('assetType').textContent=type;$('assetSource').textContent='cargando';$('assetPrice').textContent='—';$('assetChange').textContent='—';
  try{
   const pack=await fetchBars(symbol,type,tf),a=analyzeBars(pack.bars,type,tf);a.source=pack.source;appState.analysis={symbol,type,tf,bars:pack.bars,a};
@@ -357,9 +359,11 @@ function renderAnalysis(symbol,type,bars,a){
 }
 
 function renderChart(bars,a){
- const host=$('assetChart');host.innerHTML='';
- if(!window.LightweightCharts){host.innerHTML='<div class="empty-state">Motor gráfico no disponible.</div>';return}
+ const host=$('assetChart');
+ if(appState.chartResize?.disconnect)try{appState.chartResize.disconnect()}catch{}
  if(appState.chart?.remove)try{appState.chart.remove()}catch{}
+ host.innerHTML='';
+ if(!window.LightweightCharts){host.innerHTML='<div class="empty-state">Motor gráfico no disponible.</div>';return}
  const chart=LightweightCharts.createChart(host,{height:520,layout:{background:{color:'#0b151d'},textColor:'#718895'},grid:{vertLines:{color:'#13242d'},horzLines:{color:'#13242d'}},rightPriceScale:{borderColor:'#20323f'},timeScale:{borderColor:'#20323f',timeVisible:true}});
  const add=(kind,opt)=>chart.addSeries(kind,opt);
  const candles=add(LightweightCharts.CandlestickSeries,{upColor:'#64bd91',downColor:'#d27480',borderVisible:false,wickUpColor:'#64bd91',wickDownColor:'#d27480'});
@@ -375,7 +379,7 @@ function renderChart(bars,a){
 }
 
 async function analyzeBond(symbol){
- $('marketAnalysisLayout').hidden=true;$('bondAnalysisLayout').hidden=false;$('analysisAdvanced').hidden=true;
+ $('marketAnalysisLayout').hidden=true;$('bondAnalysisLayout').hidden=false;$('analysisAdvanced').hidden=true;$('addWatch').hidden=true;
  $('assetSymbol').textContent=symbol;$('assetType').textContent='bond';$('assetSource').textContent='Renta fija';
  if(!appState.bonds.length)await loadBonds();
  let b=appState.bonds.find(x=>x.symbol===symbol);
