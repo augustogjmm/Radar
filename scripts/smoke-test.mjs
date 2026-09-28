@@ -49,6 +49,30 @@ try{
   await page.waitForFunction(()=>typeof window.scanOne==='function'&&typeof window.showScannerView==='function',{timeout:30000});
   await page.waitForSelector('#dashboardView',{state:'attached',timeout:15000});
   await page.waitForTimeout(1200);
+  const design=await page.evaluate(()=>{
+    const sidebar=document.getElementById('appSidebar');
+    const wrap=document.querySelector('.wrap');
+    const top=document.querySelector('.top');
+    const css=[...document.styleSheets].map(x=>x.href||'').filter(Boolean);
+    const sr=sidebar?.getBoundingClientRect(),wr=wrap?.getBoundingClientRect(),tr=top?.getBoundingClientRect();
+    return {
+      productCss:css.some(x=>x.includes('/styles/06-product-design.css')),
+      bodyBg:getComputedStyle(document.body).backgroundColor,
+      sidebarWidth:sr?.width||0,
+      sidebarRight:sr?.right||0,
+      wrapLeft:wr?.left||0,
+      topHeight:tr?.height||0,
+      bodyOverflow:document.documentElement.scrollWidth-window.innerWidth,
+      navCount:document.querySelectorAll('.side-nav-item').length
+    };
+  });
+  await assert(design.productCss,'Product design stylesheet no cargó');
+  await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
+  await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
+  await assert(design.topHeight>=60&&design.topHeight<=90,'Topbar fuera de diseño: '+design.topHeight);
+  await assert(design.bodyOverflow<=4,'Overflow horizontal global: '+design.bodyOverflow);
+  await assert(design.navCount>=8,'Navegación incompleta');
+  await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
   await shot('01-home');
 
   const basicHealth=await page.evaluate(async()=>{
@@ -86,10 +110,12 @@ try{
 
   await page.click('#scannerViewBtn');
   await page.waitForFunction(()=>document.getElementById('scannerView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Escáner genera overflow global');
   await shot('02-scanner');
 
   await page.click('#fixedIncomeBtn');
   await page.waitForFunction(()=>document.getElementById('rfScannerView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Renta fija genera overflow global');
   await shot('03-fixed-income');
 
   await page.click('#watchlistViewBtn');
@@ -98,6 +124,7 @@ try{
 
   await page.click('#portfolioViewBtn');
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-portfolio'));
+  await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Cartera genera overflow global');
   const layout=await page.evaluate(()=>{
     const v=document.getElementById('watchlistView');
     const sections=[...v.querySelectorAll('#portfolio360Section,#portfolioRiskSection,.watch-table-wrap,.performance-panel,.stress-panel')];
