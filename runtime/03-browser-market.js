@@ -2576,7 +2576,7 @@ async function fetchScannerSeries(item,key){
 }
 async function scanOne(item,key){
  const pack=await fetchScannerSeries(item,key);
- const a=await analyzeSeriesRuntime(pack.data,key,{symbol:pack.symbol,timeframe:pack.tfs?.[key]?.interval,source:'Scanner',standalone:true});
+ const a=await analyzeSeriesRuntime(pack.data,key,{symbol:pack.symbol,timeframe:pack.tfs?.[key]?.interval,source:pack.provider||'Scanner',standalone:true});
  let plan=computeTradePlan(a,true);
  let macroTrend=key==='macro'?a.trend:'—';
 
@@ -2617,8 +2617,9 @@ async function scanOne(item,key){
    item:{symbol:pack.symbol,type:pack.type,panel:item.panel||null},
    key,tfLabel:pack.tfs[key]?.label||key,
    analysis:a,plan,status,macroTrend,marketContext,price:a.c,
+   provider:pack.provider||'Scanner',providerFallback:pack.providerFallback===true,
    rf,
-   why
+   why:(pack.providerFallback?`Fuente alternativa: ${pack.provider}. `:'')+why
  };
  if(rf){
    result.rfScore=fixedIncomeScore(result,state.scan.rfContext||{});
