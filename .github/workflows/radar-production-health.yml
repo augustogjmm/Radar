@@ -1,0 +1,25 @@
+name: Radar Production Health
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: radar-production-health
+  cancel-in-progress: true
+
+jobs:
+  provider-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wait for deployed commit and certify live providers
+        env:
+          RADAR_URL: https://radar-lovat-five.vercel.app
+          EXPECTED_SHA: ${{ github.sha }}
+        run: node scripts/production-health-check.mjs
