@@ -115,7 +115,16 @@ try{
  await page.fill('#quickSymbol','AE38');
  await page.click('#quickSearch button');
  await page.waitForFunction(()=>!document.getElementById('bondAnalysisLayout')?.hidden,{timeout:20000});
- assert(await page.evaluate(()=>/12/.test(document.getElementById('bondYield')?.textContent||'')),'AE38 no mostró TIR');
+ const bondVisual=await page.evaluate(()=>({
+   tir:document.getElementById('bondYield')?.textContent||'',
+   bondVisible:getComputedStyle(document.getElementById('bondAnalysisLayout')).display!=='none',
+   marketVisible:getComputedStyle(document.getElementById('marketAnalysisLayout')).display!=='none',
+   tfDisabled:!!document.getElementById('analysisTf')?.disabled
+ }));
+ assert(/12/.test(bondVisual.tir),'AE38 no mostró TIR');
+ assert(bondVisual.bondVisible,'Ficha de bono no visible');
+ assert(!bondVisual.marketVisible,'El gráfico técnico anterior sigue visible en modo bono');
+ assert(bondVisual.tfDisabled,'Temporalidad debe quedar deshabilitada para bono');
  await page.screenshot({path:'artifacts/v6-03-ae38.png',fullPage:true});
 
  await page.click('[data-view="portfolio"]');
@@ -125,10 +134,14 @@ try{
  const portfolio=await page.evaluate(()=>({
   count:document.getElementById('pCount')?.textContent,
   row:document.getElementById('portfolioBody')?.innerText,
+  topWeight:document.getElementById('pTopWeight')?.textContent,
+  pnl:document.getElementById('pPnl')?.textContent,
   overflow:document.documentElement.scrollWidth-window.innerWidth
  }));
  assert(portfolio.count==='1','Cartera no conservó la posición');
  assert(/AAPL/.test(portfolio.row),'Cartera no muestra AAPL');
+ assert(portfolio.topWeight==='100.0%','Peso de cartera debe mostrarse como porcentaje sin signo: '+portfolio.topWeight);
+ assert(!/^USD 0(?:$|[^,.0-9])/.test(portfolio.pnl),'P&L equivalente no debe redondearse engañosamente a cero: '+portfolio.pnl);
  assert(portfolio.overflow<=4,'Overflow horizontal en cartera');
  await page.screenshot({path:'artifacts/v6-04-portfolio.png',fullPage:true});
 
