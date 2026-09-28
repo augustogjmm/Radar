@@ -364,7 +364,7 @@ function renderChart(bars,a){
  if(appState.chart?.remove)try{appState.chart.remove()}catch{}
  host.innerHTML='';
  if(!window.LightweightCharts){host.innerHTML='<div class="empty-state">Motor gráfico no disponible.</div>';return}
- const chart=LightweightCharts.createChart(host,{height:520,layout:{background:{color:'#0b151d'},textColor:'#718895'},grid:{vertLines:{color:'#13242d'},horzLines:{color:'#13242d'}},rightPriceScale:{borderColor:'#20323f'},timeScale:{borderColor:'#20323f',timeVisible:true}});
+ const chart=LightweightCharts.createChart(host,{height:520,localization:{locale:'es-AR'},layout:{background:{color:'#0b151d'},textColor:'#718895'},grid:{vertLines:{color:'#13242d'},horzLines:{color:'#13242d'}},rightPriceScale:{borderColor:'#20323f'},timeScale:{borderColor:'#20323f',timeVisible:true}});
  const add=(kind,opt)=>chart.addSeries(kind,opt);
  const candles=add(LightweightCharts.CandlestickSeries,{upColor:'#64bd91',downColor:'#d27480',borderVisible:false,wickUpColor:'#64bd91',wickDownColor:'#d27480'});
  candles.setData(bars.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close})));
