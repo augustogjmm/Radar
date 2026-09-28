@@ -8,7 +8,7 @@ const WATCH_KEY='radar_v6_watchlist';
 const SNAPSHOT_KEY='radar_v6_today_snapshot';
 const AR_SYMBOLS=new Set(['GGAL','YPFD','PAMP','BMA','BBAR','TXAR','CEPU','TGSU2','COME','LOMA','CRES','SUPV','BYMA','TGNO4','MIRG','ALUA']);
 const CEDEAR_SYMBOLS=new Set(['AAPL','NVDA','MELI','MSFT','AMZN','GOOGL','META','TSLA','SPY','QQQ','KO','WMT','JPM','XOM','GOLD','AMD','NFLX']);
-const CORE=[
+const FALLBACK_CORE=[
  {symbol:'BTCUSDT',type:'crypto',tf:'1h'},
  {symbol:'ETHUSDT',type:'crypto',tf:'1h'},
  {symbol:'SOLUSDT',type:'crypto',tf:'1h'},
@@ -22,7 +22,7 @@ const CORE=[
  {symbol:'QQQ',type:'stock',tf:'1d'}
 ];
 const BONDS=['AE38','AL30','GD30'];
-const appState={view:'today',context:null,health:null,today:[],bonds:[],portfolio:loadJson(PORTFOLIO_KEY,[]),watch:loadJson(WATCH_KEY,[]),analysis:null,chart:null};
+const appState={view:'today',context:null,health:null,today:[],todayUniverse:[],universeMeta:null,bonds:[],portfolio:loadJson(PORTFOLIO_KEY,[]),watch:loadJson(WATCH_KEY,[]),analysis:null,chart:null};
 
 function loadJson(k,f){try{const x=JSON.parse(localStorage.getItem(k)||'null');return x??f}catch{return f}}
 function saveJson(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
@@ -36,6 +36,52 @@ function fmtMoney(v,ccy=''){const x=n(v);if(!Number.isFinite(x))return'—';retu
 function compact(s,max=160){s=String(s||'').replace(/\s+/g,' ').trim();return s.length>max?s.slice(0,max-1).trim()+'…':s}
 function ago(ts){if(!ts)return'—';const m=Math.max(0,Math.round((Date.now()-ts)/60000));return m<1?'ahora':m<60?`${m}m`:m<1440?`${Math.round(m/60)}h`:`${Math.round(m/1440)}d`}
 function uniqueBy(arr,keyFn){const m=new Map();for(const x of arr)m.set(keyFn(x),x);return [...m.values()]}
+
+function legacyType(type,symbol){
+ const t=String(type||'').toLowerCase();
+ if(t==='argbond'||t==='on')return'bond';
+ if(['crypto','stock','argstock','cedear','bond'].includes(t))return t;
+ return detectType(symbol,'auto');
+}
+function defaultCurrency(type){return type==='crypto'?'USDT':type==='stock'?'USD':'ARS'}
+function legacyPosition(item){
+ const tx=Array.isArray(item?.transactions)?[...item.transactions].sort((a,b)=>n(a.ts)-n(b.ts)):[];
+ if(tx.length){
+  let qty=0,cost=0;
+  for(const t of tx){
+   const typ=String(t.type||'').toUpperCase(),q=Math.max(0,n(t.qty)||0),p=Math.max(0,n(t.price)||0),fees=Math.max(0,n(t.fees)||0);
+   if(typ==='BUY'){qty+=q;cost+=q*p+fees}
+   else if(typ==='SELL'&&qty>0){const sold=Math.min(qty,q),avg=cost/qty;qty-=sold;cost-=sold*avg;if(qty<1e-10){qty=0;cost=0}}
+  }
+  if(qty>0&&cost>0)return{qty,buy:cost/qty};
+ }
+ const qty=n(item?.quantity),buy=n(item?.buyPrice),positionSize=n(item?.positionSize);
+ if(qty>0&&buy>0)return{qty,buy};
+ if(positionSize>0&&buy>0)return{qty:positionSize/buy,buy};
+ return null;
+}
+function migrateLegacyState(){
+ const hasV6Portfolio=localStorage.getItem(PORTFOLIO_KEY)!==null;
+ const hasV6Watch=localStorage.getItem(WATCH_KEY)!==null;
+ if(hasV6Portfolio&&hasV6Watch)return;
+ const legacy=loadJson('radar_web_config_v1',null),config=legacy?.config||legacy;
+ if(!Array.isArray(config?.watchlist)||!config.watchlist.length)return;
+ const migratedWatch=[],migratedPortfolio=[];
+ for(const item of config.watchlist){
+  const type=legacyType(item.type,item.symbol),symbol=cleanSymbol(item.symbol,type);
+  if(!symbol||!['crypto','stock','argstock','cedear','bond'].includes(type))continue;
+  if(type!=='bond')migratedWatch.push({symbol,type,tf:type==='crypto'?'1h':'1d',migratedFromV5:true});
+  const pos=legacyPosition(item);
+  if((item.inPortfolio||pos)&&pos?.qty>0&&pos?.buy>0){
+   migratedPortfolio.push({
+    id:String(item.id||`migrated-${type}-${symbol}`),symbol,type,qty:pos.qty,buy:pos.buy,
+    currency:item.portfolioCurrency||defaultCurrency(type),addedAt:n(item.portfolioAddedAt)||Date.now(),migratedFromV5:true
+   });
+  }
+ }
+ if(!hasV6Watch&&migratedWatch.length){appState.watch=uniqueBy(migratedWatch,x=>`${x.type}|${x.symbol}`);saveJson(WATCH_KEY,appState.watch)}
+ if(!hasV6Portfolio&&migratedPortfolio.length){appState.portfolio=uniqueBy(migratedPortfolio,x=>`${x.type}|${x.symbol}`);saveJson(PORTFOLIO_KEY,appState.portfolio)}
+}
 
 async function getJson(url,timeout=25000){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);
@@ -221,11 +267,44 @@ async function loadHealth(){
  }
 }
 
-function todayUniverse(){
+function liquidRank(x){
+ for(const k of ['quoteVolume','volumeAmount','tradeVolume','volume']){const v=n(x?.[k]);if(Number.isFinite(v)&&v>0)return v}
+ return 0;
+}
+async function todayUniverse(){
  const watch=(appState.watch||[])
-  .map(x=>({symbol:x.symbol,type:x.type||detectType(x.symbol),tf:x.tf||((x.type||'')==='crypto'?'1h':'1d')}))
+  .map(x=>({symbol:x.symbol,type:x.type||detectType(x.symbol),tf:x.tf||((x.type||'')==='crypto'?'1h':'1d'),source:'Seguimiento'}))
   .filter(x=>x.type!=='bond');
- return uniqueBy([...CORE,...watch],x=>`${x.type}|${x.symbol}`);
+ const discovered=[];
+ const counts={crypto:0,argstock:0,cedear:0,watch:watch.length};
+ const [crypto,ar,cedear]=await Promise.allSettled([
+  getJson('/api/binance/universe?top=8',30000),
+  getJson('/api/byma/equities?mode=leading',30000),
+  getJson('/api/byma/cedears?liquid=1',30000)
+ ]);
+ if(crypto.status==='fulfilled'){
+  const rows=(crypto.value?.items||[]).slice(0,8);
+  rows.forEach(x=>discovered.push({symbol:String(x.symbol||'').toUpperCase(),type:'crypto',tf:'1h',source:'Binance volumen'}));
+  counts.crypto=rows.length;
+ }
+ if(ar.status==='fulfilled'){
+  const rows=[...(ar.value?.items||[])].sort((a,b)=>liquidRank(b)-liquidRank(a)).slice(0,8);
+  rows.forEach(x=>discovered.push({symbol:String(x.symbol||'').toUpperCase(),type:'argstock',tf:'1d',source:'BYMA líderes'}));
+  counts.argstock=rows.length;
+ }
+ if(cedear.status==='fulfilled'){
+  const rows=[...(cedear.value?.items||[])]
+   .filter(x=>!['SPY','QQQ'].includes(String(x.symbol||'').toUpperCase()))
+   .sort((a,b)=>liquidRank(b)-liquidRank(a)).slice(0,8);
+  rows.forEach(x=>discovered.push({symbol:String(x.symbol||'').toUpperCase(),type:'cedear',tf:'1d',source:'BYMA CEDEAR líquido'}));
+  counts.cedear=rows.length;
+ }
+ const market=[{symbol:'SPY',type:'stock',tf:'1d',source:'Mercado USA'},{symbol:'QQQ',type:'stock',tf:'1d',source:'Mercado USA'}];
+ let universe=uniqueBy([...watch,...discovered,...market],x=>`${x.type}|${x.symbol}`);
+ if(universe.length<8)universe=uniqueBy([...watch,...FALLBACK_CORE],x=>`${x.type}|${x.symbol}`);
+ appState.todayUniverse=universe;
+ appState.universeMeta={...counts,total:universe.length,discoveredAt:Date.now()};
+ return universe;
 }
 function todaySnapshot(rows,bonds){
  const items={};for(const x of rows){const a=x.analysis;items[`${x.type}|${x.symbol}`]={kind:a.kind,score:a.score,price:a.price}}
@@ -285,7 +364,7 @@ function renderBondRadar(){
 
 function renderToday(rows,changes){
  const actionable=rows.filter(x=>['buy','sell','watch'].includes(x.analysis.kind)).sort((a,b)=>b.analysis.score-a.analysis.score).slice(0,7);
- $('radarCoverage').textContent=`${rows.length}/${todayUniverse().length} con datos`;
+ $('radarCoverage').textContent=`${rows.length}/${appState.todayUniverse.length} con datos`;
  $('changeCount').textContent=String(changes.length);
  $('todayUpdated').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
  $('todayPriorities').innerHTML=actionable.length?actionable.map(x=>{
@@ -306,7 +385,7 @@ async function refreshToday(){
  $('todayPriorities').innerHTML='<div class="empty-state">Analizando mercado y seguimiento…</div>';
  try{
   await Promise.all([loadContext(),loadHealth()]);
-  const universe=todayUniverse(),rows=[],errors=[];let cursor=0;
+  const universe=await todayUniverse(),rows=[],errors=[];let cursor=0;
   const workers=Array.from({length:3},async()=>{while(true){const i=cursor++;if(i>=universe.length)return;const item=universe[i];try{rows.push(await scanAsset(item))}catch(e){errors.push({item,error:e.message})}}});
   await Promise.all(workers);
   const bonds=await loadBonds();
@@ -484,7 +563,7 @@ function bind(){
 }
 
 async function boot(){
- bind();renderPortfolio();showView('today');
+ migrateLegacyState();bind();renderPortfolio();showView('today');
  await refreshToday();
  if(appState.portfolio.length)refreshPortfolio(true);
 }
