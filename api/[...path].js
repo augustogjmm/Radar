@@ -407,12 +407,69 @@ async function fixedIncomeCurve(){
   bonds.sort((a,b)=>a.duration-b.duration);
   return {source:'CompararFondos · curva soberana',updated:new Date().toISOString(),bonds};
 }
+async function deepHealth(){
+  const started=Date.now();
+  const checks=[];
+  const run=async(name,critical,fn)=>{
+    const t=Date.now();
+    try{
+      const detail=await fn();
+      checks.push({name,critical,ok:true,latencyMs:Date.now()-t,detail});
+    }catch(e){
+      checks.push({name,critical,ok:false,latencyMs:Date.now()-t,error:String(e?.message||e).slice(0,300)});
+    }
+  };
+  await Promise.all([
+    run('Yahoo SPY',true,async()=>{
+      const u=new URL('https://radar.local/api/yahoo');u.searchParams.set('symbol','SPY');u.searchParams.set('interval','1d');u.searchParams.set('range','1mo');
+      const q=compactYahooChart('SPY',await yahoo(u));
+      if(!q.ok||!Array.isArray(q.bars)||q.bars.length<20)throw new Error(q.error||'histórico insuficiente');
+      return {bars:q.bars.length,last:q.last};
+    }),
+    run('Binance BTC',true,async()=>{
+      const u=new URL('https://radar.local/api/binance');u.searchParams.set('symbol','BTCUSDT');u.searchParams.set('interval','1h');
+      const rows=await binanceKlines(u);if(!Array.isArray(rows)||rows.length<50)throw new Error('klines insuficientes');
+      return {bars:rows.length};
+    }),
+    run('BYMA acciones',true,async()=>{
+      const u=new URL('https://radar.local/api/byma/equities');u.searchParams.set('mode','all');
+      const x=await bymaEquities(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo vacío');
+      return {count:x.items.length};
+    }),
+    run('BYMA CEDEAR',true,async()=>{
+      const u=new URL('https://radar.local/api/byma/cedears');u.searchParams.set('liquid','1');
+      const x=await bymaCedears(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo vacío');
+      return {count:x.items.length,liquidCount:x.liquidCount};
+    }),
+    run('BYMA histórico GGAL',true,async()=>{
+      const u=new URL('https://radar.local/api/byma/scan-history');u.searchParams.set('symbol','GGAL');u.searchParams.set('tf','short');
+      const x=await bymaHistory(u);if(x?.s!=='ok'||!Array.isArray(x?.t)||x.t.length<30)throw new Error('histórico insuficiente');
+      return {bars:x.t.length};
+    }),
+    run('Dólar',true,async()=>{
+      const x=await fxCurrent();if(!(num(x?.fx?.mep?.venta)>0)&&!(num(x?.fx?.ccl?.venta)>0))throw new Error('MEP/CCL no disponible');
+      return {mep:x.fx?.mep?.venta,ccl:x.fx?.ccl?.venta};
+    }),
+    run('Renta fija',true,async()=>{
+      const x=await fixedIncomeCurve();if(!Array.isArray(x.bonds)||x.bonds.length<2)throw new Error('curva soberana insuficiente');
+      return {count:x.bonds.length};
+    }),
+    run('Riesgo país',false,async()=>{
+      const x=await riskNow();if(!(num(x?.value)>0))throw new Error('riesgo país no disponible');
+      return {value:x.value,date:x.date,source:x.source};
+    })
+  ]);
+  const criticalFailures=checks.filter(x=>x.critical&&!x.ok);
+  return {ok:criticalFailures.length===0,status:criticalFailures.length?'DEGRADED':'OK',release:'5.0.0',checkedAt:new Date().toISOString(),durationMs:Date.now()-started,criticalFailures:criticalFailures.length,checks};
+}
+
 async function handler(req,res){
   if(!['GET','POST','OPTIONS'].includes(req.method||''))return send(res,405,{error:'METHOD_NOT_ALLOWED'});
   if(req.method==='OPTIONS')return send(res,204,'',{'access-control-allow-origin':'*'});
   const url=new URL(req.url,'https://radar.local'),p=url.pathname;
   try{
     if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'v93',radarVersion:'v93',release:'5.0.0',phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
+    if(p==='/api/health/deep')return send(res,200,await deepHealth());
     if(p==='/api/yahoo')return send(res,200,await yahoo(url));
     if(p==='/api/yahoo-batch')return send(res,200,await yahooBatch(url));
     if(p==='/api/binance')return send(res,200,await binanceKlines(url));
