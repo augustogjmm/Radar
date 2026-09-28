@@ -333,6 +333,7 @@ function setAnalysisError(msg=''){
 async function analyzeSymbol(raw,typeSel='auto',tf='1d'){
  let symbol=String(raw||'').trim().toUpperCase();if(!symbol)return;
  const type=detectType(symbol,typeSel);symbol=cleanSymbol(symbol,type);
+ if(['argstock','cedear','bond'].includes(type))tf='1d';
  $('quickSymbol').value=symbol;$('analysisType').value=type==='bond'?'bond':(typeSel==='auto'?'auto':type);
  $('analysisTf').value=tf==='1h'||tf==='4h'||tf==='1d'?tf:'1d';
  showView('analysis');setAnalysisError('');
@@ -391,6 +392,7 @@ async function analyzeBond(symbol){
  if(Number.isFinite(n(b.risk?.value)))parts.push(`Riesgo país ${Math.round(n(b.risk.value))} pb: condiciona la sensibilidad de los soberanos en USD.`);
  parts.push('La TIR alta no es por sí sola una señal de compra; debe leerse junto con paridad, duration, calendario de pagos y riesgo soberano.');
  $('bondReading').textContent=parts.join(' ');
+ appState.analysis={symbol,type:'bond',tf:'1d',bars:[],a:{price:b.price,kind:'bond',label:'RENTA FIJA'},bond:b};
 }
 
 function openPositionDialog(prefill={}){
