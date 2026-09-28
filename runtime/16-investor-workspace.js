@@ -257,7 +257,7 @@ function portfolioAttention(){
     try{if(typeof window.portfolioDecision==='function')d=window.portfolioDecision(item,r)}catch{}
     if(d&&['exit','reduce','watch'].includes(d.key))rows.push({item,d,i});
   }
-  return{held,rows:rows.sort((a,b)=>({exit:0,reduce:1,watch:2}[a.d.key]-({exit:0,reduce:1,watch:2}[b.d.key]))};
+  return{held,rows:rows.sort((a,b)=>({exit:0,reduce:1,watch:2}[a.d.key]??9)-({exit:0,reduce:1,watch:2}[b.d.key]??9))};
 }
 function renderPortfolio(){
   const {held,rows}=portfolioAttention();
