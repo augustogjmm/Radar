@@ -2,7 +2,7 @@
    Keeps the certified engines intact and turns the home into a decision workspace. */
 (()=>{
   'use strict';
-  const VERSION='1.1.0';
+  const VERSION='1.2.0';
 
   function text(el,value){ if(el) el.textContent=value; }
 
@@ -166,16 +166,32 @@
     if(decision && right.firstElementChild!==decision) right.prepend(decision);
     if(levels && decision && decision.nextElementSibling!==levels) decision.insertAdjacentElement('afterend',levels);
 
-    for(const el of cards){
-      if(el===decision||el===levels) continue;
-      el.classList.add('product-analysis-secondary');
-    }
-
+    const secondary=cards.filter(el=>el!==decision&&el!==levels);
     const below=[...view.querySelectorAll('.below-grid')];
-    below.forEach(el=>el.classList.add('product-analysis-secondary'));
-
     const fundamentals=document.getElementById('fundamentalsCard');
-    if(fundamentals) fundamentals.classList.add('product-fundamentals');
+    const advanced=[...below,...secondary,...(fundamentals?[fundamentals]:[])].filter(Boolean);
+
+    if(advanced.length&&!document.getElementById('productAnalysisAdvanced')){
+      const details=document.createElement('details');
+      details.id='productAnalysisAdvanced';
+      details.className='product-advanced-context product-analysis-advanced';
+      details.innerHTML=`
+        <summary>
+          <span>
+            <b>Análisis avanzado</b>
+            <small>Multi-timeframe, escenarios, confluencia, Fibonacci, momentum, fuerza relativa, backtest y fundamentales</small>
+          </span>
+          <span class="product-summary-action">Abrir detalle</span>
+        </summary>
+        <div class="product-advanced-body"></div>`;
+      view.appendChild(details);
+      const body=details.querySelector('.product-advanced-body');
+      advanced.forEach(el=>body.appendChild(el));
+      details.addEventListener('toggle',()=>{
+        const a=details.querySelector('.product-summary-action');
+        if(a) a.textContent=details.open?'Cerrar detalle':'Abrir detalle';
+      });
+    }
 
     const h=decision?.querySelector('h3');
     text(h,'DECISIÓN');
