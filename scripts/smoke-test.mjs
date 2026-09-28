@@ -30,8 +30,28 @@ const binancePayload=bars=>bars.map(x=>[x.time*1000,String(x.open),String(x.high
 await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
   if(u.origin!==new URL(base).origin)return route.continue();
+  if(u.pathname==='/api/binance/universe')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({count:6,items:[
+    {symbol:'BTCUSDT',quoteVolume:900},{symbol:'ETHUSDT',quoteVolume:800},{symbol:'SOLUSDT',quoteVolume:700},
+    {symbol:'BNBUSDT',quoteVolume:600},{symbol:'XRPUSDT',quoteVolume:500},{symbol:'LINKUSDT',quoteVolume:400}
+  ]})});
   if(u.pathname==='/api/binance')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(binancePayload(hourly))});
   if(u.pathname==='/api/yahoo')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(yahooPayload(u.searchParams.get('interval')==='1wk'?daily:hourly))});
+  if(u.pathname==='/api/byma/cedears')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({count:6,items:[
+    {symbol:'AAPL',volumeAmount:900},{symbol:'NVDA',volumeAmount:800},{symbol:'MELI',volumeAmount:700},
+    {symbol:'AMZN',volumeAmount:600},{symbol:'MSFT',volumeAmount:500},{symbol:'TSLA',volumeAmount:400}
+  ]})});
+  if(u.pathname==='/api/byma/equities')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({count:6,items:[
+    {symbol:'GGAL',volumeAmount:900},{symbol:'YPFD',volumeAmount:800},{symbol:'PAMP',volumeAmount:700},
+    {symbol:'BMA',volumeAmount:600},{symbol:'BBAR',volumeAmount:500},{symbol:'CEPU',volumeAmount:400}
+  ]})});
+  if(u.pathname==='/api/fixed-income/analytics')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+    countryRisk:{value:845,change:15},
+    bonds:[
+      {ticker:'AE38',tir:12.4,paridad:54.2,duration:5.9,precio:58.7,vencimiento:'2038-01-09'},
+      {ticker:'AL30',tir:11.9,paridad:61.5,duration:3.2,precio:63.1,vencimiento:'2030-07-09'},
+      {ticker:'GD30',tir:11.5,paridad:64.4,duration:3.0,precio:65.2,vencimiento:'2030-07-09'}
+    ]
+  })});
   if(u.pathname==='/api/byma/scan-history'||u.pathname==='/api/byma/history')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaPayload(daily))});
   return route.continue();
 });
@@ -57,9 +77,11 @@ try{
     const sr=sidebar?.getBoundingClientRect(),wr=wrap?.getBoundingClientRect(),tr=top?.getBoundingClientRect();
     return {
       productCss:css.some(x=>x.includes('/styles/06-product-design.css')),
-      resetCss:css.some(x=>x.includes('/styles/07-product-reset.css')),
-      productHero:!!document.getElementById('productHomeHero'),
-      dailyRadar:!!document.getElementById('dailyRadarPanel'),
+      investorCss:css.some(x=>x.includes('/styles/08-investor-workspace.css')),
+      oldResetCss:css.some(x=>x.includes('/styles/07-product-reset.css')),
+      investorBrief:!!document.getElementById('investorBrief'),
+      oldProductHero:!!document.getElementById('productHomeHero'),
+      oldDailyRadar:!!document.getElementById('dailyRadarPanel'),
       bodyBg:getComputedStyle(document.body).backgroundColor,
       sidebarWidth:sr?.width||0,
       sidebarRight:sr?.right||0,
@@ -69,16 +91,51 @@ try{
       navCount:document.querySelectorAll('.side-nav-item').length
     };
   });
-  await assert(design.productCss,'Product design stylesheet no cargó');
-  await assert(design.resetCss,'Product reset stylesheet no cargó');
-  await assert(design.productHero,'Home de producto no se montó');
-  await assert(design.dailyRadar,'Radar de Hoy no se montó');
+  await assert(design.productCss,'Base product stylesheet no cargó');
+  await assert(design.investorCss,'Investor workspace stylesheet no cargó');
+  await assert(!design.oldResetCss,'La capa product-reset vieja sigue cargada');
+  await assert(design.investorBrief,'Investor Brief no se montó');
+  await assert(!design.oldProductHero,'El hero simplificado viejo sigue presente');
+  await assert(!design.oldDailyRadar,'El Daily Radar paralelo viejo sigue presente');
   await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
   await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
   await assert(design.topHeight>=60&&design.topHeight<=90,'Topbar fuera de diseño: '+design.topHeight);
   await assert(design.bodyOverflow<=4,'Overflow horizontal global: '+design.bodyOverflow);
-  await assert(await page.evaluate(()=>document.getElementById('dailyRadarPanel')?.getBoundingClientRect().height>150),'Radar de Hoy no tiene layout visible');
+  await assert(await page.evaluate(()=>document.getElementById('investorBrief')?.getBoundingClientRect().height>260),'Investor Brief no tiene layout visible');
   await assert(design.navCount>=8,'Navegación incompleta');
+
+  const preserved=await page.evaluate(()=>{
+    const ids=[
+      'scannerView','startScanBtn','stopScanBtn','scanUniverse','scanTf',
+      'rfScannerView','rfStartBtn','rfStopBtn','rfUniverse','rfObjective','rfHorizon',
+      'analysisView','chart','technicalStatusGrid',
+      'watchlistView','addWatchBtn','refreshWatchlistBtn','enableAlertsBtn',
+      'portfolio360Section','portfolioRiskSection','refreshPortfolioRiskBtn','refreshPerformanceBtn',
+      'signalsView','technicalDrawer','selfTestBtn','regressionBtn','dataDiagBtn'
+    ];
+    return Object.fromEntries(ids.map(id=>[id,!!document.getElementById(id)]));
+  });
+  const missing=Object.entries(preserved).filter(([,ok])=>!ok).map(([id])=>id);
+  await assert(missing.length===0,'v7 perdió funciones/core DOM: '+missing.join(', '));
+  await fs.writeFile('artifacts/v7-preserved-capabilities.json',JSON.stringify(preserved,null,2));
+
+  await page.click('#investorBriefRefresh');
+  await page.waitForFunction(()=>{
+    const t=document.getElementById('investorBriefStatus')?.textContent||'';
+    return /activos con análisis/.test(t)||/no pudo completarse/i.test(t);
+  },{timeout:45000});
+  const brief=await page.evaluate(()=>({
+    status:document.getElementById('investorBriefStatus')?.textContent||'',
+    bonds:document.querySelectorAll('#investorBondList .investor-bond').length,
+    tools:document.querySelectorAll('#investorBrief .investor-tools button').length,
+    opportunityRows:document.querySelectorAll('#investorOpportunityList .investor-opportunity').length,
+    hasEmpty:!!document.querySelector('#investorOpportunityList .investor-empty')
+  }));
+  await assert(/activos con análisis/.test(brief.status),'Investor Brief no completó lectura con motor real: '+brief.status);
+  await assert(brief.bonds===3,'Investor Brief no mostró AE38/AL30/GD30');
+  await assert(brief.tools===4,'Accesos a herramientas completas incompletos');
+  await assert(brief.opportunityRows>0||brief.hasEmpty,'Investor Brief no produjo resultado explícito');
+  await fs.writeFile('artifacts/v7-investor-brief.json',JSON.stringify(brief,null,2));
   await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
   await shot('01-home');
 
