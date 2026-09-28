@@ -219,8 +219,8 @@ async function bymaEquities(url){
 }
 async function bymaCedears(url){
   const liquidOnly=url.searchParams.get('liquid')==='1';
-  let x=await postByma('cedears',{page_size:5000}),rows=arr(x);
-  if(!rows.length){x=await postByma('cedears',{});rows=arr(x)}
+  let x=await postByma('cedears',{page_size:5000,T1:true}),rows=arr(x);
+  if(!rows.length){x=await postByma('cedears',{T1:true});rows=arr(x)}
   const ars=rows.filter(x=>!x.denominationCcy||String(x.denominationCcy).toUpperCase()==='ARS');if(ars.length)rows=ars;
   const settled=rows.filter(x=>!x.settlementType||String(x.settlementType)==='2');if(settled.length)rows=settled;
   let items=uniqueBest(rows).map(x=>({symbol:String(x.symbol||'').toUpperCase(),trade:num(x.trade),closingPrice:num(x.closingPrice),volume:num(x.volume),tradeVolume:num(x.tradeVolume),volumeAmount:num(x.volumeAmount),tradeHour:String(x.tradeHour||''),settlementType:String(x.settlementType||''),denominationCcy:String(x.denominationCcy||'')})).sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
@@ -261,13 +261,13 @@ async function bymaHistory(url){
 }
 async function bymaQuote(url){
   const symbol=String(url.searchParams.get('symbol')||'').toUpperCase().replace('.BA','');if(!symbol)throw new Error('Ticker vacío');
-  const x=await postByma('bnown/fichatecnica/especies/cotizacion',{symbol,settlementType:'2','Content-Type':'application/json'});
+  const x=await postByma('bnown/fichatecnica/especies/cotizacion',{symbol,settlementType:'2'});
   const rows=arr(x);if(!rows.length)throw new Error('BYMA no devolvió cotización para '+symbol);
   return {quote:rows[0],serverTime:Math.floor(Date.now()/1000)};
 }
 async function bymaFixedIncome(url){
   const kind=(url.searchParams.get('kind')||'all').toLowerCase(),currency=(url.searchParams.get('currency')||'ALL').toUpperCase(),liquid=url.searchParams.get('liquid')==='1';
-  const [pub,on]=await Promise.allSettled([postByma('public-bonds',{page_size:5000}),postByma('negociable-obligations',{page_size:5000})]);
+  const [pub,on]=await Promise.allSettled([postByma('public-bonds',{page_size:5000,T1:true}),postByma('negociable-obligations',{page_size:5000,T1:true})]);
   const publicRows=pub.status==='fulfilled'?arr(pub.value):[],onRows=on.status==='fulfilled'?arr(on.value):[];
   const norm=(x,type)=>({symbol:String(x.symbol||'').trim().toUpperCase(),type,category:type==='on'?'ON':'Soberano',securityType:String(x.securityType||''),denominationCcy:String(x.denominationCcy||''),settlementType:String(x.settlementType||''),maturityDate:String(x.maturityDate||''),daysToMaturity:num(x.daysToMaturity),trade:num(x.trade),closingPrice:num(x.closingPrice),volume:num(x.volume),tradeVolume:num(x.tradeVolume),volumeAmount:num(x.volumeAmount)});
   let items=[...publicRows.map(x=>norm(x,'bond')),...onRows.map(x=>norm(x,'on'))].filter(x=>x.symbol);
