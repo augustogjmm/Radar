@@ -135,7 +135,16 @@ try{
   await assert(brief.bonds===3,'Investor Brief no mostró AE38/AL30/GD30');
   await assert(brief.tools===4,'Accesos a herramientas completas incompletos');
   await assert(brief.opportunityRows>0||brief.hasEmpty,'Investor Brief no produjo resultado explícito');
-  await fs.writeFile('artifacts/v7-investor-brief.json',JSON.stringify(brief,null,2));
+  const advancedHome=await page.evaluate(()=>({
+    exists:!!document.getElementById('v7AdvancedMarket'),
+    open:!!document.getElementById('v7AdvancedMarket')?.open,
+    decisionInside:!!document.querySelector('#v7AdvancedMarket #decisionCenter'),
+    marketInside:!!document.querySelector('#v7AdvancedMarket .market-board')
+  }));
+  await assert(advancedHome.exists,'Falta workspace de mercado avanzado');
+  await assert(!advancedHome.open,'Mercado avanzado debe iniciar plegado');
+  await assert(advancedHome.decisionInside&&advancedHome.marketInside,'El plegado eliminó módulos de mercado');
+  await fs.writeFile('artifacts/v7-investor-brief.json',JSON.stringify({...brief,advancedHome},null,2));
   await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
   await shot('01-home');
 
@@ -198,11 +207,13 @@ try{
 
   await page.click('#scannerViewBtn');
   await page.waitForFunction(()=>document.getElementById('scannerView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>getComputedStyle(document.getElementById('dashboardView')).display==='none'),'Dashboard sigue visible dentro del escáner');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Escáner genera overflow global');
   await shot('02-scanner');
 
   await page.click('#fixedIncomeBtn');
   await page.waitForFunction(()=>document.getElementById('rfScannerView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>getComputedStyle(document.getElementById('dashboardView')).display==='none'),'Dashboard sigue visible dentro de renta fija');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Renta fija genera overflow global');
   await shot('03-fixed-income');
 
@@ -212,6 +223,7 @@ try{
 
   await page.click('#portfolioViewBtn');
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-portfolio'));
+  await assert(await page.evaluate(()=>getComputedStyle(document.getElementById('dashboardView')).display==='none'),'Dashboard sigue visible dentro de cartera');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Cartera genera overflow global');
   const portfolioVisual=await page.evaluate(()=>{
     const visibleEmpty=[...document.querySelectorAll('#watchlistView .premium-donut-empty')].filter(el=>getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().height>0);
