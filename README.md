@@ -29,3 +29,8 @@ Radar es un producto personal de análisis de mercados y cartera. La versión we
 - `web-compat.js`: persistencia/fallbacks web.
 
 Los módulos experimentales de Asesor, Asignador, Rotación CEDEAR y Laboratorio no forman parte del producto publicado y no deben condicionar el QA del núcleo.
+
+
+## QA automatizado
+
+El flujo núcleo se valida con un smoke test de navegador sobre Chromium. La prueba levanta Radar localmente, ejecuta la salud profunda de proveedores, corre el pipeline real de escáner sobre BTC, SPY, GGAL y AAPL CEDEAR, navega por Escáner, Renta fija, Seguimiento y Cartera, captura evidencia y falla ante errores JavaScript o regresiones críticas.
