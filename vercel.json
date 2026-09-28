@@ -59,6 +59,10 @@
       "destination": "/api/router?ns=fixed-income&path=:path*"
     },
     {
+      "source": "/api/eco/bond",
+      "destination": "/api/router?route=eco/bond"
+    },
+    {
       "source": "/api/cedear/:path*",
       "destination": "/api/router?ns=cedear&path=:path*"
     },
