@@ -1692,67 +1692,6 @@ function prepareRemainingCashflows(rf){
  return rf;
 }
 
-async function fetchArgenBond(symbol){
- const t=String(symbol||'').toUpperCase().replace('.BA','');
- const r=await fetch(`/api/argenbond/bond?ticker=${encodeURIComponent(t)}`);
- if(!r.ok)throw new Error(await r.text());
- return await r.json();
-}
-function applyArgenBondData(rf,data){
- if(!rf||!data)return false;
-
- const tir=rfNum(data.tir),par=rfNum(data.paridad),dur=rfNum(data.duration),rate=rfNum(data.couponRate);
- if(Number.isFinite(tir))rf.tir=tir;
- if(Number.isFinite(par)&&par>0)rf.paridad=par;
- if(Number.isFinite(dur)&&dur>0)rf.duration=dur;
- if(Number.isFinite(rate)&&rate>=0)rf.couponRate=rate;
-
- rf.argenBondValidated=true;
- rf.validationSource='argen.bond';
- rf.rating=cleanSourceText(data.rating);
- rf.ecoNextPayment=cleanSourceText(data.nextPayment)||rf.ecoNextPayment;
-
- rf.contract=rf.contract||{};
-
- const pay=cleanSourceText(data.paymentCurrency);
- if(pay){
-   rf.contract.paymentCurrencyLabel=pay;
-   if(/D[ÓO]LAR|USD|U\$S/i.test(pay))rf.contract.contractCurrency='USD';
-   else if(/PESO|ARS/i.test(pay))rf.contract.contractCurrency='ARS';
-
-   if(/CABLE|EXTERIOR/i.test(pay))rf.contract.paymentLocation='EXT';
-   else if(/MEP|ARGENTINA|LOCAL/i.test(pay))rf.contract.paymentLocation='LOCAL';
- }
-
- if(cleanSourceText(data.issuer))rf.contract.issuer=cleanSourceText(data.issuer);
- if(cleanSourceText(data.law))rf.contract.law=cleanSourceText(data.law);
- if(cleanSourceText(data.frequency))rf.contract.frequencyLabel=cleanSourceText(data.frequency);
- if(cleanSourceText(data.couponType))rf.contract.couponType=cleanSourceText(data.couponType);
- if(cleanSourceText(data.amortization))rf.contract.amortization=cleanSourceText(data.amortization);
- if(Number.isFinite(rfNum(data.minDenomination)))rf.contract.minDenomination=rfNum(data.minDenomination);
- if(cleanSourceText(data.maturity)){
-   if(!cleanSourceText(rf.vencimiento))rf.vencimiento=cleanSourceText(data.maturity);
-   if(!Number.isFinite(rfNum(rf.days))||rfNum(rf.days)<=0)rf.days=daysUntilBondDate(data.maturity);
- }
-
- const flows=Array.isArray(data.flows)?data.flows:[];
- if(flows.length){
-   rf.flujos=flows.map(x=>({
-     fecha:x.date,
-     capital:rfNum(x.capital),
-     interes:rfNum(x.interest),
-     total:rfNum(x.total),
-     residual:rfNum(x.residual),
-     source:'argen.bond'
-   }));
-   prepareRemainingCashflows(rf);
- }
- rf.scenario100=rfScenarioUpside(rf,100);
- rf.coreDataCount=[rfYieldMetric(rf),rf.paridad,rf.duration,rf.price].filter(Number.isFinite).length;
- return true;
-}
-
-
 async function fetchEcoBond(symbol){
  const t=String(symbol||'').toUpperCase().replace('.BA','').replace(/[DC]$/,'');
  const r=await fetch(`/api/eco/bond?ticker=${encodeURIComponent(t)}`);
@@ -1810,8 +1749,7 @@ async function validateTopRfCandidates(items,ctx){
    if(rfScanState.stop)break;
    const rf=x.item?.panel?.rf;
    let enriched=false;
-   try{enriched=applyArgenBondData(rf,await fetchArgenBond(x.item.symbol))||enriched}catch(e){}
-   try{enriched=applyEcoValidation(x.item,await fetchEcoBond(x.item.symbol))||enriched}catch(e){if(rf&&!enriched){rf.ecoValidated=false;rf.validationSource='Sin segunda fuente'}}
+   try{enriched=applyEcoValidation(x.item,await fetchEcoBond(x.item.symbol))||enriched}catch(e){if(rf){rf.ecoValidated=false;rf.validationSource='Sin segunda fuente pública'}}
    if(rf){rf.recoveryAttempted=true;if(enriched){rf.analyticsPending=false;rf.recoveredFromSecondary=true}else if(x.recoveryPriority){rf.recoveryFailed=true}}
    if(enriched&&x.recoveryPriority)recovered++;
    done++;
