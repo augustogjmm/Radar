@@ -2552,13 +2552,27 @@ async function fetchScannerSeries(item,key){
  const symbol=displaySymbolForType(item.symbol,type);
  const tfs=getTfsForType(type),tf=tfs[key];
  if(!tf)throw new Error('Temporalidad no disponible para este mercado.');
- if(type==='crypto')return{data:await fetchBinance(symbol,tf.interval),type,symbol,tfs};
+ if(type==='crypto')return{data:await fetchBinance(symbol,tf.interval),type,symbol,tfs,provider:'Binance'};
  if(type==='stock'){
    const quiet=!!item?.panel?.source && item.panel.source==='cedear-underlying';
-   return{data:await fetchYahoo(symbol,tf.interval,tf.range,quiet),type,symbol,tfs};
+   return{data:await fetchYahoo(symbol,tf.interval,tf.range,quiet),type,symbol,tfs,provider:'Yahoo'};
  }
  if(key==='micro')throw new Error('Micro no disponible en histórico BYMA gratuito.');
- return{data:await fetchBymaScannerHistory(symbol,key),type,symbol,tfs};
+ try{
+   return{data:await fetchBymaScannerHistory(symbol,key),type,symbol,tfs,provider:'BYMA'};
+ }catch(bymaError){
+   if(['argstock','cedear'].includes(type)){
+     try{
+       const daily=await fetchYahoo(symbol+'.BA','1d','5y',true);
+       const data=key==='medium'?aggregateBars(daily,'week'):key==='macro'?aggregateBars(daily,'month'):daily;
+       if(!Array.isArray(data)||data.length<30)throw new Error('histórico alternativo insuficiente');
+       return{data,type,symbol,tfs,provider:'Yahoo .BA fallback',providerFallback:true};
+     }catch(yahooError){
+       throw new Error(`BYMA: ${String(bymaError?.message||bymaError)} · Yahoo .BA: ${String(yahooError?.message||yahooError)}`);
+     }
+   }
+   throw bymaError;
+ }
 }
 async function scanOne(item,key){
  const pack=await fetchScannerSeries(item,key);
