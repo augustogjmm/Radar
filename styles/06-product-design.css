@@ -897,3 +897,18 @@ body.sidebar-collapsed .wrap{
   max-width:none!important;
   margin-left:72px!important;
 }
+
+
+
+/* Portfolio empty-state integrity: when there are no positions, do not squeeze the
+   donut explanatory copy into the narrow Top 5 column beside the table. */
+#watchlistView.mode-portfolio .p360-master-position-layout:has(.premium-donut-layout.is-empty){
+  grid-template-columns:1fr!important;
+}
+#watchlistView.mode-portfolio .p360-master-position-layout:has(.premium-donut-layout.is-empty) .portfolio-top-donut{
+  display:none!important;
+}
+#watchlistView.mode-portfolio .p360-master-position-layout:has(.premium-donut-layout.is-empty) .portfolio-top-table-wrap{
+  width:100%!important;
+  max-width:100%!important;
+}
