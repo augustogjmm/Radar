@@ -24,6 +24,8 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
+      - name: Check v6 JavaScript syntax
+        run: node --check v6/app.js
       - name: Start local Radar v6
         run: |
           node scripts/qa-server.mjs > /tmp/radar-v6.log 2>&1 &
