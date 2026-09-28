@@ -149,6 +149,16 @@ try{
   await page.click('#portfolioViewBtn');
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-portfolio'));
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Cartera genera overflow global');
+  const portfolioVisual=await page.evaluate(()=>{
+    const visibleEmpty=[...document.querySelectorAll('#watchlistView .premium-donut-empty')].filter(el=>getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().height>0);
+    const narrow=visibleEmpty.map(el=>({w:el.getBoundingClientRect().width,text:el.innerText.trim()})).filter(x=>x.w<100);
+    const topDonut=document.getElementById('p360TopPositionsDonut');
+    const noPositions=(document.getElementById('p360Positions')?.textContent||'').trim()==='0';
+    return {narrow,noPositions,topDonutDisplay:topDonut?getComputedStyle(topDonut).display:null};
+  });
+  await assert(portfolioVisual.narrow.length===0,'Cartera tiene estados vacíos comprimidos: '+JSON.stringify(portfolioVisual.narrow));
+  await assert(!portfolioVisual.noPositions||portfolioVisual.topDonutDisplay==='none','Top 5 vacío debe ocultar donut explicativo');
+  await fs.writeFile('artifacts/portfolio-visual-check.json',JSON.stringify(portfolioVisual,null,2));
   const layout=await page.evaluate(()=>{
     const v=document.getElementById('watchlistView');
     const sections=[...v.querySelectorAll('#portfolio360Section,#portfolioRiskSection,.watch-table-wrap,.performance-panel,.stress-panel')];
