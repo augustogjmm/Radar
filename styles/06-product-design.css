@@ -912,3 +912,36 @@ body.sidebar-collapsed .wrap{
   width:100%!important;
   max-width:100%!important;
 }
+
+
+/* ===== Empty portfolio product state =====
+   An empty portfolio is an onboarding state, not an analytics report.
+   Keep the identity/KPIs visible and remove zero-information sections until
+   at least one real position exists. */
+#portfolio360Section.is-empty-portfolio .p360-master-dashboard,
+#portfolio360Section.is-empty-portfolio #g2PortfolioCutoverPanel,
+#portfolio360Section.is-empty-portfolio .portfolio-diversification,
+#portfolio360Section.is-empty-portfolio .portfolio-ledger,
+#portfolio360Section.is-empty-portfolio #portfolioRiskSection,
+#portfolio360Section.is-empty-portfolio .performance-panel,
+#portfolio360Section.is-empty-portfolio .stress-panel,
+#portfolio360Section.is-empty-portfolio #v5InvestmentIntelligence{
+  display:none!important;
+}
+#portfolio360Section.is-empty-portfolio #p360Note{
+  margin:16px 0 0!important;
+  padding:18px 20px!important;
+  border:1px dashed var(--rt-border-strong)!important;
+  border-radius:var(--rt-radius)!important;
+  background:#09141d!important;
+  color:#9aacb9!important;
+  font-size:12px!important;
+  line-height:1.55!important;
+}
+#portfolio360Section.is-empty-portfolio #g2PortfolioLiveStatus{
+  margin-top:8px!important;
+  padding:0 2px!important;
+  border:0!important;
+  background:transparent!important;
+  color:#667987!important;
+}

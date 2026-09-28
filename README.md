@@ -1,4 +1,4 @@
-# Radar Técnico G2 · v5 web
+# Radar Técnico G2 · v5.1 web
 
 Radar es un producto personal de análisis de mercados y cartera. La versión web publicada se concentra en un flujo corto y auditable:
 
