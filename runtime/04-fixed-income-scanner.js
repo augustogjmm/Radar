@@ -856,15 +856,14 @@ async function loadBondAnalysis(symbol,type){
  if($('symbol'))$('symbol').value=s;if($('assetType'))$('assetType').value=type;
  showBondView();
  $('bondTitle').textContent=s+' · '+(type==='on'?'OBLIGACIÓN NEGOCIABLE':'RENTA FIJA');
- $('bondName').textContent='Cargando ficha…';$('bondSource').textContent=type==='on'?'Open BYMADATA + argen.bond + ArgentinaDatos + DolarApi':'Open BYMADATA + compararfondos.com.ar + Eco Valores + ArgentinaDatos + DolarApi';
+ $('bondName').textContent='Cargando ficha…';$('bondSource').textContent=type==='on'?'Open BYMADATA + Eco Valores + DolarApi':'Open BYMADATA + compararfondos.com.ar + Eco Valores + DolarApi';
  $('bondUpdated').textContent=fmtDateTimeNow();$('bondReading').textContent='Cargando…';
  try{
-   const [analyticsRes,infoRes,panelRes,ecoRes,argenRes]=await Promise.allSettled([
+   const [analyticsRes,infoRes,panelRes,ecoRes]=await Promise.allSettled([
      fetchFixedIncomeAnalytics(),
      fetchBondInfo(s),
      fetchJsonOrThrow('/api/byma/fixed-income?kind=all&currency=ALL&liquid=0','BYMA renta fija'),
-     fetchEcoBond(s),
-     type==='on'?fetchArgenBond(s):Promise.resolve(null)
+     fetchEcoBond(s)
    ]);
    if(analyticsRes.status!=='fulfilled')throw analyticsRes.reason;
    const analytics=analyticsRes.value,bonds=Array.isArray(analytics.bonds)?analytics.bonds:[],letters=Array.isArray(analytics.letters)?analytics.letters:[];
@@ -880,10 +879,6 @@ async function loadBondAnalysis(symbol,type){
    rf.price=bondCurrentPrice(rf,panel);
 
    enrichBondContractData(rf,panel,info,type);
-
-   if(type==='on'&&argenRes.status==='fulfilled'&&argenRes.value){
-     applyArgenBondData(rf,argenRes.value);
-   }
 
    finalizeOnAnalytics(rf,panel,{fx:analytics.fx||{}});
    await hydrateG2FixedIncome(rf,panel,letter,{fx:analytics.fx||{}});
