@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Radar V6 · Decision Workspace</title>
+  <link rel="stylesheet" href="/v6/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">R</span><div><b>Radar</b><small>Decision Workspace</small></div></div>
+      <nav>
+        <button class="nav-item active" data-view="overview">Resumen<span>Prioridades y contexto</span></button>
+        <button class="nav-item" data-view="opportunities">Oportunidades<span>Qué merece atención</span></button>
+        <button class="nav-item" data-view="fixed-income">Renta fija<span>Bonos, Letras y ON</span></button>
+        <button class="nav-item" data-view="portfolio">Cartera<span>Posiciones y riesgo</span></button>
+      </nav>
+      <div class="sidebar-foot">
+        <button id="systemStatusBtn" class="system-link">Estado del sistema</button>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div><span class="eyebrow">RADAR V6</span><h1 id="pageTitle">Resumen</h1></div>
+        <form id="assetSearch" class="asset-search">
+          <input id="assetSymbol" placeholder="Analizar activo: BTCUSDT, AAPL, GGAL, AE38">
+          <button>Analizar</button>
+        </form>
+        <div id="dataState" class="data-state checking"><i></i><span>Validando datos</span></div>
+      </header>
+
+      <section id="overview" class="view active">
+        <div class="hero">
+          <div>
+            <span class="eyebrow">HOY</span>
+            <h2>Qué merece tu atención ahora</h2>
+            <p>Primero decisiones. Después, evidencia y detalle.</p>
+          </div>
+          <button id="refreshOverview" class="secondary">Actualizar</button>
+        </div>
+
+        <section class="context-card">
+          <div class="section-head"><div><span class="eyebrow">CONTEXTO</span><h3>Mercado en cuatro números</h3></div><span id="contextUpdated" class="muted">—</span></div>
+          <div class="kpi-grid">
+            <article class="kpi"><small>Riesgo país</small><strong id="riskValue">—</strong><span id="riskMeta">Esperando dato</span></article>
+            <article class="kpi"><small>Dólar MEP</small><strong id="mepValue">—</strong><span id="mepMeta">Venta</span></article>
+            <article class="kpi"><small>Dólar CCL</small><strong id="cclValue">—</strong><span id="cclMeta">Venta</span></article>
+            <article class="kpi"><small>Inflación</small><strong id="inflationValue">—</strong><span id="inflationMeta">Último IPC</span></article>
+          </div>
+        </section>
+
+        <section class="priority-card">
+          <div class="section-head"><div><span class="eyebrow">PRIORIDADES</span><h3>Lo que requiere una decisión</h3></div><span class="muted">Sin ruido</span></div>
+          <div id="priorityList" class="empty-state">
+            <b>El nuevo motor de prioridades todavía no está conectado.</b>
+            <span>La V6 no va a reutilizar la presentación legacy. Sólo se conectarán resultados normalizados y verificables.</span>
+          </div>
+        </section>
+
+        <section class="portfolio-card">
+          <div class="section-head"><div><span class="eyebrow">CARTERA</span><h3>Posiciones que requieren atención</h3></div><button class="text-button" data-go="portfolio">Ver cartera</button></div>
+          <div id="portfolioAttention" class="empty-state compact">
+            <b>Sin cartera conectada a la V6.</b>
+            <span>Se portará el motor existente sin traer el layout anterior.</span>
+          </div>
+        </section>
+      </section>
+
+      <section id="opportunities" class="view">
+        <div class="view-intro"><span class="eyebrow">OPORTUNIDADES</span><h2>Qué vale la pena mirar</h2><p>Un ranking corto, con razón, entrada, invalidación y evidencia.</p></div>
+        <div class="empty-state"><b>Motor pendiente de portar.</b><span>No se mostrará una tabla de 15 columnas: sólo candidatos accionables.</span></div>
+      </section>
+
+      <section id="fixed-income" class="view">
+        <div class="view-intro"><span class="eyebrow">RENTA FIJA</span><h2>Comparar instrumentos equivalentes</h2><p>Rendimiento, paridad, duration, liquidez y escenario por objetivo y horizonte.</p></div>
+        <div class="empty-state"><b>Motor pendiente de portar.</b><span>Se reutilizarán los cálculos actuales, no la interfaz legacy.</span></div>
+      </section>
+
+      <section id="portfolio" class="view">
+        <div class="view-intro"><span class="eyebrow">CARTERA</span><h2>Qué cambió y dónde está el riesgo</h2><p>Valor, P&amp;L, concentración y posiciones primero. Lo avanzado queda como drill-down.</p></div>
+        <div class="empty-state"><b>Motor pendiente de portar.</b><span>Se conservarán movimientos y métricas, pero con una experiencia nueva.</span></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="systemDialog">
+    <div class="dialog-head"><div><span class="eyebrow">SISTEMA</span><h3>Salud de datos</h3></div><button id="closeSystem">Cerrar</button></div>
+    <div id="systemChecks" class="system-checks">Validando…</div>
+  </dialog>
+
+  <script src="/v6/app.js"></script>
+</body>
+</html>
