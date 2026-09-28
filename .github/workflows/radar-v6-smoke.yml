@@ -3,6 +3,8 @@ name: Radar v6 Smoke
 on:
   push:
     branches: [v6-rebuild]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
