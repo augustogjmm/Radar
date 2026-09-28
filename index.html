@@ -1,56 +1,244 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="es">
 <head>
-<script src="/web-compat.js?v=20260922-7"></script>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Radar Técnico G2 · v5.3.0</title>
-<script src="https://unpkg.com/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
-
-
-<meta content="radar-product-reset-v5.3.0-20260928" name="radar-deployment"/>
-<link rel="stylesheet" href="/styles/01-base.css?v=20260928-2">
-<link rel="stylesheet" href="/styles/02-theme-compat.css?v=20260928-2">
-<link rel="stylesheet" href="/styles/03-premium-authority.css?v=20260928-2">
-<link rel="stylesheet" href="/styles/04-portfolio-layout.css?v=20260928-2">
-<link rel="stylesheet" href="/styles/05-responsive.css?v=20260928-2">
-<link rel="stylesheet" href="/styles/06-product-design.css?v=20260928-3">\n<link rel="stylesheet" href="/styles/07-product-reset.css?v=20260928-5">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Radar Técnico · v6</title>
+  <meta name="radar-deployment" content="radar-v6-rebuild-20260928">
+  <link rel="stylesheet" href="/v6/styles.css?v=1">
+  <script src="https://unpkg.com/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
-<div data-app-shell="9S" id="appShellMount"></div>
-<div class="wrap">
-<div data-app-topbar="9S" id="appTopBarMount"></div>
-<div data-asset-intelligence-summary="9P" id="assetIntelligenceSummaryMount"></div>
-<div data-market-command-shell="9J" id="marketCommandMount"></div>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">R</div>
+      <div><b>Radar Técnico</b><span>Decisiones de mercado</span></div>
+    </div>
 
-<div data-asset-intelligence-shell="9P" id="assetIntelligenceWorkspaceMount"></div>
+    <nav class="nav" aria-label="Principal">
+      <button class="nav-item active" data-view="today">
+        <span class="nav-icon">⌁</span><span><b>Hoy</b><small>Qué merece atención</small></span>
+      </button>
+      <button class="nav-item" data-view="analysis">
+        <span class="nav-icon">⌕</span><span><b>Analizar</b><small>Un activo en profundidad</small></span>
+      </button>
+      <button class="nav-item" data-view="portfolio">
+        <span class="nav-icon">▣</span><span><b>Cartera</b><small>P&L, peso y estado</small></span>
+      </button>
+    </nav>
 
-<div data-fixed-income-detail-shell="9Q" id="fixedIncomeDetailMount"></div>
+    <div class="sidebar-bottom">
+      <button id="systemStatusBtn" class="system-status checking">
+        <i></i><span><b>Validando datos</b><small id="systemStatusDetail">Comprobando fuentes</small></span>
+      </button>
+      <div class="version">v6 · rebuild</div>
+    </div>
+  </aside>
 
-<div data-scanner-workspace-shell="9K" id="scannerWorkspaceMount"></div>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <span class="eyebrow" id="viewEyebrow">RADAR DE HOY</span>
+        <h1 id="viewTitle">Qué merece tu atención</h1>
+      </div>
+      <form id="quickSearch" class="quick-search">
+        <input id="quickSymbol" autocomplete="off" placeholder="Analizar BTCUSDT, GGAL, AAPL, AE38…">
+        <button>Analizar</button>
+      </form>
+    </header>
 
-<div data-portfolio-workspace-shell="9N" id="portfolioWorkspaceMount"></div>
+    <section id="todayView" class="view active">
+      <div class="hero">
+        <div>
+          <span class="eyebrow">LECTURA AUTOMÁTICA</span>
+          <h2>Lo importante primero.</h2>
+          <p>Radar revisa mercado, renta fija y tu cartera. Si no encuentra nada suficientemente claro, no inventa una oportunidad.</p>
+        </div>
+        <div class="hero-actions">
+          <span id="todayUpdated" class="updated">Sin ejecutar</span>
+          <button id="refreshToday" class="secondary">Actualizar</button>
+        </div>
+      </div>
 
+      <div id="marketContext" class="context-grid">
+        <article class="context-card"><small>Riesgo país</small><b id="ctxRisk">—</b><span id="ctxRiskNote">Cargando…</span></article>
+        <article class="context-card"><small>Dólar MEP</small><b id="ctxMep">—</b><span id="ctxMepNote">Cargando…</span></article>
+        <article class="context-card"><small>Dólar CCL</small><b id="ctxCcl">—</b><span id="ctxCclNote">Cargando…</span></article>
+        <article class="context-card"><small>IPC último</small><b id="ctxInflation">—</b><span id="ctxInflationNote">Cargando…</span></article>
+      </div>
 
-<div data-portfolio-workspace-overlays="9N" id="portfolioWorkspaceOverlayMount"></div>
+      <div class="today-grid">
+        <section class="panel priority-panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">PRIORIDADES</span><h3>Qué mirar ahora</h3></div>
+            <span id="radarCoverage" class="chip">—</span>
+          </div>
+          <div id="todayPriorities" class="priority-list">
+            <div class="empty-state">Preparando la primera lectura…</div>
+          </div>
+        </section>
 
-<div data-help-center-shell="9L" id="helpCenterMount"></div>
+        <section class="panel side-panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">CAMBIOS</span><h3>Desde la última lectura</h3></div>
+            <span id="changeCount" class="chip">0</span>
+          </div>
+          <div id="todayChanges" class="compact-list"><div class="empty-state small">Todavía no hay una lectura anterior para comparar.</div></div>
+        </section>
+      </div>
 
-<div data-app-footer="9S" id="appFooterMount"></div>
-</div>
-<div data-app-loading="9S" id="appLoadingMount"></div>
+      <div class="today-grid lower">
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">RENTA FIJA</span><h3>Soberanos en contexto</h3></div>
+            <button class="text-button" id="analyzeAe38">Abrir AE38</button>
+          </div>
+          <div id="bondRadar" class="bond-list"><div class="empty-state small">Consultando AE38, AL30 y GD30…</div></div>
+        </section>
 
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">CARTERA</span><h3>Posiciones a revisar</h3></div>
+            <button class="text-button" data-go="portfolio">Ver cartera</button>
+          </div>
+          <div id="portfolioAlerts" class="compact-list"><div class="empty-state small">No hay posiciones cargadas.</div></div>
+        </section>
+      </div>
+    </section>
 
-<!-- Phase 9Y: allocator navigation/bootstrap now owned by capital-allocator-runtime.js -->
-<script src="/runtime/02-workspace-shells.js?v=20260928-4"></script>
-<script src="/runtime/03-browser-market.js?v=20260928-2"></script>
-<script src="/runtime/04-fixed-income-scanner.js?v=20260928-3"></script>
-<script src="/runtime/05-portfolio-runtime.js?v=20260928-3"></script>
-<script src="/runtime/06-technical-core.js?v=20260928-2"></script>
-<script src="/runtime/07-asset-intelligence.js?v=20260928-2"></script>
-<script src="/runtime/08-portfolio-pro.js?v=20260928-2"></script>
-<script src="/runtime/11-stability-bootstrap.js?v=20260928-3"></script>
-<script src="/runtime/13-decision-intelligence.js?v=20260928-3"></script>\n<script src="/runtime/14-product-reset.js?v=20260928-4"></script>
-<script src="/runtime/15-daily-radar.js?v=20260928-1"></script>\n</body>
+    <section id="analysisView" class="view">
+      <div class="analysis-head">
+        <div>
+          <span class="eyebrow">ANÁLISIS</span>
+          <div class="asset-heading"><h2 id="assetSymbol">—</h2><span id="assetType" class="chip">—</span><span id="assetSource" class="chip muted">—</span></div>
+          <div class="asset-price"><b id="assetPrice">—</b><span id="assetChange">—</span></div>
+        </div>
+        <div class="analysis-tools">
+          <select id="analysisType">
+            <option value="auto">Auto</option>
+            <option value="crypto">Crypto</option>
+            <option value="stock">Acción / ETF USA</option>
+            <option value="argstock">Acción Argentina</option>
+            <option value="cedear">CEDEAR</option>
+            <option value="bond">Bono</option>
+          </select>
+          <select id="analysisTf">
+            <option value="1h">1H</option>
+            <option value="4h">4H</option>
+            <option value="1d" selected>1D</option>
+          </select>
+          <button id="refreshAnalysis" class="secondary">Actualizar</button>
+        </div>
+      </div>
+
+      <div id="analysisError" class="error-banner" hidden></div>
+
+      <div id="marketAnalysisLayout" class="analysis-layout">
+        <section class="panel chart-panel">
+          <div class="chart-toolbar">
+            <span>Precio</span>
+            <div class="legend"><i class="l10"></i>EMA 10 <i class="l55"></i>EMA 55 <i class="l200"></i>EMA 200</div>
+          </div>
+          <div id="assetChart"></div>
+        </section>
+
+        <aside class="decision-panel">
+          <div id="decisionState" class="decision-state neutral">SIN ANÁLISIS</div>
+          <div class="decision-score"><span>Score</span><b id="decisionScore">—</b></div>
+          <p id="decisionHeadline" class="decision-headline">Buscá un activo para empezar.</p>
+
+          <div class="decision-levels">
+            <div><small>Condición a favor</small><b id="decisionTrigger">—</b></div>
+            <div><small>Invalidación</small><b id="decisionInvalidation">—</b></div>
+            <div><small>Objetivo técnico</small><b id="decisionTarget">—</b></div>
+          </div>
+
+          <div class="reason-section">
+            <span class="eyebrow">POR QUÉ</span>
+            <ul id="decisionReasons"><li>Sin datos.</li></ul>
+          </div>
+
+          <div class="analysis-actions">
+            <button id="addWatch">Seguir activo</button>
+            <button id="addPortfolio" class="secondary">Agregar a cartera</button>
+          </div>
+        </aside>
+      </div>
+
+      <div id="bondAnalysisLayout" class="bond-analysis" hidden>
+        <section class="panel">
+          <div class="panel-head"><div><span class="eyebrow">RENTA FIJA</span><h3 id="bondTitle">—</h3></div><span id="bondRiskCountry" class="chip">—</span></div>
+          <div class="bond-metrics">
+            <div><small>Precio</small><b id="bondPrice">—</b></div>
+            <div><small>TIR</small><b id="bondYield">—</b></div>
+            <div><small>Paridad</small><b id="bondParity">—</b></div>
+            <div><small>Duration</small><b id="bondDuration">—</b></div>
+            <div><small>Vencimiento</small><b id="bondMaturity">—</b></div>
+          </div>
+          <div id="bondReading" class="bond-reading">—</div>
+        </section>
+      </div>
+
+      <details class="advanced" id="analysisAdvanced">
+        <summary><span><b>Detalle técnico</b><small>Indicadores y datos que explican la lectura</small></span><span>Ver detalle</span></summary>
+        <div class="advanced-grid">
+          <div><small>EMA 10</small><b id="mEma10">—</b></div>
+          <div><small>EMA 55</small><b id="mEma55">—</b></div>
+          <div><small>EMA 200</small><b id="mEma200">—</b></div>
+          <div><small>RSI 14</small><b id="mRsi">—</b></div>
+          <div><small>MACD hist.</small><b id="mMacd">—</b></div>
+          <div><small>ATR 14</small><b id="mAtr">—</b></div>
+          <div><small>Volumen vs 20</small><b id="mVolume">—</b></div>
+          <div><small>Estructura</small><b id="mStructure">—</b></div>
+        </div>
+      </details>
+    </section>
+
+    <section id="portfolioView" class="view">
+      <div class="portfolio-head">
+        <div><span class="eyebrow">CARTERA</span><h2>Qué tenés, cuánto pesa y qué cambió</h2><p>La cartera prioriza resultado, concentración y estado técnico. El resto es secundario.</p></div>
+        <button id="refreshPortfolio" class="secondary">Actualizar precios</button>
+      </div>
+
+      <div class="portfolio-kpis">
+        <article><small>Valor actual</small><b id="pValue">—</b><span id="pCurrency">Moneda mixta</span></article>
+        <article><small>P&L</small><b id="pPnl">—</b><span id="pPnlPct">—</span></article>
+        <article><small>Posiciones</small><b id="pCount">0</b><span>cargadas</span></article>
+        <article><small>Mayor peso</small><b id="pTopWeight">—</b><span id="pTopSymbol">—</span></article>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><div><span class="eyebrow">POSICIONES</span><h3>Estado actual</h3></div><button id="openAddPosition" class="text-button">+ Agregar posición</button></div>
+        <div class="table-wrap">
+          <table class="portfolio-table">
+            <thead><tr><th>Activo</th><th>Cantidad</th><th>Compra</th><th>Actual</th><th>P&L</th><th>Peso</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="portfolioBody"><tr><td colspan="8" class="empty-cell">No hay posiciones cargadas.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <details class="advanced">
+        <summary><span><b>Resumen de exposición</b><small>Concentración por tipo y moneda</small></span><span>Ver detalle</span></summary>
+        <div id="portfolioExposure" class="exposure-grid"></div>
+      </details>
+    </section>
+  </main>
+
+  <dialog id="positionDialog">
+    <form id="positionForm" method="dialog" class="dialog-card">
+      <div class="dialog-head"><div><span class="eyebrow">NUEVA POSICIÓN</span><h3>Agregar a cartera</h3></div><button type="button" id="closePositionDialog" class="icon-button">×</button></div>
+      <label>Activo<input id="posSymbol" required placeholder="AAPL, GGAL, BTCUSDT…"></label>
+      <label>Tipo<select id="posType"><option value="auto">Auto</option><option value="crypto">Crypto</option><option value="stock">USA</option><option value="argstock">Acción Argentina</option><option value="cedear">CEDEAR</option><option value="bond">Bono</option></select></label>
+      <div class="dialog-grid">
+        <label>Cantidad<input id="posQty" type="number" min="0" step="any" required></label>
+        <label>Precio compra<input id="posBuy" type="number" min="0" step="any" required></label>
+      </div>
+      <label>Moneda<select id="posCurrency"><option>USD</option><option>ARS</option><option>USDT</option></select></label>
+      <div class="dialog-actions"><button type="button" class="secondary" id="cancelPosition">Cancelar</button><button type="submit">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <script src="/v6/app.js?v=1"></script>
+</body>
 </html>
