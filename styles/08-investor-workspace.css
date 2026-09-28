@@ -11,7 +11,8 @@
 .radar-v7 .top{min-height:64px;background:rgba(7,16,24,.95);backdrop-filter:blur(12px)}
 .radar-v7 .view-title{font-size:18px}
 .radar-v7 .view-subtitle{color:#6e8694}
-.radar-v7 .dashboard-view{display:flex!important;flex-direction:column!important;gap:14px!important}
+.radar-v7 .dashboard-view{display:none!important}
+.radar-v7 .dashboard-view.active{display:flex!important;flex-direction:column!important;gap:14px!important}
 .radar-v7 .dash-head{order:5}
 .radar-v7 .dash-kpis{order:6}
 .radar-v7 .dash-official-strip{order:7}
@@ -128,3 +129,42 @@
 .v7-decision-audit .v7-signal-table-wrap{border:0;border-radius:0}
 @media(max-width:1100px){.v7-signal-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:720px){.v7-signal-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.v7-workspace-head{align-items:flex-start;flex-direction:column}}
+
+/* Keep the full legacy market workspace available without duplicating the cockpit */
+.v7-advanced-market{
+  order:20;
+  border:1px solid #1d313c;
+  border-radius:11px;
+  background:#09141b;
+  overflow:hidden;
+}
+.v7-advanced-market>summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:15px 17px;
+  list-style:none;
+  cursor:pointer;
+  user-select:none;
+}
+.v7-advanced-market>summary::-webkit-details-marker{display:none}
+.v7-advanced-market>summary b{display:block;color:#b9c9d1;font-size:10.5px}
+.v7-advanced-market>summary small{display:block;margin-top:3px;color:#607887;font-size:8.5px}
+.v7-advanced-action{color:#82a7bb;font-size:8.8px;font-weight:650}
+.v7-advanced-market-body{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:0 10px 10px;
+  border-top:1px solid #172a34;
+}
+.v7-advanced-market-body>.dash-head{order:1;margin-top:10px!important}
+.v7-advanced-market-body>.dash-loading-panel{order:2}
+.v7-advanced-market-body>.dash-kpis{order:3}
+.v7-advanced-market-body>.dash-official-strip{order:4}
+.v7-advanced-market-body>#dashDetail{order:5}
+.v7-advanced-market-body>#decisionCenter{order:6}
+.v7-advanced-market-body>.daily-brief{order:7}
+.v7-advanced-market-body>.intel-wrap{order:8}
+.v7-advanced-market-body>.market-board{order:9}
