@@ -31,6 +31,7 @@ function clamp(v,a=0,b=100){return Math.max(a,Math.min(b,v))}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmt(v,d=2){const x=n(v);return Number.isFinite(x)?new Intl.NumberFormat('es-AR',{maximumFractionDigits:d,minimumFractionDigits:0}).format(x):'—'}
 function fmtPct(v,d=2){const x=n(v);return Number.isFinite(x)?`${x>=0?'+':''}${x.toFixed(d)}%`:'—'}
+function fmtWeight(v,d=1){const x=n(v);return Number.isFinite(x)?`${x.toFixed(d)}%`:'—'}
 function fmtMoney(v,ccy=''){const x=n(v);if(!Number.isFinite(x))return'—';return `${ccy} ${new Intl.NumberFormat('es-AR',{maximumFractionDigits:2}).format(x)}`.trim()}
 function compact(s,max=160){s=String(s||'').replace(/\s+/g,' ').trim();return s.length>max?s.slice(0,max-1).trim()+'…':s}
 function ago(ts){if(!ts)return'—';const m=Math.max(0,Math.round((Date.now()-ts)/60000));return m<1?'ahora':m<60?`${m}m`:m<1440?`${Math.round(m/60)}h`:`${Math.round(m/1440)}d`}
@@ -340,7 +341,7 @@ async function analyzeSymbol(raw,typeSel='auto',tf='1d'){
  $('analysisTf').value=tf==='1h'||tf==='4h'||tf==='1d'?tf:'1d';
  showView('analysis');setAnalysisError('');
  if(type==='bond'){await analyzeBond(symbol);return}
- $('marketAnalysisLayout').hidden=false;$('bondAnalysisLayout').hidden=true;$('analysisAdvanced').hidden=false;$('addWatch').hidden=false;
+ $('marketAnalysisLayout').hidden=false;$('bondAnalysisLayout').hidden=true;$('analysisAdvanced').hidden=false;$('addWatch').hidden=false;$('analysisTf').disabled=false;
  $('assetSymbol').textContent=symbol;$('assetType').textContent=type;$('assetSource').textContent='cargando';$('assetPrice').textContent='—';$('assetChange').textContent='—';
  try{
   const pack=await fetchBars(symbol,type,tf),a=analyzeBars(pack.bars,type,tf);a.source=pack.source;appState.analysis={symbol,type,tf,bars:pack.bars,a};
@@ -379,7 +380,7 @@ function renderChart(bars,a){
 }
 
 async function analyzeBond(symbol){
- $('marketAnalysisLayout').hidden=true;$('bondAnalysisLayout').hidden=false;$('analysisAdvanced').hidden=true;$('addWatch').hidden=true;
+ $('marketAnalysisLayout').hidden=true;$('bondAnalysisLayout').hidden=false;$('analysisAdvanced').hidden=true;$('addWatch').hidden=true;$('analysisTf').disabled=true;
  $('assetSymbol').textContent=symbol;$('assetType').textContent='bond';$('assetSource').textContent='Renta fija';
  if(!appState.bonds.length)await loadBonds();
  let b=appState.bonds.find(x=>x.symbol===symbol);
@@ -449,11 +450,11 @@ function renderPortfolio(){
  enriched.forEach(x=>x.weight=totalUsd>0&&Number.isFinite(x.usd)?x.usd/totalUsd*100:NaN);
  const top=[...enriched].filter(x=>Number.isFinite(x.weight)).sort((a,b)=>b.weight-a.weight)[0];
  $('pValue').textContent=totalUsd>0?`USD ${fmt(totalUsd,0)} eq.`:'—';$('pCurrency').textContent=Number.isFinite(n(appState.context?.fx?.mep?.venta))?'Equivalente vía MEP':'Sin conversión completa';
- const pnlUsd=totalUsd-totalCostUsd;$('pPnl').textContent=totalCostUsd>0?`USD ${fmt(pnlUsd,0)}`:'—';$('pPnl').className=pnlUsd>0?'positive':pnlUsd<0?'negative':'';
- $('pPnlPct').textContent=totalCostUsd>0?fmtPct(pnlUsd/totalCostUsd*100):'—';$('pTopWeight').textContent=top?fmtPct(top.weight,1):'—';$('pTopSymbol').textContent=top?.symbol||'—';
+ const pnlUsd=totalUsd-totalCostUsd;$('pPnl').textContent=totalCostUsd>0?`USD ${fmt(pnlUsd,Math.abs(pnlUsd)<100?2:0)}`:'—';$('pPnl').className=pnlUsd>0?'positive':pnlUsd<0?'negative':'';
+ $('pPnlPct').textContent=totalCostUsd>0?fmtPct(pnlUsd/totalCostUsd*100):'—';$('pTopWeight').textContent=top?fmtWeight(top.weight,1):'—';$('pTopSymbol').textContent=top?.symbol||'—';
  $('portfolioBody').innerHTML=enriched.map(p=>{
   const pnlPct=Number.isFinite(p.pnl)&&p.cost>0?p.pnl/p.cost*100:NaN,status=p.analysis?.label||(p.error?'SIN DATOS':'PENDIENTE'),scls=p.analysis?.kind||'none';
-  return`<tr><td><b>${esc(p.symbol)}</b><br><small>${esc(p.type)} · ${esc(p.currency)}</small></td><td>${fmt(p.qty,4)}</td><td>${fmtMoney(p.buy,p.currency)}</td><td>${Number.isFinite(n(p.current))?fmtMoney(p.current,p.currency):'—'}</td><td class="${p.pnl>0?'positive':p.pnl<0?'negative':''}">${Number.isFinite(p.pnl)?fmtMoney(p.pnl,p.currency):'—'}<br><small>${fmtPct(pnlPct)}</small></td><td>${fmtPct(p.weight,1)}</td><td><span class="status-pill state ${scls}">${esc(status)}</span></td><td><button class="text-button" data-open-pos="${esc(p.id)}">Abrir</button> · <button class="text-button" data-remove-pos="${esc(p.id)}">Quitar</button></td></tr>`
+  return`<tr><td><b>${esc(p.symbol)}</b><br><small>${esc(p.type)} · ${esc(p.currency)}</small></td><td>${fmt(p.qty,4)}</td><td>${fmtMoney(p.buy,p.currency)}</td><td>${Number.isFinite(n(p.current))?fmtMoney(p.current,p.currency):'—'}</td><td class="${p.pnl>0?'positive':p.pnl<0?'negative':''}">${Number.isFinite(p.pnl)?fmtMoney(p.pnl,p.currency):'—'}<br><small>${fmtPct(pnlPct)}</small></td><td>${fmtWeight(p.weight,1)}</td><td><span class="status-pill state ${scls}">${esc(status)}</span></td><td><button class="text-button" data-open-pos="${esc(p.id)}">Abrir</button> · <button class="text-button" data-remove-pos="${esc(p.id)}">Quitar</button></td></tr>`
  }).join('');
  $$('[data-open-pos]').forEach(el=>el.addEventListener('click',()=>{const p=ps.find(x=>x.id===el.dataset.openPos);if(p)goAnalysis(p.symbol,p.type,p.type==='crypto'?'1h':'1d')}));
  $$('[data-remove-pos]').forEach(el=>el.addEventListener('click',()=>{appState.portfolio=appState.portfolio.filter(x=>x.id!==el.dataset.removePos);saveJson(PORTFOLIO_KEY,appState.portfolio);renderPortfolio();renderPortfolioAlerts()}));
