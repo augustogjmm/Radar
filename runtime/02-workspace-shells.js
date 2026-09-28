@@ -1157,7 +1157,7 @@ const TOP_HTML=String.raw`<div class="top">
       <button id="analyzeBtn">Analizar</button>
     </div>
     <div class="top-utilities">
-      <span class="realtime-pill"><i></i> DATOS EN LÍNEA</span>
+      <span id="topDataHealth" class="realtime-pill testing"><i></i><b>VALIDANDO DATOS</b></span>
       <span id="topClock" class="top-clock">--:--</span>
     </div>
   </div>`;
