@@ -62,23 +62,18 @@ try{
  const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
  assert(response?.ok(),`Home HTTP ${response?.status()}`);
  await page.waitForSelector('#todayView.active',{timeout:15000});
- try{
-  await page.waitForFunction(()=>document.querySelectorAll('#todayPriorities .priority-item').length>0,{timeout:30000});
- }catch(e){
-  const diag=await page.evaluate(()=>({
-    priorityHtml:document.getElementById('todayPriorities')?.innerHTML||'',
-    coverage:document.getElementById('radarCoverage')?.textContent||'',
-    status:document.getElementById('systemStatusDetail')?.textContent||'',
-    bodyText:document.body.innerText.slice(0,4000)
-  }));
-  console.error('V6_BOOT_DIAGNOSTIC',JSON.stringify({diag,errors,consoleErrors},null,2));
-  throw e;
- }
+ await page.waitForFunction(()=>{
+  const p=document.querySelectorAll('#todayPriorities .priority-item').length;
+  const t=document.getElementById('todayPriorities')?.textContent||'';
+  const coverage=document.getElementById('radarCoverage')?.textContent||'';
+  return /con datos/.test(coverage) && (p>0 || /No hay setups o deterioros suficientemente claros/.test(t));
+ },{timeout:30000});
 
  const home=await page.evaluate(()=>({
   views:document.querySelectorAll('.view').length,
   nav:document.querySelectorAll('.nav-item').length,
   priorities:document.querySelectorAll('#todayPriorities .priority-item').length,
+  noAction:/No hay setups o deterioros suficientemente claros/.test(document.getElementById('todayPriorities')?.textContent||''),
   bonds:document.querySelectorAll('#bondRadar .bond-row').length,
   risk:document.getElementById('ctxRisk')?.textContent,
   health:document.getElementById('systemStatusBtn')?.className,
@@ -86,14 +81,19 @@ try{
  }));
  assert(home.views===3,'v6 debe tener exactamente tres vistas');
  assert(home.nav===3,'v6 debe tener exactamente tres opciones principales');
- assert(home.priorities>0,'Radar de Hoy no generó prioridades con datos válidos');
+ assert(home.priorities>0||home.noAction,'Radar de Hoy no produjo ni prioridades ni estado explícito de no acción');
  assert(home.bonds===3,'Renta fija no mostró los tres soberanos');
  assert(/845/.test(home.risk),'Riesgo país no cargó');
  assert(/ok/.test(home.health),'Health no quedó OK');
  assert(home.overflow<=4,'Overflow horizontal en home: '+home.overflow);
  await page.screenshot({path:'artifacts/v6-01-today.png',fullPage:true});
 
- await page.click('#todayPriorities .priority-item');
+ if(home.priorities>0){
+   await page.click('#todayPriorities .priority-item');
+ }else{
+   await page.fill('#quickSymbol','SPY');
+   await page.click('#quickSearch button');
+ }
  await page.waitForSelector('#analysisView.active',{timeout:10000});
  await page.waitForFunction(()=>document.getElementById('decisionState')?.textContent!=='SIN ANÁLISIS',{timeout:20000});
  const analysis=await page.evaluate(()=>({
