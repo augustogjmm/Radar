@@ -478,3 +478,220 @@
   .radar-product-reset .product-scanner .product-scan-summary,
   .radar-product-reset .product-portfolio .p360-master-kpis{grid-template-columns:1fr!important}
 }
+
+/* ===== Daily Radar: immediate value on open ===== */
+.radar-product-reset .daily-radar-panel{
+  order:1;
+  padding:0;
+  border:1px solid #233743;
+  border-radius:14px;
+  background:#0a151d;
+  overflow:hidden;
+}
+.radar-product-reset .daily-radar-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  padding:20px 22px 16px;
+  border-bottom:1px solid #182b35;
+}
+.radar-product-reset .daily-radar-head h2{
+  margin:0!important;
+  color:#edf4f7!important;
+  font-size:18px!important;
+  font-weight:680!important;
+  letter-spacing:-.015em!important;
+}
+.radar-product-reset .daily-radar-head p{
+  margin:5px 0 0!important;
+  max-width:760px;
+  color:#728996!important;
+  font-size:11px!important;
+  line-height:1.45!important;
+}
+.radar-product-reset .daily-radar-actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex:0 0 auto;
+}
+.radar-product-reset .daily-radar-when{
+  color:#718997;
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+}
+.radar-product-reset .daily-radar-kpis{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+  border-bottom:1px solid #182b35;
+}
+.radar-product-reset .daily-radar-kpis>div{
+  padding:14px 16px;
+  border-right:1px solid #182b35;
+}
+.radar-product-reset .daily-radar-kpis>div:last-child{border-right:0}
+.radar-product-reset .daily-radar-kpis small{
+  display:block;
+  color:#667f8e;
+  font-size:8.5px;
+  font-weight:700;
+  letter-spacing:.07em;
+}
+.radar-product-reset .daily-radar-kpis b{
+  display:block;
+  margin-top:5px;
+  color:#e7eff3;
+  font-size:21px;
+  font-weight:680;
+}
+.radar-product-reset .daily-radar-kpis span{
+  display:block;
+  margin-top:2px;
+  color:#607786;
+  font-size:9px;
+}
+.radar-product-reset .daily-radar-status{
+  padding:9px 16px;
+  border-bottom:1px solid #152832;
+  background:#08131a;
+  color:#708895;
+  font-size:10px;
+}
+.radar-product-reset .daily-radar-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.8fr) minmax(300px,.8fr);
+  gap:0;
+}
+.radar-product-reset .daily-radar-main{
+  padding:16px;
+  border-right:1px solid #182b35;
+}
+.radar-product-reset .daily-radar-side{padding:16px}
+.radar-product-reset .daily-radar-section-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+.radar-product-reset .daily-radar-section-head.portfolio-head{margin-top:16px}
+.radar-product-reset .daily-radar-section-head h3{
+  margin:0!important;
+  color:#aebfc9!important;
+  font-size:10px!important;
+  letter-spacing:.07em!important;
+}
+.radar-product-reset .daily-radar-section-head span{
+  color:#5f7786;
+  font-size:9px;
+}
+.radar-product-reset .daily-radar-list{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.radar-product-reset .daily-radar-item{
+  width:100%;
+  min-height:58px!important;
+  display:grid!important;
+  grid-template-columns:104px 100px minmax(0,1fr) 64px;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px!important;
+  border:1px solid #182d38!important;
+  border-radius:8px!important;
+  background:#0b171f!important;
+  color:inherit!important;
+  text-align:left!important;
+}
+.radar-product-reset .daily-radar-item:hover{
+  border-color:#2b4655!important;
+  background:#0d1b24!important;
+}
+.radar-product-reset .daily-radar-state{
+  color:#9cb0bc;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.045em;
+}
+.radar-product-reset .daily-radar-item.buy .daily-radar-state{color:#73cda0}
+.radar-product-reset .daily-radar-item.sell .daily-radar-state{color:#df8793}
+.radar-product-reset .daily-radar-item.near .daily-radar-state{color:#d3ad68}
+.radar-product-reset .daily-radar-asset b{
+  display:block;
+  color:#e8f0f4;
+  font-size:12px;
+}
+.radar-product-reset .daily-radar-asset small{
+  display:block;
+  margin-top:2px;
+  color:#627b89;
+  font-size:8.5px;
+}
+.radar-product-reset .daily-radar-reason{
+  min-width:0;
+  color:#869ca9;
+  font-size:10px;
+  line-height:1.4;
+}
+.radar-product-reset .daily-radar-score{
+  text-align:right;
+}
+.radar-product-reset .daily-radar-score small{
+  display:block;
+  color:#607887;
+  font-size:8px;
+}
+.radar-product-reset .daily-radar-score b{
+  display:block;
+  margin-top:2px;
+  color:#c7d5dd;
+  font-size:14px;
+}
+.radar-product-reset .daily-radar-source{
+  display:inline-block;
+  margin-top:3px;
+  color:#b79a62;
+  font-size:7.5px;
+}
+.radar-product-reset .daily-radar-list.compact .daily-radar-item{
+  grid-template-columns:84px 76px minmax(0,1fr) 48px;
+  min-height:52px!important;
+  padding:8px!important;
+}
+.radar-product-reset .daily-radar-list.compact .daily-radar-reason{
+  font-size:9.5px;
+}
+.radar-product-reset .daily-radar-item.portfolio{
+  grid-template-columns:78px 74px minmax(0,1fr);
+}
+.radar-product-reset .daily-radar-item.portfolio .daily-radar-score{display:none}
+.radar-product-reset .daily-radar-empty{
+  padding:15px;
+  border:1px dashed #1c303b;
+  border-radius:8px;
+  color:#687f8d;
+  font-size:10px;
+  line-height:1.45;
+}
+.radar-product-reset .daily-radar-empty.strong{
+  color:#91a5b0;
+  background:#09151c;
+}
+@media(max-width:1050px){
+  .radar-product-reset .daily-radar-grid{grid-template-columns:1fr}
+  .radar-product-reset .daily-radar-main{border-right:0;border-bottom:1px solid #182b35}
+}
+@media(max-width:760px){
+  .radar-product-reset .daily-radar-head{align-items:flex-start;flex-direction:column}
+  .radar-product-reset .daily-radar-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .radar-product-reset .daily-radar-kpis>div:nth-child(2){border-right:0}
+  .radar-product-reset .daily-radar-kpis>div:nth-child(-n+2){border-bottom:1px solid #182b35}
+  .radar-product-reset .daily-radar-item,
+  .radar-product-reset .daily-radar-list.compact .daily-radar-item{
+    grid-template-columns:86px minmax(70px,.5fr) minmax(0,1fr)!important;
+  }
+  .radar-product-reset .daily-radar-score{display:none}
+}
