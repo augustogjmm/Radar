@@ -845,6 +845,9 @@ async function runRegressionSuite(){
  await get('Treasury curve','/api/treasury-curve',12000,x=>Array.isArray(x?.points)&&x.points.length>=3,true,'Mercados');
  await get('Tasas locales','/api/local-rates',12000,x=>Number(x?.available)>0,true,'Mercados');
  await get('Renta fija','/api/fixed-income/analytics',12000,x=>Array.isArray(x?.bonds)&&x.bonds.length>0,false,'Renta fija');
+ await get('RF · Letras','/api/byma/fixed-income?kind=letters&currency=ALL&liquid=0',15000,x=>Array.isArray(x?.items)&&x.items.length>0&&x.items.every(i=>i.type==='bond'&&i.category==='LECAP/BONCAP'),false,'Renta fija');
+ await get('RF · Soberanos','/api/byma/fixed-income?kind=sovereign&currency=ALL&liquid=0',15000,x=>Array.isArray(x?.items)&&x.items.length>0&&x.items.every(i=>i.type==='bond'&&i.category!=='LECAP/BONCAP'),false,'Renta fija');
+ await get('RF · ON','/api/byma/fixed-income?kind=on&currency=ALL&liquid=0',15000,x=>Array.isArray(x?.items)&&x.items.length>0&&x.items.every(i=>i.type==='on'),false,'Renta fija');
  async function probeScanner(name,item,key='short'){
   const t=performance.now();
   try{
