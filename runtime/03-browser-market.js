@@ -119,12 +119,12 @@ const MARKET_ASSETS=[
  {id:'sp500',group:'Índices',name:'S&P 500',symbol:'^GSPC',unit:'pts',decimals:2,summary:true},
  {id:'nasdaq',group:'Índices',name:'NASDAQ Composite',symbol:'^IXIC',unit:'pts',decimals:2},
  {id:'nasdaq100',group:'Índices',name:'NASDAQ 100',symbol:'^NDX',unit:'pts',decimals:2,summary:true},
- {id:'dow',group:'Índices',name:'Dow Jones',symbol:'^DJI',unit:'pts',decimals:2,summary:true},
- {id:'russell',group:'Índices',name:'Russell 2000',symbol:'^RUT',unit:'pts',decimals:2,summary:true},
+ {id:'dow',group:'Índices',name:'Dow Jones',symbol:'^DJI',unit:'pts',decimals:2},
+ {id:'russell',group:'Índices',name:'Russell 2000',symbol:'^RUT',unit:'pts',decimals:2},
  {id:'vix',group:'Índices',name:'VIX',symbol:'^VIX',unit:'pts',decimals:2,summary:true},
 
  // ARGENTINA / LATAM
- {id:'merval',group:'Índices',name:'MERVAL $',symbol:'^MERV',unit:'pts ARS',decimals:0,summary:true},
+ {id:'merval',group:'Índices',name:'MERVAL $',symbol:'^MERV',unit:'pts ARS',decimals:0},
  {id:'merval_usd',group:'Índices',name:'S&P Merval USD (MEP)',symbol:'SPMERVDT',unit:'pts USD',decimals:2,summary:true,intraday:false,lineOnly:true,sourceType:'byma-merval-usd',sourceLabel:'BYMA'}, 
  {id:'bovespa',group:'Índices',name:'IBOVESPA Brasil',symbol:'^BVSP',unit:'pts',decimals:0},
  {id:'ipc_mex',group:'Índices',name:'IPC México',symbol:'^MXX',unit:'pts',decimals:2},
@@ -143,7 +143,7 @@ const MARKET_ASSETS=[
  {id:'ust13w',group:'Bonos USA',name:'Treasury Bill 13 semanas · yield',symbol:'^IRX',unit:'% yield',decimals:3},
  {id:'ust5y',group:'Bonos USA',name:'Treasury 5Y · yield',symbol:'^FVX',unit:'% yield',decimals:3},
  {id:'ust10y',group:'Bonos USA',name:'Treasury 10Y · yield',symbol:'^TNX',unit:'% yield',decimals:3,summary:true},
- {id:'ust30y',group:'Bonos USA',name:'Treasury 30Y · yield',symbol:'^TYX',unit:'% yield',decimals:3,summary:true},
+ {id:'ust30y',group:'Bonos USA',name:'Treasury 30Y · yield',symbol:'^TYX',unit:'% yield',decimals:3},
  {id:'ust2f',group:'Bonos USA',name:'US 2Y T-Note Futures',symbol:'ZT=F',unit:'pts',decimals:4,intraday:false},
  {id:'ust5f',group:'Bonos USA',name:'US 5Y T-Note Futures',symbol:'ZF=F',unit:'pts',decimals:4,intraday:false},
  {id:'ust10f',group:'Bonos USA',name:'US 10Y T-Note Futures',symbol:'ZN=F',unit:'pts',decimals:4,intraday:false},
@@ -152,7 +152,7 @@ const MARKET_ASSETS=[
  // METALES PRECIOSOS E INDUSTRIALES
  {id:'gold',group:'Metales',name:'Oro',symbol:'GC=F',unit:'USD/oz',decimals:2,summary:true},
  {id:'silver',group:'Metales',name:'Plata',symbol:'SI=F',unit:'USD/oz',decimals:3},
- {id:'copper',group:'Metales',name:'Cobre',symbol:'HG=F',unit:'USD/lb',decimals:4,summary:true},
+ {id:'copper',group:'Metales',name:'Cobre',symbol:'HG=F',unit:'USD/lb',decimals:4},
  {id:'platinum',group:'Metales',name:'Platino',symbol:'PL=F',unit:'USD/oz',decimals:2},
  {id:'palladium',group:'Metales',name:'Paladio',symbol:'PA=F',unit:'USD/oz',decimals:2},
  {id:'aluminum',group:'Metales',name:'Aluminio',symbol:'ALI=F',unit:'USD',decimals:2},
@@ -160,14 +160,14 @@ const MARKET_ASSETS=[
  // ENERGÍA
  {id:'wti',group:'Energía',name:'Petróleo WTI',symbol:'CL=F',unit:'USD/bbl',decimals:2,summary:true},
  {id:'brent',group:'Energía',name:'Petróleo Brent',symbol:'BZ=F',unit:'USD/bbl',decimals:2},
- {id:'natgas',group:'Energía',name:'Gas natural',symbol:'NG=F',unit:'USD/MMBtu',decimals:3,summary:true},
+ {id:'natgas',group:'Energía',name:'Gas natural',symbol:'NG=F',unit:'USD/MMBtu',decimals:3},
  {id:'gasoline',group:'Energía',name:'Gasolina RBOB',symbol:'RB=F',unit:'USD/gal',decimals:4},
  {id:'heating',group:'Energía',name:'Heating Oil',symbol:'HO=F',unit:'USD/gal',decimals:4},
 
  // AGRÍCOLAS
  {id:'corn',group:'Agrícolas',name:'Maíz',symbol:'ZC=F',unit:'US¢/bu',decimals:2},
  {id:'wheat',group:'Agrícolas',name:'Trigo',symbol:'ZW=F',unit:'US¢/bu',decimals:2},
- {id:'soy',group:'Agrícolas',name:'Soja',symbol:'ZS=F',unit:'US¢/bu',decimals:2,summary:true},
+ {id:'soy',group:'Agrícolas',name:'Soja',symbol:'ZS=F',unit:'US¢/bu',decimals:2},
  {id:'soyoil',group:'Agrícolas',name:'Aceite de soja',symbol:'ZL=F',unit:'US¢/lb',decimals:3},
  {id:'coffee',group:'Agrícolas',name:'Café',symbol:'KC=F',unit:'US¢/lb',decimals:2},
  {id:'sugar',group:'Agrícolas',name:'Azúcar #11',symbol:'SB=F',unit:'US¢/lb',decimals:2},
@@ -177,9 +177,9 @@ const MARKET_ASSETS=[
 
  // DIVISAS PRINCIPALES Y LATAM
  {id:'dxy',group:'FX',name:'Índice dólar DXY',symbol:'DX-Y.NYB',unit:'pts',decimals:3,summary:true},
- {id:'eurusd',group:'FX',name:'EUR/USD',symbol:'EURUSD=X',unit:'USD por EUR',decimals:5,summary:true},
+ {id:'eurusd',group:'FX',name:'EUR/USD',symbol:'EURUSD=X',unit:'USD por EUR',decimals:5},
  {id:'gbpusd',group:'FX',name:'GBP/USD',symbol:'GBPUSD=X',unit:'USD por GBP',decimals:5},
- {id:'usdjpy',group:'FX',name:'USD/JPY',symbol:'JPY=X',unit:'JPY por USD',decimals:3,summary:true},
+ {id:'usdjpy',group:'FX',name:'USD/JPY',symbol:'JPY=X',unit:'JPY por USD',decimals:3},
  {id:'audusd',group:'FX',name:'AUD/USD',symbol:'AUDUSD=X',unit:'USD por AUD',decimals:5},
  {id:'nzdusd',group:'FX',name:'NZD/USD',symbol:'NZDUSD=X',unit:'USD por NZD',decimals:5},
  {id:'usdchf',group:'FX',name:'USD/CHF',symbol:'CHF=X',unit:'CHF por USD',decimals:5},
@@ -187,7 +187,7 @@ const MARKET_ASSETS=[
  {id:'usdcny',group:'FX',name:'USD/CNY',symbol:'CNY=X',unit:'CNY por USD',decimals:4},
  {id:'usdbrl',group:'FX',name:'USD/BRL',symbol:'BRL=X',unit:'BRL por USD',decimals:4},
  {id:'usdmxn',group:'FX',name:'USD/MXN',symbol:'MXN=X',unit:'MXN por USD',decimals:4},
- {id:'usdars',group:'FX',name:'USD/ARS mercado FX',symbol:'ARS=X',unit:'ARS por USD',decimals:2,summary:true}
+ {id:'usdars',group:'FX',name:'USD/ARS mercado FX',symbol:'ARS=X',unit:'ARS por USD',decimals:2}
 ];
 let marketBoardData=new Map(),marketBoardFilter='Resumen',marketBoardLoading=false,mervalUsdQuoteCache=null;
 let marketCardLoads=new Map(),marketBoardLoadSeq=0;
