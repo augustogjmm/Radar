@@ -100,3 +100,31 @@
   .investor-opportunity{grid-template-columns:96px 76px minmax(0,1fr)}.investor-op-metrics{display:none}
   .investor-tools{grid-template-columns:1fr}.investor-tools button{border-right:0!important;border-bottom:1px solid #182b35!important}
 }
+/* Historial / auditoría restored as a first-class workspace */
+.v7-signals-view{display:none}
+.v7-signals-view.active{display:block}
+.v7-workspace-head{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;margin-bottom:12px;padding:18px 20px;border:1px solid #20343f;border-radius:11px;background:#0a151d}
+.v7-workspace-head h2{margin:4px 0 0!important;color:#e5eef2!important;font-size:18px!important}
+.v7-workspace-head p{margin:5px 0 0!important;color:#718997!important;font-size:10px!important}
+.v7-head-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.v7-signal-kpis{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.v7-signal-kpis>div{padding:11px 12px;border:1px solid #1c303a;border-radius:9px;background:#0a151d}
+.v7-signal-kpis small{display:block;color:#5f7786;font-size:7.7px;font-weight:700;letter-spacing:.06em}
+.v7-signal-kpis b{display:block;margin-top:5px;color:#dce7ec;font-size:16px}
+.v7-evidence-note{margin-bottom:10px;padding:10px 12px;border:1px solid #1b303a;border-radius:8px;background:#09151c;color:#718895;font-size:9.5px;line-height:1.45}
+.v7-signal-toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;border:1px solid #1c303a;border-radius:9px;background:#0a151d}
+.v7-signal-toolbar label{display:flex;flex-direction:column;gap:4px;color:#617a89;font-size:8px}
+.v7-signal-toolbar select{min-height:32px}
+.v7-audit-progress{margin-left:auto;min-width:210px;height:32px;position:relative;overflow:hidden;border:1px solid #1c303a;border-radius:8px;background:#08131a}
+.v7-audit-progress span{position:absolute;inset:0 auto 0 0;width:0;background:rgba(78,140,181,.18)}
+.v7-audit-progress b{position:relative;z-index:1;display:flex;height:100%;align-items:center;padding:0 9px;color:#6d8593;font-size:8.5px}
+.v7-signal-table-wrap{overflow:auto;border:1px solid #1c303a;border-radius:9px;background:#09141b}
+.v7-signal-table{width:100%;min-width:1250px;border-collapse:collapse}
+.v7-signal-table th,.v7-signal-table td{padding:9px 10px;border-bottom:1px solid #152730;text-align:left;font-size:8.8px;vertical-align:top}
+.v7-signal-table th{position:sticky;top:0;background:#0b171f;color:#637d8c;font-size:7.8px;letter-spacing:.045em}
+.v7-signal-table td{color:#849aa6}
+.v7-signal-table td b{color:#dfe8ed}
+.v7-decision-audit{margin-top:12px;border:1px solid #1c303a;border-radius:10px;overflow:hidden;background:#0a151d}
+.v7-decision-audit .v7-signal-table-wrap{border:0;border-radius:0}
+@media(max-width:1100px){.v7-signal-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:720px){.v7-signal-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.v7-workspace-head{align-items:flex-start;flex-direction:column}}
