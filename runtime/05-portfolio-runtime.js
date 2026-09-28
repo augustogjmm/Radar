@@ -844,6 +844,20 @@ async function runRegressionSuite(){
  await get('Treasury curve','/api/treasury-curve',12000,x=>Array.isArray(x?.points)&&x.points.length>=3,true,'Mercados');
  await get('Tasas locales','/api/local-rates',12000,x=>Number(x?.available)>0,true,'Mercados');
  await get('Renta fija','/api/fixed-income/analytics',12000,x=>Array.isArray(x?.bonds)&&x.bonds.length>0,false,'Renta fija');
+ async function probeScanner(name,item,key='short'){
+  const t=performance.now();
+  try{
+    const result=await scanOne(item,key);
+    const ok=!!result?.analysis&&!!result?.plan&&!!result?.status&&Number.isFinite(Number(result?.price));
+    add(name,ok?'ok':'bad',`${Math.round(performance.now()-t)} ms · ${ok?'análisis + plan + estado + precio':'pipeline incompleto'}`,'E2E');
+  }catch(e){
+    add(name,'bad',String(e?.message||e),'E2E');
+  }
+ }
+ await probeScanner('E2E · Crypto BTC 1H',{symbol:'BTCUSDT',type:'crypto'},'short');
+ await probeScanner('E2E · USA SPY 1H',{symbol:'SPY',type:'stock'},'short');
+ await probeScanner('E2E · Argentina GGAL 1D',{symbol:'GGAL',type:'argstock'},'short');
+ await probeScanner('E2E · CEDEAR AAPL 1D',{symbol:'AAPL',type:'cedear'},'short');
  const result=qaRenderResult(tests,Math.round(performance.now()-started),true);renderSystemHealth();return result;
 }
 
