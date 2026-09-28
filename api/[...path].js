@@ -496,7 +496,7 @@ async function deepHealth(){
     })
   ]);
   const criticalFailures=checks.filter(x=>x.critical&&!x.ok);
-  return {ok:criticalFailures.length===0,status:criticalFailures.length?'DEGRADED':'OK',release:'5.1.0',checkedAt:new Date().toISOString(),durationMs:Date.now()-started,criticalFailures:criticalFailures.length,checks};
+  return {ok:criticalFailures.length===0,status:criticalFailures.length?'DEGRADED':'OK',release:'5.1.0',gitSha:process.env.VERCEL_GIT_COMMIT_SHA||null,checkedAt:new Date().toISOString(),durationMs:Date.now()-started,criticalFailures:criticalFailures.length,checks};
 }
 
 async function handler(req,res){
@@ -504,7 +504,7 @@ async function handler(req,res){
   if(req.method==='OPTIONS')return send(res,204,'',{'access-control-allow-origin':'*'});
   const url=new URL(req.url,'https://radar.local'),p=url.pathname;
   try{
-    if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'v93',radarVersion:'v93',release:'5.1.0',phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
+    if(p==='/api/health'||p==='/health')return send(res,200,{ok:true,service:'radar-web-api',version:'v93',radarVersion:'v93',release:'5.1.0',gitSha:process.env.VERCEL_GIT_COMMIT_SHA||null,phase:'12A',runtime:'vercel-serverless',time:new Date().toISOString()});
     if(p==='/api/health/deep')return send(res,200,await deepHealth());
     if(p==='/api/yahoo')return send(res,200,await yahoo(url));
     if(p==='/api/yahoo-batch')return send(res,200,await yahooBatch(url));
