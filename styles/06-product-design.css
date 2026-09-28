@@ -798,3 +798,26 @@ label{color:#7c8f9f!important;font-weight:600!important}
     text-align:center!important;
   }
 }
+
+
+/* Table empty states must remain table cells; legacy generic empty-state flex
+   breaks colspan geometry and can collapse text into a narrow vertical strip. */
+table td:is(.watch-empty,.scan-empty,.portfolio-empty,.signal-empty,.alloc-empty,.cedar-empty,.market-empty,.advisor-empty,.is-empty){
+  display:table-cell!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  min-height:0!important;
+  height:auto!important;
+  padding:24px 16px!important;
+  text-align:center!important;
+  vertical-align:middle!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  border:0!important;
+  border-bottom:1px solid rgba(255,255,255,.045)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#718493!important;
+}
