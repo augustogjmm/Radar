@@ -24,14 +24,32 @@ const yahoo=b=>({chart:{result:[{timestamp:b.map(x=>x.time),meta:{regularMarketP
 const binance=b=>b.map(x=>[x.time*1000,String(x.open),String(x.high),String(x.low),String(x.close),String(x.volume),0,0,0,0,0,0]);
 
 await page.addInitScript(()=>{
- localStorage.setItem('radar_v6_portfolio',JSON.stringify([
-  {id:'qa-aapl',symbol:'AAPL',type:'cedear',qty:10,buy:100,currency:'ARS',addedAt:Date.now()}
- ]));
+ localStorage.removeItem('radar_v6_portfolio');
+ localStorage.removeItem('radar_v6_watchlist');
+ localStorage.setItem('radar_web_config_v1',JSON.stringify({
+   revision:7,
+   config:{watchlist:[
+     {symbol:'AAPL',type:'cedear',tf:'medium',quantity:10,buyPrice:100,positionSize:1000,portfolioCurrency:'ARS',inPortfolio:true,portfolioAddedAt:Date.now()-86400000},
+     {symbol:'BTCUSDT',type:'crypto',tf:'short',positionSize:0,buyPrice:0,inPortfolio:false}
+   ]}
+ }));
 });
 
 await page.route('**/api/**',async route=>{
  const u=new URL(route.request().url());
  const ok=body=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)});
+ if(u.pathname==='/api/binance/universe')return ok({count:8,items:[
+  {symbol:'BTCUSDT',quoteVolume:900},{symbol:'ETHUSDT',quoteVolume:800},{symbol:'SOLUSDT',quoteVolume:700},{symbol:'BNBUSDT',quoteVolume:600},
+  {symbol:'XRPUSDT',quoteVolume:500},{symbol:'DOGEUSDT',quoteVolume:400},{symbol:'ADAUSDT',quoteVolume:300},{symbol:'LINKUSDT',quoteVolume:200}
+ ]});
+ if(u.pathname==='/api/byma/equities')return ok({count:8,items:[
+  {symbol:'GGAL',volumeAmount:900},{symbol:'YPFD',volumeAmount:800},{symbol:'PAMP',volumeAmount:700},{symbol:'BMA',volumeAmount:600},
+  {symbol:'BBAR',volumeAmount:500},{symbol:'TXAR',volumeAmount:400},{symbol:'CEPU',volumeAmount:300},{symbol:'COME',volumeAmount:200}
+ ]});
+ if(u.pathname==='/api/byma/cedears')return ok({count:8,items:[
+  {symbol:'AAPL',volumeAmount:900},{symbol:'NVDA',volumeAmount:800},{symbol:'MELI',volumeAmount:700},{symbol:'AMZN',volumeAmount:600},
+  {symbol:'MSFT',volumeAmount:500},{symbol:'KO',volumeAmount:400},{symbol:'JPM',volumeAmount:300},{symbol:'TSLA',volumeAmount:200}
+ ]});
  if(u.pathname==='/api/health/deep')return ok({ok:true,status:'OK',criticalFailures:0,checks:[
   {name:'Yahoo SPY',ok:true,critical:true},{name:'Binance BTC',ok:true,critical:true},{name:'BYMA acciones',ok:true,critical:true},{name:'BYMA CEDEAR',ok:true,critical:true},{name:'Dólar',ok:true,critical:true},{name:'Renta fija',ok:true,critical:true}
  ]});
@@ -76,10 +94,13 @@ try{
   noAction:/No hay setups o deterioros suficientemente claros/.test(document.getElementById('todayPriorities')?.textContent||''),
   bonds:document.querySelectorAll('#bondRadar .bond-row').length,
   risk:document.getElementById('ctxRisk')?.textContent,
+  coverageText:document.getElementById('radarCoverage')?.textContent||'',
   health:document.getElementById('systemStatusBtn')?.className,
   overflow:document.documentElement.scrollWidth-window.innerWidth
  }));
  assert(home.views===3,'v6 debe tener exactamente tres vistas');
+ const coverageTotal=Number((home.coverageText.match(/\/(\d+)\s+con datos/)||[])[1]);
+ assert(coverageTotal>=20,'Radar de Hoy no está usando universo dinámico suficiente: '+home.coverageText);
  assert(home.nav===3,'v6 debe tener exactamente tres opciones principales');
  assert(home.priorities>0||home.noAction,'Radar de Hoy no produjo ni prioridades ni estado explícito de no acción');
  assert(home.bonds===3,'Renta fija no mostró los tres soberanos');
@@ -138,7 +159,7 @@ try{
   pnl:document.getElementById('pPnl')?.textContent,
   overflow:document.documentElement.scrollWidth-window.innerWidth
  }));
- assert(portfolio.count==='1','Cartera no conservó la posición');
+ assert(portfolio.count==='1','Migración v5→v6 no conservó la posición');
  assert(/AAPL/.test(portfolio.row),'Cartera no muestra AAPL');
  assert(portfolio.topWeight==='100.0%','Peso de cartera debe mostrarse como porcentaje sin signo: '+portfolio.topWeight);
  assert(!/^USD 0(?:$|[^,.0-9])/.test(portfolio.pnl),'P&L equivalente no debe redondearse engañosamente a cero: '+portfolio.pnl);
