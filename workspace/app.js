@@ -62,24 +62,65 @@ function parseYahoo(j){
   const r=j?.chart?.result?.[0],q=r?.indicators?.quote?.[0];if(!r?.timestamp?.length||!q)throw new Error('Yahoo sin histórico');
   const out=[];r.timestamp.forEach((t,i)=>{const b={time:n(t),open:n(q.open?.[i]),high:n(q.high?.[i]),low:n(q.low?.[i]),close:n(q.close?.[i]),volume:n(q.volume?.[i])||0};if([b.open,b.high,b.low,b.close].every(Number.isFinite))out.push(b)});return out;
 }
-async function fetchBars(item){
+function aggregateBars(bars,mode){
+  const bucket=new Map();
+  for(const b of bars){
+    const d=new Date(b.time*1000);
+    let key;
+    if(mode==='week'){
+      const x=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()));
+      const day=(x.getUTCDay()+6)%7;x.setUTCDate(x.getUTCDate()-day);
+      key=x.toISOString().slice(0,10);
+    }else key=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
+    const prev=bucket.get(key);
+    if(!prev)bucket.set(key,{...b});
+    else{prev.high=Math.max(prev.high,b.high);prev.low=Math.min(prev.low,b.low);prev.close=b.close;prev.volume=(prev.volume||0)+(b.volume||0);prev.time=b.time}
+  }
+  return [...bucket.values()].sort((a,b)=>a.time-b.time);
+}
+async function fetchBars(item,tf='trade'){
   if(item.type==='crypto'){
-    const j=await json(`/api/binance?symbol=${encodeURIComponent(item.symbol)}&interval=1h`);
+    const interval=tf==='trade'?'1h':tf==='higher'?'4h':'1d';
+    const j=await json(`/api/binance?symbol=${encodeURIComponent(item.symbol)}&interval=${interval}`);
     if(!Array.isArray(j))throw new Error('Binance sin histórico');
-    return{bars:j.map(x=>({time:Math.floor(n(x[0])/1000),open:n(x[1]),high:n(x[2]),low:n(x[3]),close:n(x[4]),volume:n(x[5])||0})).filter(b=>[b.open,b.high,b.low,b.close].every(Number.isFinite)),source:'Binance',tf:'1H'};
+    return{bars:j.map(x=>({time:Math.floor(n(x[0])/1000),open:n(x[1]),high:n(x[2]),low:n(x[3]),close:n(x[4]),volume:n(x[5])||0})).filter(b=>[b.open,b.high,b.low,b.close].every(Number.isFinite)),source:'Binance',tf:interval.toUpperCase()};
   }
   if(item.type==='stock'){
-    return{bars:parseYahoo(await json(`/api/yahoo?symbol=${encodeURIComponent(item.symbol)}&interval=1d&range=2y`)),source:'Yahoo Finance',tf:'1D'};
+    const interval=tf==='trade'?'1d':'1wk',range=tf==='trade'?'2y':'5y';
+    return{bars:parseYahoo(await json(`/api/yahoo?symbol=${encodeURIComponent(item.symbol)}&interval=${interval}&range=${range}`)),source:'Yahoo Finance',tf:interval==='1d'?'1D':'1W'};
   }
-  try{
-    return{bars:parseByma(await json(`/api/byma/history?symbol=${encodeURIComponent(item.symbol)}&days=7300`)),source:'Open BYMADATA',tf:'1D'};
-  }catch(e){
-    return{bars:parseYahoo(await json(`/api/yahoo?symbol=${encodeURIComponent(item.symbol+'.BA')}&interval=1d&range=5y&quiet=1`)),source:'Yahoo .BA fallback',tf:'1D'};
-  }
+  let daily,source;
+  try{daily=parseByma(await json(`/api/byma/history?symbol=${encodeURIComponent(item.symbol)}&days=7300`));source='Open BYMADATA'}
+  catch(e){daily=parseYahoo(await json(`/api/yahoo?symbol=${encodeURIComponent(item.symbol+'.BA')}&interval=1d&range=5y&quiet=1`));source='Yahoo .BA fallback'}
+  if(tf==='trade')return{bars:daily,source,tf:'1D'};
+  if(tf==='higher')return{bars:aggregateBars(daily,'week'),source,tf:'1W'};
+  return{bars:aggregateBars(daily,'month'),source,tf:'1M'};
 }
+function mtfLabel(a){return a?.score>=2?'ALCISTA':a?.score<=-2?'BAJISTA':'NEUTRAL'}
+function applyInvestmentRules(item,trade,plan,higher,macro){
+  const longOnly=item.type!=='crypto',dir=plan?.direction;
+  const h=mtfLabel(higher),m=mtfLabel(macro);
+  let aligned=false,label='',reason='';
+  if(dir==='LONG'){
+    aligned=h!=='BAJISTA'&&m!=='BAJISTA';
+    label=longOnly?'COMPRA':'LONG';
+    reason=aligned?'Tendencia superior no contradice la compra.':`Compra bloqueada: superior ${h.toLowerCase()} / macro ${m.toLowerCase()}.`;
+  }else if(dir==='SHORT'){
+    aligned=!longOnly&&h!=='ALCISTA'&&m!=='ALCISTA';
+    label=longOnly?'EVITAR / SALIDA':'SHORT';
+    reason=longOnly?'Radar no abre shorts en renta variable; la lectura bajista sirve para evitar o reducir.':(aligned?'Tendencia superior no contradice el short.':`Short bloqueado: superior ${h.toLowerCase()} / macro ${m.toLowerCase()}.`);
+  }
+  const base=opportunityState(trade,plan);
+  if(longOnly&&dir==='SHORT')return{...base,kind:'sell',label:'EVITAR / SALIDA',rank:300+(plan?.score||0),aligned:false,reason,higher:h,macro:m};
+  if(['LONG','SHORT'].includes(dir)&&!aligned)return{...base,kind:'wait',label:'CONTRA TENDENCIA',rank:180+(plan?.score||0),aligned:false,reason,higher:h,macro:m};
+  return{...base,label:base.kind==='buy'?label:base.kind==='sell'?label:base.label,aligned,reason,higher:h,macro:m};
+}
+
 async function analyzeItem(item){
-  const pack=await fetchBars(item),a=analyzeSeries(pack.bars,'short'),plan=computeTradePlan(a),opp=opportunityState(a,plan);
-  return{...item,bars:pack.bars,source:pack.source,tf:pack.tf,a,plan,opp,price:a.c};
+  const [tradePack,higherPack,macroPack]=await Promise.all([fetchBars(item,'trade'),fetchBars(item,'higher'),fetchBars(item,'macro')]);
+  const a=analyzeSeries(tradePack.bars,'short'),higher=analyzeSeries(higherPack.bars,'medium'),macro=analyzeSeries(macroPack.bars,'macro');
+  const plan=computeTradePlan(a),opp=applyInvestmentRules(item,a,plan,higher,macro);
+  return{...item,bars:tradePack.bars,source:tradePack.source,tf:tradePack.tf,a,higher,macro,plan,opp,price:a.c};
 }
 async function universe(market){
   if(market==='crypto'){
@@ -128,7 +169,7 @@ function renderRows(){
     </button>`;
     const p=r.plan,o=r.opp;
     return `<button class="op-row ${state.selected?.symbol===r.symbol?'selected':''}" data-symbol="${esc(r.symbol)}" data-type="${esc(r.type)}">
-      <span><b>${esc(r.symbol)}</b><small>${esc(r.type)} · ${esc(r.tf)}</small></span>
+      <span><b>${esc(r.symbol)}</b><small>${esc(r.type)} · ${esc(r.tf)} · ${esc(r.opp.higher||'—')}/${esc(r.opp.macro||'—')}</small></span>
       <span class="state ${esc(o.kind)}">${esc(o.label)}</span>
       <span class="num">${Math.round(p?.score||0)}</span>
       <span class="num">${fmt(r.price)}</span>
@@ -183,7 +224,7 @@ function renderTechnical(r){
   $('rType').textContent=r.type.toUpperCase();$('rSymbol').textContent=r.symbol;$('rSource').textContent=`${r.source} · ${r.tf} · última vela ${fresh}`;$('rPrice').textContent=fmt(r.price);$('rTf').textContent=r.tf;
   const ds=$('rState');ds.className='decision '+r.opp.kind;ds.textContent=r.opp.label;$('rScore').textContent=`${Math.round(r.plan?.score||0)}/100`;
   $('rEntry').textContent=Number.isFinite(r.plan?.entryLow)?`${fmt(r.plan.entryLow)} – ${fmt(r.plan.entryHigh)}`:'—';$('rTrigger').textContent=fmt(r.plan?.trigger);$('rStop').textContent=fmt(r.plan?.stop);$('rTp1').textContent=fmt(r.plan?.tp1);$('rTp2').textContent=fmt(r.plan?.tp2);$('rRr').textContent=Number.isFinite(r.plan?.rr1)?`1:${r.plan.rr1.toFixed(2)}`:'—';
-  $('rAction').textContent=r.plan?.action||'Sin acción técnica activa.';$('rWhy').innerHTML=(r.plan?.why||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  $('rAction').textContent=[r.opp?.reason,r.plan?.action].filter(Boolean).join(' ');$('rWhy').innerHTML=[`Superior: ${r.opp?.higher||'—'} · Macro: ${r.opp?.macro||'—'}`,...(r.plan?.why||[])].map(x=>`<li>${esc(x)}</li>`).join('');
   $('rStructure').textContent=r.a.structure;$('rEma').textContent=r.a.emaState;$('rMacd').textContent=r.a.macdState;$('rVolume').textContent=Number.isFinite(r.a.volumeRatio)?`${r.a.volumeRatio.toFixed(2)}x`:'—';
   syncWatchButton(r);drawSpark(r);
 }
