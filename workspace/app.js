@@ -91,6 +91,7 @@ function attentionSeverity(row){
 }
 function todayRowKey(x){return `${x.type}|${x.symbol}`}
 async function analyzeTodayItem(item){
+  if(item.legacyType==='on'||item.type==='on')return{...item,error:'ON: pendiente de valuación específica; Radar no la fuerza al motor técnico de acciones.'};
   if(item.type==='bond'){
     if(!state.bonds.length)await loadBonds();
     const b=state.bonds.find(x=>x.symbol===item.symbol);
