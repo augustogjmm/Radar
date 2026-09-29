@@ -103,16 +103,19 @@ function applyInvestmentRules(item,trade,plan,higher,macro){
   const h=mtfLabel(higher),m=mtfLabel(macro);
   let aligned=false,label='',reason='';
   if(dir==='LONG'){
-    aligned=h!=='BAJISTA'&&m!=='BAJISTA';
+    aligned=h==='ALCISTA'&&m==='ALCISTA';
     label=longOnly?'COMPRA':'LONG';
-    reason=aligned?'Tendencia superior no contradice la compra.':`Compra bloqueada: superior ${h.toLowerCase()} / macro ${m.toLowerCase()}.`;
+    reason=aligned?'Superior y macro confirman la compra.':`Compra bloqueada: superior ${h.toLowerCase()} / macro ${m.toLowerCase()}.`;
   }else if(dir==='SHORT'){
-    aligned=!longOnly&&h!=='ALCISTA'&&m!=='ALCISTA';
+    aligned=!longOnly&&h==='BAJISTA'&&m==='BAJISTA';
     label=longOnly?'EVITAR / SALIDA':'SHORT';
-    reason=longOnly?'Radar no abre shorts en renta variable; la lectura bajista sirve para evitar o reducir.':(aligned?'Tendencia superior no contradice el short.':`Short bloqueado: superior ${h.toLowerCase()} / macro ${m.toLowerCase()}.`);
+    reason=longOnly?'Radar no abre shorts en renta variable; la lectura bajista se usa como señal de riesgo.':(aligned?'Superior y macro confirman el short.':`Short bloqueado: superior ${h.toLowerCase()} / macro ${m.toLowerCase()}.`);
   }
   const base=opportunityState(trade,plan);
-  if(longOnly&&dir==='SHORT')return{...base,kind:'sell',label:'EVITAR / SALIDA',rank:300+(plan?.score||0),aligned:false,reason,higher:h,macro:m};
+  if(longOnly&&dir==='SHORT'){
+    const strong=plan?.status==='OPERABLE'||(plan?.score||0)>=75;
+    return{...base,kind:strong?'sell':'wait',label:strong?'EVITAR / SALIDA':'DEBILIDAD',rank:(strong?300:170)+(plan?.score||0),aligned:false,reason,higher:h,macro:m};
+  }
   if(['LONG','SHORT'].includes(dir)&&!aligned)return{...base,kind:'wait',label:'CONTRA TENDENCIA',rank:180+(plan?.score||0),aligned:false,reason,higher:h,macro:m};
   return{...base,label:base.kind==='buy'?label:base.kind==='sell'?label:base.label,aligned,reason,higher:h,macro:m};
 }
@@ -226,7 +229,7 @@ function renderTechnical(r){
   const ds=$('rState');ds.className='decision '+r.opp.kind;ds.textContent=r.opp.label;$('rScore').textContent=`${Math.round(r.plan?.score||0)}/100`;
   $('rEntry').textContent=Number.isFinite(r.plan?.entryLow)?`${fmt(r.plan.entryLow)} – ${fmt(r.plan.entryHigh)}`:'—';$('rTrigger').textContent=fmt(r.plan?.trigger);$('rStop').textContent=fmt(r.plan?.stop);$('rTp1').textContent=fmt(r.plan?.tp1);$('rTp2').textContent=fmt(r.plan?.tp2);$('rRr').textContent=Number.isFinite(r.plan?.rr1)?`1:${r.plan.rr1.toFixed(2)}`:'—';
   $('rAction').textContent=[r.opp?.reason,r.plan?.action].filter(Boolean).join(' ');$('rWhy').innerHTML=[`Superior: ${r.opp?.higher||'—'} · Macro: ${r.opp?.macro||'—'}`,...(r.plan?.why||[])].map(x=>`<li>${esc(x)}</li>`).join('');
-  $('rStructure').textContent=r.a.structure;$('rEma').textContent=r.a.emaState;$('rMacd').textContent=r.a.macdState;$('rVolume').textContent=Number.isFinite(r.a.volumeRatio)?`${r.a.volumeRatio.toFixed(2)}x`:'—';
+  $('rStructure').textContent=`${r.a.structure} · Op ${mtfLabel(r.a)} · Sup ${mtfLabel(r.higher)} · Macro ${mtfLabel(r.macro)}`;$('rEma').textContent=r.a.emaState;$('rMacd').textContent=r.a.macdState;$('rVolume').textContent=Number.isFinite(r.a.volumeRatio)?`${r.a.volumeRatio.toFixed(2)}x`:'—';
   syncWatchButton(r);drawSpark(r);
 }
 function renderBond(b){
