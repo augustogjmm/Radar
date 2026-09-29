@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "sourceCommit": "0622db4a4463bb687b72f55852a20c66c3e8855c",
+  "workflows": {
+    "overview": ["market_context","portfolio_summary","portfolio_attention","watchlist_alerts","ranked_opportunities","data_health"],
+    "discover": ["rv_scanner","crypto_scanner","cedear_scanner","arg_equity_scanner","fixed_income_scanner","liquidity_filters","entry_stop_targets","rr","macro_context"],
+    "research": ["multi_timeframe","structure","emas","macd","volume","fibonacci","support_resistance","trade_plan","backtest","bond_contract","bond_cashflows","yield_duration_parity","bond_scenarios","peers"],
+    "portfolio": ["transactions","average_cost","pnl","mep_conversion","cash_reconciliation","allocation","concentration","risk","correlation","performance","benchmark","stress","position_sizing","increase_reduce_close","monitoring","backup_restore"],
+    "journal": ["signals","signal_audit","mfe_mae","r_multiple","win_rate","decision_audit","csv_export","model_provenance"],
+    "system": ["health","provenance","freshness","fallbacks","runtime_errors","api_usage","qa","config_persistence"]
+  }
+}
