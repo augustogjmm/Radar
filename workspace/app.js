@@ -146,7 +146,7 @@ async function loadMarket(market){
   const [kick,title]=MARKET_META[market];$('marketKicker').textContent=kick;$('marketTitle').textContent=title;
   $('opportunityList').innerHTML='<div class="empty">Actualizando universo y análisis…</div>';
   try{
-    if(market==='bonds'){state.rows=await loadBonds()}
+    if(market==='bonds'){state.rows=(await loadBonds()).slice(0,14)}
     else if(market==='watch'){
       const bonds=state.watch.filter(x=>x.type==='bond');
       const tech=state.watch.filter(x=>x.type!=='bond'),results=[];
@@ -161,6 +161,8 @@ async function loadMarket(market){
     }
     if(market==='bonds')$('coverage').textContent=`${state.rows.length} soberanos con métricas`;
     if(market==='watch')$('coverage').textContent=`${state.rows.length} activos en seguimiento`;
+    const currentStillVisible=state.rows.some(x=>state.selected&&x.symbol===state.selected.symbol&&x.type===state.selected.type);
+    if(!currentStillVisible)state.selected=null;
     renderRows();
     if(state.rows.length&&!state.selected)openResult(state.rows[0].symbol,state.rows[0].type);
   }catch(e){$('opportunityList').innerHTML=`<div class="empty">No se pudo cargar ${esc(title)}: ${esc(e.message)}</div>`;$('coverage').textContent='Error de datos'}
@@ -178,7 +180,8 @@ function showResearchError(symbol,msg){
 }
 function renderTechnical(r){
   $('researchEmpty').hidden=true;$('researchTechnical').hidden=false;$('researchBond').hidden=true;
-  $('rType').textContent=r.type.toUpperCase();$('rSymbol').textContent=r.symbol;$('rSource').textContent=`${r.source} · ${r.tf}`;$('rPrice').textContent=fmt(r.price);$('rTf').textContent=r.tf;
+  const lastBar=r.bars?.at(-1),fresh=lastBar?.time?new Date(lastBar.time*1000).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+  $('rType').textContent=r.type.toUpperCase();$('rSymbol').textContent=r.symbol;$('rSource').textContent=`${r.source} · ${r.tf} · última vela ${fresh}`;$('rPrice').textContent=fmt(r.price);$('rTf').textContent=r.tf;
   const ds=$('rState');ds.className='decision '+r.opp.kind;ds.textContent=r.opp.label;$('rScore').textContent=`${Math.round(r.plan?.score||0)}/100`;
   $('rEntry').textContent=Number.isFinite(r.plan?.entryLow)?`${fmt(r.plan.entryLow)} – ${fmt(r.plan.entryHigh)}`:'—';$('rTrigger').textContent=fmt(r.plan?.trigger);$('rStop').textContent=fmt(r.plan?.stop);$('rTp1').textContent=fmt(r.plan?.tp1);$('rTp2').textContent=fmt(r.plan?.tp2);$('rRr').textContent=Number.isFinite(r.plan?.rr1)?`1:${r.plan.rr1.toFixed(2)}`:'—';
   $('rAction').textContent=r.plan?.action||'Sin acción técnica activa.';$('rWhy').innerHTML=(r.plan?.why||[]).map(x=>`<li>${esc(x)}</li>`).join('');
