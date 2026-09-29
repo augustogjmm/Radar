@@ -111,7 +111,7 @@ function renderTodayList(hostId,rows,mode){
     const delta=Number.isFinite(r.priceDeltaPct)?fmtPct(r.priceDeltaPct):'';
     const label=r.type==='bond'?'RENTA FIJA':(r.opp?.label|| (r.error?'SIN DATOS':'SIN SETUP'));
     let detail='';
-    if(r.type==='bond')detail=[Number.isFinite(r.tir)?`TIR ${fmt(r.tir,2)}%`:'',Number.isFinite(r.paridad)?`paridad ${fmt(r.paridad,1)}%`:''].filter(Boolean).join(' · ');
+    if(r.type==='bond')detail=[Number.isFinite(r.tir)?`TIR ${fmt(r.tir,2)}%`:'',Number.isFinite(r.paridad)?`paridad ${fmt(r.paridad,1)}%`:'',r.inPortfolio?'P&L no estimado hasta normalizar base':'' ].filter(Boolean).join(' · ');
     else detail=r.error?r.error:(r.opp?.reason||r.plan?.action||'Sin cambio accionable');
     return `<button class="today-row sev-${sev}" data-today-symbol="${esc(r.symbol)}" data-today-type="${esc(r.type)}">
       <span class="today-asset"><b>${esc(r.symbol)}</b><small>${esc(r.type)}${r.inPortfolio?' · cartera':''}</small></span>
@@ -152,11 +152,13 @@ async function refreshToday(force=false){
     for(const r of portfolio){
       r.inPortfolio=true;
       const price=currentInstrumentPrice(r),qty=Number(r.quantity)||0,buy=Number(r.buyPrice)||0;
-      if(Number.isFinite(price)&&qty>0){
+      if(r.type!=='bond'&&Number.isFinite(price)&&qty>0){
         r.currentValue=price*qty;r.costValue=buy>0?buy*qty:Number(r.positionSize)||NaN;
         r.pnl=r.currentValue-r.costValue;r.pnlPct=Number.isFinite(r.costValue)&&r.costValue>0?r.pnl/r.costValue*100:NaN;
         const cv=usdEquivalent(r.currentValue,r.portfolioCurrency,mep),cc=usdEquivalent(r.costValue,r.portfolioCurrency,mep);
         if(Number.isFinite(cv))valueUsd+=cv;if(Number.isFinite(cc))costUsd+=cc;
+      }else if(r.type==='bond'){
+        r.valuationNote='P&L pendiente de normalizar nominal, moneda y base de cotización.';
       }
     }
     const previousMap=new Map((previous?.assets||[]).map(x=>[todayRowKey(x),x]));
