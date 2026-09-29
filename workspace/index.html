@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar Técnico</title>
+<link rel="stylesheet" href="/workspace/styles.css?v=1">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><b>Radar Técnico</b><span>Decisión primero</span></div>
+  <div class="market-strip">
+    <span>Riesgo país <b id="mRisk">—</b></span>
+    <span>MEP <b id="mMep">—</b></span>
+    <span>CCL <b id="mCcl">—</b></span>
+    <span id="healthPill" class="health checking">Validando fuentes</span>
+  </div>
+</header>
+
+<main class="workspace">
+  <aside class="rail">
+    <div class="rail-title">DESCUBRIR</div>
+    <button class="market-tab active" data-market="cedear"><span>CEDEAR</span><small>Exterior vía BYMA</small></button>
+    <button class="market-tab" data-market="arg"><span>Argentina</span><small>Acciones líderes</small></button>
+    <button class="market-tab" data-market="crypto"><span>Crypto</span><small>Spot USDT por volumen</small></button>
+    <button class="market-tab" data-market="bonds"><span>Bonos</span><small>Soberanos USD</small></button>
+    <button class="market-tab" data-market="watch"><span>Seguimiento</span><small>Tu lista</small></button>
+
+    <div class="rail-divider"></div>
+    <div class="rail-title">FILTRO</div>
+    <label class="field"><span>Estado</span>
+      <select id="stateFilter">
+        <option value="all">Todos</option>
+        <option value="actionable">Operable / cerca</option>
+        <option value="operable">Sólo operables</option>
+        <option value="wait">Esperar</option>
+      </select>
+    </label>
+    <label class="field"><span>Mín. score</span><input id="scoreFilter" type="number" min="0" max="100" value="0"></label>
+    <button id="refreshBtn" class="primary">Actualizar radar</button>
+    <p id="coverage" class="coverage">Sin ejecutar</p>
+  </aside>
+
+  <section class="list-pane">
+    <div class="pane-head">
+      <div><small id="marketKicker">CEDEAR</small><h1 id="marketTitle">Oportunidades</h1></div>
+      <div class="search-box">
+        <input id="symbolSearch" placeholder="Analizar símbolo…">
+        <select id="symbolType">
+          <option value="cedear">CEDEAR</option>
+          <option value="argstock">Acción AR</option>
+          <option value="crypto">Crypto</option>
+          <option value="stock">USA / ETF</option>
+          <option value="bond">Bono</option>
+        </select>
+        <button id="searchBtn">Abrir</button>
+      </div>
+    </div>
+    <div class="table-head" id="tableHead">
+      <span>Activo</span><span>Estado</span><span>Score</span><span>Precio</span><span>Zona / TIR</span><span>R:R / Paridad</span>
+    </div>
+    <div id="opportunityList" class="opportunity-list">
+      <div class="empty">Elegí un mercado o actualizá el radar.</div>
+    </div>
+  </section>
+
+  <aside class="research-pane">
+    <div id="researchEmpty" class="research-empty">
+      <span>ANÁLISIS</span>
+      <h2>Elegí una oportunidad</h2>
+      <p>Acá vas a ver la tesis técnica o de renta fija, niveles concretos y qué tendría que pasar antes de actuar.</p>
+    </div>
+
+    <div id="researchTechnical" hidden>
+      <div class="research-head">
+        <div><small id="rType">—</small><h2 id="rSymbol">—</h2><p id="rSource">—</p></div>
+        <button id="watchBtn" class="watch-btn">+ Seguir</button>
+      </div>
+      <div class="price-line"><b id="rPrice">—</b><span id="rTf">—</span></div>
+      <div id="rState" class="decision neutral">SIN SETUP</div>
+      <div class="score-line"><span>Confluencia</span><b id="rScore">—</b></div>
+      <div class="plan-grid">
+        <div><small>Zona</small><b id="rEntry">—</b></div>
+        <div><small>Trigger</small><b id="rTrigger">—</b></div>
+        <div><small>Invalidación</small><b id="rStop">—</b></div>
+        <div><small>Objetivo 1</small><b id="rTp1">—</b></div>
+        <div><small>Objetivo 2</small><b id="rTp2">—</b></div>
+        <div><small>R:R</small><b id="rRr">—</b></div>
+      </div>
+      <canvas id="spark" width="560" height="180"></canvas>
+      <section class="why">
+        <div class="section-label">LECTURA</div>
+        <p id="rAction">—</p>
+        <ul id="rWhy"></ul>
+      </section>
+      <section class="technical-facts">
+        <div><small>Estructura</small><b id="rStructure">—</b></div>
+        <div><small>Medias</small><b id="rEma">—</b></div>
+        <div><small>MACD</small><b id="rMacd">—</b></div>
+        <div><small>Volumen</small><b id="rVolume">—</b></div>
+      </section>
+    </div>
+
+    <div id="researchBond" hidden>
+      <div class="research-head">
+        <div><small>RENTA FIJA</small><h2 id="bSymbol">—</h2><p id="bSource">CompararFondos + Radar</p></div>
+        <button id="bondWatchBtn" class="watch-btn">+ Seguir</button>
+      </div>
+      <div class="price-line"><b id="bPrice">—</b><span>Soberano USD</span></div>
+      <div class="bond-grid">
+        <div><small>TIR</small><b id="bTir">—</b></div>
+        <div><small>Paridad</small><b id="bParity">—</b></div>
+        <div><small>Duration</small><b id="bDuration">—</b></div>
+        <div><small>Vencimiento</small><b id="bMaturity">—</b></div>
+      </div>
+      <section class="why">
+        <div class="section-label">LECTURA</div>
+        <p id="bRead">—</p>
+      </section>
+      <section class="risk-box"><small>Contexto soberano</small><b id="bRisk">—</b><p>La TIR debe leerse junto con paridad, duration, calendario de pagos y riesgo país; no se usa sola como señal.</p></section>
+    </div>
+  </aside>
+</main>
+
+<script type="module" src="/workspace/app.js?v=1"></script>
+</body>
+</html>
