@@ -94,7 +94,8 @@ async function fetchBars(item,tf='trade'){
   catch(e){daily=parseYahoo(await json(`/api/yahoo?symbol=${encodeURIComponent(item.symbol+'.BA')}&interval=1d&range=5y&quiet=1`));source='Yahoo .BA fallback'}
   if(tf==='trade')return{bars:daily,source,tf:'1D'};
   if(tf==='higher')return{bars:aggregateBars(daily,'week'),source,tf:'1W'};
-  return{bars:aggregateBars(daily,'month'),source,tf:'1M'};
+  const monthly=aggregateBars(daily,'month');
+  return monthly.length>=80?{bars:monthly,source,tf:'1M'}:{bars:aggregateBars(daily,'week'),source,tf:'1W macro'};
 }
 function mtfLabel(a){return a?.score>=2?'ALCISTA':a?.score<=-2?'BAJISTA':'NEUTRAL'}
 function applyInvestmentRules(item,trade,plan,higher,macro){
