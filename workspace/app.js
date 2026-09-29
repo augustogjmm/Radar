@@ -101,11 +101,10 @@ async function loadBonds(){
   const j=await json('/api/fixed-income/analytics',45000);
   state.risk=j.countryRisk||state.risk;
   state.bonds=(j.bonds||[])
-    .filter(x=>/^(AE|AL|GD)d{2}/.test(String(x.ticker||x.symbol||'').toUpperCase()))
+    .filter(x=>/^(AE|AL|GD)\d{2}/.test(String(x.ticker||x.symbol||'').toUpperCase()))
     .map(x=>({symbol:String(x.ticker||x.symbol).toUpperCase(),type:'bond',price:n(x.precio??x.price),tir:n(x.tir),paridad:n(x.paridad),duration:n(x.duration),maturity:x.vencimiento||x.maturityDate||'',raw:x}))
     .filter(x=>x.symbol)
-    .sort((a,b)=>(b.tir||-999)-(a.tir||-999))
-    .slice(0,14);
+    .sort((a,b)=>(b.tir||-999)-(a.tir||-999));
   return state.bonds;
 }
 
