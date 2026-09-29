@@ -93,3 +93,5 @@ try{
  assert(errors.length===0,'errores JS: '+errors.join(' | '));
  console.log(JSON.stringify({ok:true,initial,ae38},null,2));
 }finally{await browser.close()}
+
+// CI trigger: product-flow contract active.
