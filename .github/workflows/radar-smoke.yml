@@ -2,7 +2,7 @@ name: Radar Core Smoke
 
 on:
   push:
-    branches: [main]
+    branches: [main, v8-core-rescue]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -36,6 +36,9 @@ jobs:
           exit 1
       - name: Run core browser smoke
         run: node scripts/smoke-test.mjs
+      - name: Run product decision flow
+        if: github.ref == 'refs/heads/v8-core-rescue'
+        run: node scripts/workspace-smoke.mjs
       - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4
