@@ -1,9 +1,12 @@
 import {analyzeSeries,computeTradePlan,opportunityState} from './engine.js';
 
 const $=id=>document.getElementById(id);
-const state={market:'cedear',rows:[],selected:null,bonds:[],risk:null,watch:loadWatch(),running:false};
+const state={market:'today',rows:[],selected:null,bonds:[],risk:null,watch:loadWatch(),running:false,legacyConfig:null,today:null};
 const WATCH_KEY='radar_workspace_watch_v1';
+const LEGACY_CONFIG_KEY='radar_web_config_v1';
+const TODAY_SNAPSHOT_KEY='radar_workspace_today_snapshot_v1';
 const MARKET_META={
+  today:['HOY','Qué requiere tu atención'],
   cedear:['CEDEAR','Oportunidades en CEDEAR'],
   arg:['ARGENTINA','Acciones líderes'],
   crypto:['CRYPTO','Spot USDT por volumen'],
@@ -36,6 +39,161 @@ async function json(url,timeout=30000){
   finally{clearTimeout(t)}
 }
 
+
+function loadLegacyConfig(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(LEGACY_CONFIG_KEY)||'null');
+    state.legacyConfig=raw?.config&&typeof raw.config==='object'?raw.config:{};
+  }catch{state.legacyConfig={}}
+  const legacy=(state.legacyConfig?.watchlist||[]).map(x=>({...x,symbol:String(x.symbol||'').toUpperCase()})).filter(x=>x.symbol);
+  const merged=new Map();
+  for(const x of [...legacy,...state.watch])merged.set(watchKey(x),x);
+  state.watch=[...merged.values()].map(x=>({
+    ...x,
+    type:x.type==='argbond'?'bond':x.type,
+    legacyType:x.type
+  }));
+  saveWatch();
+}
+function legacyPortfolioItems(){
+  const legacy=(state.legacyConfig?.watchlist||[]).filter(x=>x?.inPortfolio);
+  return legacy.map(x=>{
+    const type=x.type==='argbond'?'bond':x.type;
+    const buy=Number(x.buyPrice)||0,pos=Number(x.positionSize)||0;
+    const qty=Number(x.quantity)>0?Number(x.quantity):(buy>0&&pos>0?pos/buy:0);
+    return{...x,symbol:String(x.symbol||'').toUpperCase(),type,legacyType:x.type,quantity:qty,buyPrice:buy,positionSize:pos,portfolioCurrency:x.portfolioCurrency||defaultPortfolioCurrencyLite(type)};
+  }).filter(x=>x.symbol);
+}
+function defaultPortfolioCurrencyLite(type){
+  if(type==='crypto')return'USDT';
+  if(type==='stock')return'USD';
+  return'ARS';
+}
+function snapshotLoad(){try{return JSON.parse(localStorage.getItem(TODAY_SNAPSHOT_KEY)||'null')}catch{return null}}
+function snapshotSave(data){try{localStorage.setItem(TODAY_SNAPSHOT_KEY,JSON.stringify(data))}catch{}}
+function usdEquivalent(value,currency,mep){
+  if(!Number.isFinite(value))return NaN;
+  const c=String(currency||'').toUpperCase();
+  if(c==='USD'||c==='USDT')return value;
+  if(c==='ARS'&&Number.isFinite(mep)&&mep>0)return value/mep;
+  return NaN;
+}
+function attentionSeverity(row){
+  if(row.error)return 1;
+  if(row.type==='bond')return 0;
+  const label=String(row.opp?.label||'');
+  if(/EVITAR|SALIDA/.test(label))return 4;
+  if(/CONTRA TENDENCIA/.test(label))return 3;
+  if(/DEBILIDAD/.test(label))return 2;
+  if(/OPERABLE|COMPRA|LONG|SHORT/.test(label))return 3;
+  if(/CERCA/.test(label))return 2;
+  return 0;
+}
+function todayRowKey(x){return `${x.type}|${x.symbol}`}
+async function analyzeTodayItem(item){
+  if(item.type==='bond'){
+    if(!state.bonds.length)await loadBonds();
+    const b=state.bonds.find(x=>x.symbol===item.symbol);
+    if(!b)return{...item,error:'Sin métricas de renta fija'};
+    return{...item,...b,type:'bond'};
+  }
+  try{return{...item,...await analyzeItem(item)}}catch(e){return{...item,error:String(e?.message||e)}}
+}
+function currentInstrumentPrice(r){return Number.isFinite(n(r.price))?n(r.price):NaN}
+function renderTodayList(hostId,rows,mode){
+  const host=$(hostId);if(!host)return;
+  if(!rows.length){
+    host.innerHTML=`<div class="empty">${mode==='portfolio'?'No hay posiciones marcadas como cartera en Radar.':mode==='watch'?'No hay activos de seguimiento con cambios relevantes.':'Nada requiere atención inmediata.'}</div>`;
+    return;
+  }
+  host.innerHTML=rows.map(r=>{
+    const sev=attentionSeverity(r),pnl=Number.isFinite(r.pnlPct)?fmtPct(r.pnlPct):'—';
+    const delta=Number.isFinite(r.priceDeltaPct)?fmtPct(r.priceDeltaPct):'';
+    const label=r.type==='bond'?'RENTA FIJA':(r.opp?.label|| (r.error?'SIN DATOS':'SIN SETUP'));
+    let detail='';
+    if(r.type==='bond')detail=[Number.isFinite(r.tir)?`TIR ${fmt(r.tir,2)}%`:'',Number.isFinite(r.paridad)?`paridad ${fmt(r.paridad,1)}%`:''].filter(Boolean).join(' · ');
+    else detail=r.error?r.error:(r.opp?.reason||r.plan?.action||'Sin cambio accionable');
+    return `<button class="today-row sev-${sev}" data-today-symbol="${esc(r.symbol)}" data-today-type="${esc(r.type)}">
+      <span class="today-asset"><b>${esc(r.symbol)}</b><small>${esc(r.type)}${r.inPortfolio?' · cartera':''}</small></span>
+      <span class="today-state">${esc(label)}</span>
+      <span class="today-detail">${esc(detail)}</span>
+      <span class="today-metric"><b>${r.inPortfolio?pnl:(delta||'—')}</b><small>${r.inPortfolio?'P&L':'desde revisión'}</small></span>
+    </button>`;
+  }).join('');
+  host.querySelectorAll('[data-today-symbol]').forEach(el=>el.addEventListener('click',()=>openTodayItem(el.dataset.todaySymbol,el.dataset.todayType)));
+}
+function openTodayItem(symbol,type){
+  const all=[...(state.today?.portfolio||[]),...(state.today?.watch||[])];
+  const r=all.find(x=>x.symbol===symbol&&x.type===type);
+  if(!r)return;
+  state.selected=r;
+  if(type==='bond')renderBond(r);else if(!r.error)renderTechnical(r);else showResearchError(symbol,r.error);
+}
+async function refreshToday(force=false){
+  if(state.running&&!force)return;
+  state.running=true;state.market='today';
+  document.querySelectorAll('.market-tab').forEach(b=>b.classList.toggle('active',b.dataset.market==='today'));
+  $('todayView').hidden=false;$('discoverView').hidden=true;
+  $('todayAttention').innerHTML='<div class="empty">Analizando cartera y seguimiento…</div>';
+  try{
+    loadLegacyConfig();
+    const previous=snapshotLoad(),portfolioBase=legacyPortfolioItems();
+    const watchBase=state.watch.filter(x=>!portfolioBase.some(p=>todayRowKey(p)===todayRowKey(x))).slice(0,12);
+    if(!state.bonds.length&&(portfolioBase.some(x=>x.type==='bond')||watchBase.some(x=>x.type==='bond')))await loadBonds().catch(()=>{});
+    const analyzeAll=async(items,workers=4)=>{
+      const out=[];let i=0;
+      await Promise.all(Array.from({length:Math.min(workers,Math.max(1,items.length))},async()=>{while(i<items.length){const item=items[i++];out.push(await analyzeTodayItem(item))}}));
+      return out;
+    };
+    const [portfolio,watch]=await Promise.all([analyzeAll(portfolioBase),analyzeAll(watchBase)]);
+    const coreMep=n($('mMep')?.textContent?.replace(/[^0-9,.-]/g,'').replace('.','').replace(',','.'));
+    const mep=Number.isFinite(coreMep)?coreMep:n(window.__RADAR_TODAY_MEP);
+    let valueUsd=0,costUsd=0;
+    for(const r of portfolio){
+      r.inPortfolio=true;
+      const price=currentInstrumentPrice(r),qty=Number(r.quantity)||0,buy=Number(r.buyPrice)||0;
+      if(Number.isFinite(price)&&qty>0){
+        r.currentValue=price*qty;r.costValue=buy>0?buy*qty:Number(r.positionSize)||NaN;
+        r.pnl=r.currentValue-r.costValue;r.pnlPct=Number.isFinite(r.costValue)&&r.costValue>0?r.pnl/r.costValue*100:NaN;
+        const cv=usdEquivalent(r.currentValue,r.portfolioCurrency,mep),cc=usdEquivalent(r.costValue,r.portfolioCurrency,mep);
+        if(Number.isFinite(cv))valueUsd+=cv;if(Number.isFinite(cc))costUsd+=cc;
+      }
+    }
+    const previousMap=new Map((previous?.assets||[]).map(x=>[todayRowKey(x),x]));
+    for(const r of [...portfolio,...watch]){
+      const prev=previousMap.get(todayRowKey(r)),price=currentInstrumentPrice(r);
+      if(prev&&Number.isFinite(price)&&Number.isFinite(n(prev.price))&&n(prev.price)!==0)r.priceDeltaPct=(price/n(prev.price)-1)*100;
+      if(prev?.label&&prev.label!==(r.opp?.label||''))r.stateChangedFrom=prev.label;
+    }
+    const changes=[];
+    for(const r of [...portfolio,...watch]){
+      if(r.stateChangedFrom)changes.push({...r,changeText:`${r.stateChangedFrom} → ${r.opp?.label||'—'}`});
+      else if(Number.isFinite(r.priceDeltaPct)&&Math.abs(r.priceDeltaPct)>=2)changes.push({...r,changeText:`Precio ${fmtPct(r.priceDeltaPct)} desde la revisión anterior`});
+    }
+    const riskNow=n(state.risk?.value),riskPrev=n(previous?.risk),riskDelta=Number.isFinite(riskNow)&&Number.isFinite(riskPrev)?riskNow-riskPrev:NaN;
+    if(Number.isFinite(riskDelta)&&Math.abs(riskDelta)>=25)changes.unshift({symbol:'RIESGO PAÍS',type:'macro',changeText:`${riskDelta>=0?'+':''}${Math.round(riskDelta)} pb desde la revisión anterior`,priceDeltaPct:NaN});
+    const attention=[...portfolio,...watch].filter(r=>attentionSeverity(r)>=2||r.stateChangedFrom).sort((a,b)=>attentionSeverity(b)-attentionSeverity(a)).slice(0,8);
+    const watchedRelevant=watch.filter(r=>attentionSeverity(r)>=2||Number.isFinite(r.priceDeltaPct)).sort((a,b)=>attentionSeverity(b)-attentionSeverity(a)).slice(0,8);
+    state.today={portfolio,watch,changes,attention,previous};
+    $('todayPositions').textContent=String(portfolio.length);
+    $('todayValue').textContent=valueUsd>0?`USD ${fmt(valueUsd,0)}`:'—';
+    const totalPnl=valueUsd>0&&costUsd>0?(valueUsd-costUsd)/costUsd*100:NaN;
+    $('todayPnl').textContent=Number.isFinite(totalPnl)?`${fmtPct(totalPnl)} vs costo`:'Valor sólo donde moneda/precio son comparables';
+    $('todayAttentionCount').textContent=String(attention.length);
+    $('todayRisk').textContent=Number.isFinite(riskNow)?`${Math.round(riskNow)} pb`:'—';
+    $('todayRiskDelta').textContent=Number.isFinite(riskDelta)?`${riskDelta>=0?'+':''}${Math.round(riskDelta)} pb desde revisión anterior`:(previous?'Sin comparación':'Primera revisión');
+    $('todayWhen').textContent=previous?.at?`Comparando contra ${new Date(previous.at).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'})}`:'Primera revisión: se crea línea base';
+    renderTodayList('todayAttention',attention,'attention');
+    renderTodayList('todayPortfolio',portfolio,'portfolio');
+    renderTodayList('todayWatch',watchedRelevant,'watch');
+    const changeHost=$('todayChanges');
+    if(!changes.length)changeHost.innerHTML='<div class="empty">No hay cambios relevantes respecto de la revisión anterior.</div>';
+    else changeHost.innerHTML=changes.slice(0,10).map(r=>`<div class="today-change"><b>${esc(r.symbol)}</b><span>${esc(r.changeText||'Cambio detectado')}</span></div>`).join('');
+    snapshotSave({at:Date.now(),risk:riskNow,assets:[...portfolio,...watch].map(r=>({symbol:r.symbol,type:r.type,price:currentInstrumentPrice(r),label:r.opp?.label||'',score:r.plan?.score??null}))});
+  }catch(e){
+    $('todayAttention').innerHTML=`<div class="empty">No se pudo completar la revisión: ${esc(e.message)}</div>`;
+  }finally{state.running=false}
+}
 async function loadContext(){
   const [risk,core,health]=await Promise.all([
     json('/api/dashboard/risk').catch(()=>null),
@@ -44,6 +202,7 @@ async function loadContext(){
   ]);
   state.risk=risk;
   $('mRisk').textContent=Number.isFinite(n(risk?.value))?`${Math.round(n(risk.value))} pb`:'—';
+  window.__RADAR_TODAY_MEP=n(core?.fx?.mep?.venta);
   $('mMep').textContent=Number.isFinite(n(core?.fx?.mep?.venta))?`$ ${fmt(core.fx.mep.venta,0)}`:'—';
   $('mCcl').textContent=Number.isFinite(n(core?.fx?.ccl?.venta))?`$ ${fmt(core.fx.ccl.venta,0)}`:'—';
   const hp=$('healthPill'),bad=Number(health?.criticalFailures||0);
@@ -185,7 +344,9 @@ function renderRows(){
 }
 
 async function loadMarket(market){
+  if(market==='today'){await refreshToday();return}
   if(state.running)return;state.running=true;state.market=market;
+  $('todayView').hidden=true;$('discoverView').hidden=false;
   document.querySelectorAll('.market-tab').forEach(b=>b.classList.toggle('active',b.dataset.market===market));
   const [kick,title]=MARKET_META[market];$('marketKicker').textContent=kick;$('marketTitle').textContent=title;
   $('opportunityList').innerHTML='<div class="empty">Actualizando universo y análisis…</div>';
@@ -255,9 +416,10 @@ async function directSearch(){
 }
 
 document.querySelectorAll('.market-tab').forEach(b=>b.addEventListener('click',()=>loadMarket(b.dataset.market)));
-$('refreshBtn').addEventListener('click',()=>loadMarket(state.market));$('stateFilter').addEventListener('change',renderRows);$('scoreFilter').addEventListener('input',renderRows);
+$('refreshBtn').addEventListener('click',()=>loadMarket(state.market));$('todayRefreshBtn').addEventListener('click',()=>refreshToday(true));$('stateFilter').addEventListener('change',renderRows);$('scoreFilter').addEventListener('input',renderRows);
 $('searchBtn').addEventListener('click',directSearch);$('symbolSearch').addEventListener('keydown',e=>{if(e.key==='Enter')directSearch()});
 $('watchBtn').addEventListener('click',()=>state.selected&&toggleWatch(state.selected));$('bondWatchBtn').addEventListener('click',()=>state.selected&&toggleWatch(state.selected));
 
 await loadContext();
-await loadMarket('cedear');
+loadLegacyConfig();
+await refreshToday(true);
