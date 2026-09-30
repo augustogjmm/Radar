@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='1.0.0';
+const VERSION='1.1.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -16,7 +16,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length)return NaN;const m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2};
 
 const state={
-  loading:false,lastUpdate:0,markets:new Map(),selectedRegion:'europe',filter:'all',
+  loading:false,lastUpdate:0,markets:new Map(),selectedRegion:'europe',filter:'all',worldMapLoaded:false,
   sessionTimer:null,renderTimer:null
 };
 
@@ -25,6 +25,7 @@ const ASSETS=[
   {id:'nasdaq',symbol:'^IXIC',name:'NASDAQ',region:'northamerica',flag:'🇺🇸',decimals:1},
   {id:'dow',symbol:'^DJI',name:'DOW JONES',region:'northamerica',flag:'🇺🇸',decimals:1},
   {id:'vix',symbol:'^VIX',name:'VIX',region:'global',flag:'⚡',decimals:1},
+  {id:'move',symbol:'^MOVE',name:'MOVE',region:'global',flag:'〽',decimals:1},
   {id:'tnx',symbol:'^TNX',name:'US 10Y',region:'global',flag:'🏛',decimals:2},
   {id:'dxy',symbol:'DX-Y.NYB',name:'DXY',region:'global',flag:'$',decimals:2},
   {id:'wti',symbol:'CL=F',name:'WTI',region:'global',flag:'◉',decimals:2},
@@ -56,6 +57,78 @@ const REGIONS={
 };
 
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
+
+const MAP_VIEW={w:1200,h:560,minLat:-60,maxLat:85};
+const REGION_VIEWS={
+  northamerica:[5,18,405,330], europe:[460,52,340,245], asia:[640,36,525,330],
+  latam:[205,245,365,315], oceania:[895,300,300,240]
+};
+const MARKET_CITIES={
+  northamerica:[['NUEVA YORK',-74.006,40.7128],['TORONTO',-79.3832,43.6532]],
+  europe:[['LONDRES',-0.1276,51.5072],['FRANKFURT',8.6821,50.1109],['PARÍS',2.3522,48.8566]],
+  asia:[['TOKIO',139.6917,35.6895],['HONG KONG',114.1694,22.3193],['SHANGHÁI',121.4737,31.2304]],
+  latam:[['SÃO PAULO',-46.6333,-23.5505],['BUENOS AIRES',-58.3816,-34.6037],['CIUDAD DE MÉXICO',-99.1332,19.4326]],
+  oceania:[['SÍDNEY',151.2093,-33.8688]]
+};
+function mapXY(lon,lat){
+  return [
+    (lon+180)/360*MAP_VIEW.w,
+    (MAP_VIEW.maxLat-Math.max(MAP_VIEW.minLat,Math.min(MAP_VIEW.maxLat,lat)))/(MAP_VIEW.maxLat-MAP_VIEW.minLat)*MAP_VIEW.h
+  ];
+}
+function marketMarkers(regionOnly=null){
+  const entries=regionOnly?[[regionOnly,MARKET_CITIES[regionOnly]||[]]]:Object.entries(MARKET_CITIES);
+  return entries.flatMap(([region,cities])=>cities.map(([name,lon,lat])=>{
+    const [cx,cy]=mapXY(lon,lat);
+    return `<g class="rt-market-marker" data-marker-region="${region}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="9" y="-7">${name}</text></g>`;
+  })).join('');
+}
+async function loadWorldMap(){
+  if(state.worldMapLoaded)return;
+  try{
+    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc2',{cache:'force-cache'});
+    if(!r.ok)throw new Error(`Mapa HTTP ${r.status}`);
+    const svgText=await r.text();
+    const host=$('rtWorldMapHost');
+    if(host){
+      host.innerHTML=svgText;
+      const svg=q('svg',host);
+      if(svg){
+        const layer=svg.querySelector('#rtCountryLayer');
+        layer?.insertAdjacentHTML('beforeend',marketMarkers());
+        svg.addEventListener('click',ev=>{
+          const country=ev.target.closest?.('.rt-country[data-region]');
+          const key=country?.dataset?.region;
+          if(key&&REGIONS[key]){state.selectedRegion=key;renderRegionDetail()}
+        });
+      }
+    }
+    state.worldMapLoaded=true;
+    renderMap();
+    renderRegionDetail();
+  }catch(e){
+    console.warn('World map',e);
+    const host=$('rtWorldMapHost');
+    if(host)host.innerHTML='<div class="rt-map-loading error"><b>Cartografía no disponible</b><small>Los datos de mercado siguen operativos.</small></div>';
+  }
+}
+function renderDetailGeo(key){
+  const source=q('#rtWorldMapHost svg');
+  const host=$('rtDetailGeoHost');
+  if(!source||!host)return;
+  const clone=source.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.classList.add('rt-detail-geo-svg');
+  clone.setAttribute('viewBox',(REGION_VIEWS[key]||REGION_VIEWS.europe).join(' '));
+  clone.querySelectorAll('.rt-country').forEach(p=>{
+    const match=p.dataset.region===key;
+    p.classList.toggle('rt-detail-focus',match);
+    p.classList.toggle('rt-detail-dim',!match);
+  });
+  clone.querySelectorAll('.rt-market-marker').forEach(m=>m.remove());
+  clone.querySelector('#rtCountryLayer')?.insertAdjacentHTML('beforeend',marketMarkers(key));
+  host.replaceChildren(clone);
+}
 
 function insertShell(){
   if($('rtGlobalAppbar')) return;
@@ -145,25 +218,14 @@ function mountDashboard(){
       </div>
       <div id="rtNextSessions" class="rt-next-sessions"></div>
       <div class="rt-world-wrap">
-        <svg class="rt-world-map" viewBox="0 0 1000 470" aria-label="Mapa mundial interactivo">
-          <path id="rtRegionNorthamerica" data-region="northamerica" class="rt-continent neutral" d="M52,103 L94,69 157,58 223,83 250,120 238,157 210,171 188,207 150,211 126,184 97,167 69,137Z"/>
-          <path class="rt-continent neutral" data-region="northamerica" d="M210,170 L241,175 258,195 247,214 225,207 209,188Z"/>
-          <path id="rtRegionLatam" data-region="latam" class="rt-continent neutral" d="M250,213 L292,219 326,254 331,299 316,342 295,381 270,407 259,375 263,337 248,304 238,266Z"/>
-          <path id="rtRegionEurope" data-region="europe" class="rt-continent neutral" d="M455,105 L493,88 534,96 553,118 538,139 509,146 483,135 459,125Z"/>
-          <path class="rt-continent neutral" data-region="europe" d="M488,144 L505,143 517,161 510,181 493,173 480,153Z"/>
-          <path id="rtRegionAsia" data-region="asia" class="rt-continent neutral" d="M536,94 L607,72 694,67 778,90 854,117 910,153 902,190 851,199 812,181 764,198 731,225 673,215 631,183 591,170 547,142Z"/>
-          <path class="rt-continent neutral" data-region="asia" d="M742,222 L773,224 799,251 788,281 757,277 735,249Z"/>
-          <path id="rtRegionAfrica" class="rt-continent neutral" d="M468,176 L517,163 568,184 592,228 582,283 555,333 522,347 489,307 468,262 450,217Z"/>
-          <path id="rtRegionOceania" data-region="oceania" class="rt-continent neutral" d="M797,321 L844,302 893,315 918,348 896,376 850,382 813,362Z"/>
-          <path class="rt-continent neutral" data-region="oceania" d="M936,376 L951,369 963,384 952,399 938,394Z"/>
-          <path class="rt-continent neutral" d="M370,77 L402,58 424,70 413,96 384,100Z"/>
-        </svg>
+        <div id="rtWorldMapHost" class="rt-world-map rt-world-map-host" aria-label="Mapa mundial interactivo">
+          <div class="rt-map-loading"><span></span><b>Cargando cartografía de mercado…</b></div>
+        </div>
         <div class="rt-map-label rt-label-na" data-label-region="northamerica"><b>América del Norte</b><strong>—</strong><small>S&P 500 · NASDAQ</small></div>
         <div class="rt-map-label rt-label-eu" data-label-region="europe"><b>Europa</b><strong>—</strong><small>DAX · FTSE · CAC</small></div>
         <div class="rt-map-label rt-label-asia" data-label-region="asia"><b>Asia</b><strong>—</strong><small>NIKKEI · HANG SENG</small></div>
         <div class="rt-map-label rt-label-latam" data-label-region="latam"><b>LatAm</b><strong>—</strong><small>BOVESPA · MERVAL</small></div>
         <div class="rt-map-label rt-label-oceania" data-label-region="oceania"><b>Oceanía</b><strong>—</strong><small>ASX 200</small></div>
-        <span class="rt-city ny">Nueva York</span><span class="rt-city lon">Londres</span><span class="rt-city tokyo">Tokio</span><span class="rt-city sao">São Paulo</span><span class="rt-city bue">Argentina</span><span class="rt-city syd">Sídney</span>
         <div class="rt-map-legend">
           <div class="rt-legend-line"><i class="s1"></i>Fuerte alza</div>
           <div class="rt-legend-line"><i class="s2"></i>Alza moderada</div>
@@ -177,19 +239,18 @@ function mountDashboard(){
     <section id="rtRegionDetail" class="rt-card rt-detail-card">
       <div class="rt-section-title"><div><h3 id="rtDetailTitle">Detalle de Región: Europa</h3><p id="rtDetailSubtitle">Índices principales y tendencia</p></div><button id="rtRegionOpen" class="rt-link-button">Abrir vista completa →</button></div>
       <div class="rt-detail-map">
-        <svg viewBox="0 0 360 170" aria-hidden="true">
-          <path class="hot" d="M78 49 111 34 135 43 147 63 132 79 103 75 86 65Z"/>
-          <path class="hot" d="M145 39 179 29 218 36 239 54 230 72 197 80 171 71 151 60Z"/>
-          <path class="hot" d="M130 83 158 76 187 87 192 108 176 122 147 117 128 99Z"/>
-          <path d="M218 78 247 73 269 91 264 111 238 118 218 102Z"/>
-          <path d="M75 84 101 78 117 96 108 113 84 110 70 98Z"/>
-        </svg>
-        <span class="rt-detail-city" style="left:20%;top:38%">Londres</span>
-        <span class="rt-detail-city" style="left:49%;top:39%">Frankfurt</span>
-        <span class="rt-detail-city" style="left:38%;top:58%">París</span>
+        <div id="rtDetailGeoHost" class="rt-detail-geo-host"></div>
       </div>
       <div id="rtRegionList" class="rt-detail-list"></div>
-      <div class="rt-detail-chart"><svg viewBox="0 0 400 80" preserveAspectRatio="none"><defs><linearGradient id="rtAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#27d77e" stop-opacity=".24"/><stop offset="100%" stop-color="#27d77e" stop-opacity="0"/></linearGradient></defs><path id="rtRegionArea" class="area" d=""/><path id="rtRegionSpark" d=""/></svg></div>
+      <div class="rt-detail-chart">
+        <div class="rt-detail-chart-head"><span id="rtDetailChartName">Índice regional · últimas ruedas</span><b id="rtRegionLastValue">—</b></div>
+        <svg viewBox="0 0 400 94" preserveAspectRatio="none">
+          <defs><linearGradient id="rtAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#27d77e" stop-opacity=".28"/><stop offset="100%" stop-color="#27d77e" stop-opacity="0"/></linearGradient></defs>
+          <g class="rt-chart-grid"><path d="M5 18H395M5 42H395M5 66H395"/><path d="M80 8V80M160 8V80M240 8V80M320 8V80"/></g>
+          <path id="rtRegionArea" class="area" d=""/><path id="rtRegionSpark" d=""/>
+        </svg>
+        <div class="rt-detail-axis"><span>-20</span><span>-15</span><span>-10</span><span>-5</span><span>Hoy</span></div>
+      </div>
     </section>
 
     <section class="rt-card rt-watch-card">
@@ -197,8 +258,9 @@ function mountDashboard(){
       <div id="rtWatchList" class="rt-watch-list"></div>
       <div class="rt-risk-strip">
         <div class="rt-risk-label"><span>Riesgo Global</span><b id="rtRiskLabel">CALCULANDO</b></div>
-        <div class="rt-risk-gauge"><i id="rtRiskNeedle" style="left:50%"></i></div>
-        <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><span id="rtRiskTnx">US10Y —</span></div>
+        <div class="rt-risk-gauge"><span class="zone low"></span><span class="zone mid"></span><span class="zone high"></span><i id="rtRiskNeedle" style="left:50%"></i></div>
+        <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><span id="rtRiskMove">MOVE —</span><span id="rtRiskTnx">US10Y —</span></div>
+        <div class="rt-risk-scale"><span>Riesgo bajo</span><span>Moderado</span><span>Riesgo alto</span></div>
       </div>
     </section>
   </div>
@@ -228,11 +290,28 @@ function mountDashboard(){
         <button id="rtMoreOpps" class="rt-link-button">Ver más oportunidades →</button>
       </div>
     </div>
-    <div class="rt-opps-wrap">
-      <table class="rt-opps-table">
-        <thead><tr><th>Activo</th><th>Tipo</th><th>Último precio</th><th>Var.</th><th>Volumen</th><th>Gráfico</th><th>Setup técnico</th><th>Tendencia</th><th>Timing</th><th>Comentario</th></tr></thead>
-        <tbody id="rtOppsBody"><tr><td colspan="10" class="rt-opps-empty">Analizando oportunidades con datos reales…</td></tr></tbody>
-      </table>
+    <div class="rt-opps-layout">
+      <div class="rt-opps-wrap">
+        <table class="rt-opps-table">
+          <thead><tr><th>Activo</th><th>Tipo</th><th>Último precio</th><th>Var. 24h</th><th>Volumen</th><th>Gráfico 20d</th><th>Setup técnico</th><th>Tendencia</th><th>Timing</th><th>Comentario</th></tr></thead>
+          <tbody id="rtOppsBody"><tr><td colspan="10" class="rt-opps-empty">Analizando oportunidades con datos reales…</td></tr></tbody>
+        </table>
+      </div>
+      <aside class="rt-opps-aside">
+        <div class="rt-legend-panel">
+          <b>Leyenda de colores</b>
+          <div><i class="s1"></i><span>Fuerte alza</span><small>&gt; +2%</small></div>
+          <div><i class="s2"></i><span>Alza moderada</span><small>+0,5% a +2%</small></div>
+          <div><i class="s3"></i><span>Neutral</span><small>-0,5% a +0,5%</small></div>
+          <div><i class="s4"></i><span>Caída moderada</span><small>-2% a -0,5%</small></div>
+          <div><i class="s5"></i><span>Fuerte caída</span><small>&lt; -2%</small></div>
+        </div>
+        <div class="rt-source-panel">
+          <b>Fuentes y mercado</b>
+          <p><span class="rt-status-dot"></span>Datos de mercado actualizados desde las fuentes conectadas de Radar.</p>
+          <small>Índices, bonos, tasas, commodities y activos locales pueden tener distinto nivel de demora según origen.</small>
+        </div>
+      </aside>
     </div>
   </section>`;
   dash.prepend(root);
@@ -337,7 +416,11 @@ function signClass(v){return !Number.isFinite(v)?'rt-flat':v>.03?'rt-up':v<-.03?
 function renderMap(){
   for(const key of Object.keys(REGIONS)){
     const ch=regionChange(key,'day'),tone=toneClass(ch);
-    qa(`[data-region="${key}"]`).forEach(el=>{el.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');el.classList.add(tone)});
+    qa(`[data-region="${key}"]`).forEach(el=>{
+      el.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');
+      el.classList.add(tone);
+      if(el.classList.contains('rt-country'))el.classList.toggle('selected-region',key===state.selectedRegion);
+    });
     const label=q(`[data-label-region="${key}"]`);
     if(label){
       label.classList.remove('positive','negative','neutral');
@@ -372,7 +455,10 @@ function riskModel(){
 }
 function renderRisk(){
   const r=riskModel();$('rtRiskLabel').textContent=r.label;$('rtRiskNeedle').style.left=`${r.score}%`;
-  const v=get('vix'),t=get('tnx');$('rtRiskVix').textContent=`VIX ${Number.isFinite(v?.last)?fmt(v.last,1):'—'}`;$('rtRiskTnx').textContent=`US10Y ${Number.isFinite(t?.last)?fmt(t.last,2)+'%':'—'}`;
+  const v=get('vix'),mv=get('move'),t=get('tnx');
+  $('rtRiskVix').textContent=`VIX ${Number.isFinite(v?.last)?fmt(v.last,1):'—'}`;
+  $('rtRiskMove').textContent=`MOVE ${Number.isFinite(mv?.last)?fmt(mv.last,1):'—'}`;
+  $('rtRiskTnx').textContent=`US10Y ${Number.isFinite(t?.last)?fmt(t.last,2)+'%':'—'}`;
 }
 
 function regionSeries(key){
@@ -398,13 +484,24 @@ function svgLine(values,w=400,h=80,p=5){
 function renderRegionDetail(){
   const key=state.selectedRegion,region=REGIONS[key]||REGIONS.europe;
   $('rtDetailTitle').textContent=`Detalle de Región: ${region.label}`;
+  $('rtDetailSubtitle').textContent=`${region.indices} · rendimiento y amplitud`;
+  renderDetailGeo(key);
   const rows=region.ids.map(id=>{
     const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day');
-    return `<div class="rt-market-line"><b>${a.flag} ${esc(a.name)}</b><span class="price">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}</span><span class="chg ${signClass(ch)}">${pct(ch)}</span></div>`;
+    const wk=periodChange(m,'week');
+    return `<div class="rt-market-line">
+      <b>${a.flag} ${esc(a.name)}</b>
+      <span class="price">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}<small>${Number.isFinite(wk)?'5d '+pct(wk):''}</small></span>
+      <span class="chg ${signClass(ch)}">${pct(ch)}</span>
+    </div>`;
   });
   $('rtRegionList').innerHTML=rows.join('');
-  const values=regionSeries(key),d=svgLine(values);$('rtRegionSpark').setAttribute('d',d);
-  if(d){const area=`${d} L395,75 L5,75 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
+  const values=regionSeries(key),d=svgLine(values,400,94,8);$('rtRegionSpark').setAttribute('d',d);
+  const last=regionChange(key,'day');
+  $('rtRegionLastValue').textContent=pct(last);
+  $('rtRegionLastValue').className=signClass(last);
+  $('rtDetailChartName').textContent=`${region.short} · índice regional normalizado`;
+  if(d){const area=`${d} L392,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
 }
 
 function localRiskChange(period='day'){
@@ -435,13 +532,26 @@ function trafficState(score){
   if(score<-.2)return{key:'negative',label:'NEGATIVO',copy:'Contexto combinado exige mayor cautela y selectividad.'};
   return{key:'neutral',label:'NEUTRAL',copy:'Señales mixtas; conviene esperar confirmaciones.'};
 }
+function trafficDrivers(period){
+  const raw=[
+    periodChange(get('merval'),period),
+    periodChange(get('eem'),period),
+    -(periodChange(get('vix'),period)||0),
+    -(periodChange(get('tnx'),period)||0),
+    -(localRiskChange(period)||0)
+  ].map(v=>Number.isFinite(v)?v:0);
+  const max=Math.max(0.15,...raw.map(v=>Math.abs(v)));
+  return raw.map(v=>({v,h:clamp(22+Math.abs(v)/max*48,22,70)}));
+}
 function renderTraffic(){
   const defs=[['Hoy','day'],['Semana','week'],['Mes','month']];
   $('rtTrafficGrid').innerHTML=defs.map(([label,p])=>{
-    const s=trafficState(scoreArgentina(p));
+    const score=scoreArgentina(p),s=trafficState(score),drivers=trafficDrivers(p);
     return `<article class="rt-traffic-card">
       <div class="rt-light ${s.key}"><i></i><i></i><i></i></div>
-      <div class="rt-traffic-copy"><small>Argentina ${label}</small><strong class="${s.key}">${s.label}</strong><p>${s.copy}</p></div>
+      <div class="rt-traffic-copy"><small>Argentina ${label}</small><strong class="${s.key}">${s.label}</strong><p>${s.copy}</p>
+        <div class="rt-driver-chart" aria-label="Contribución de drivers">${drivers.map((d,i)=>`<i class="${d.v>=0?'pos':'neg'}" style="height:${d.h}%"><span>${['MER','EM','VIX','10Y','RP'][i]}</span></i>`).join('')}</div>
+      </div>
     </article>`;
   }).join('');
 }
@@ -498,8 +608,18 @@ function timing(r){
 }
 function miniSpark(values){
   if(!values.length)return'<span style="color:#667f92">—</span>';
-  const d=svgLine(values.slice(-20),92,25,2),down=values.at(-1)<values[0];
-  return `<svg class="rt-spark ${down?'down':''}" viewBox="0 0 92 25" preserveAspectRatio="none"><path d="${d}"/></svg>`;
+  const vals=values.slice(-20),d=svgLine(vals,104,30,2),down=vals.at(-1)<vals[0];
+  const area=d?`${d} L102,28 L2,28 Z`:'';
+  return `<svg class="rt-spark ${down?'down':''}" viewBox="0 0 104 30" preserveAspectRatio="none"><path class="spark-area" d="${area}"/><path class="spark-line" d="${d}"/></svg>`;
+}
+function volumeChart(bars){
+  const vals=(bars||[]).slice(-14).map(x=>num(x.volume)).filter(Number.isFinite);
+  if(vals.length<3)return'<span style="color:#667f92">—</span>';
+  const max=Math.max(...vals)||1;
+  return `<span class="rt-volume-bars">${vals.map((v,i)=>{
+    const up=i===0||num(bars.slice(-14)[i]?.close)>=num(bars.slice(-14)[Math.max(0,i-1)]?.close);
+    return `<i class="${up?'up':'down'}" style="height:${Math.max(18,v/max*100)}%"></i>`;
+  }).join('')}</span>`;
 }
 function scoreBars(score){
   const n=clamp(Math.round((num(score)||0)/20),1,5);
@@ -523,7 +643,7 @@ function renderOpportunities(){
       <td><span class="rt-type">${esc(oppType(r))}</span></td>
       <td>${Number.isFinite(price)?fmt(price,2):'—'}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
-      <td>${Number.isFinite(rv)?`${fmt(rv,1)}x`:scoreBars(score)}</td>
+      <td><div class="rt-volume-cell">${volumeChart(bars)}<small>${Number.isFinite(rv)?fmt(rv,1)+'x':'s/d'}</small></div></td>
       <td>${miniSpark(bars.map(x=>x.close))}</td>
       <td>${esc(setup)}</td>
       <td><span class="rt-pill ${trend[1]}">${trend[0]}</span></td>
@@ -577,6 +697,7 @@ function boot(){
   insertShell();mountDashboard();watchViews();
   if(!$('rtGlobalRadar'))return;
   renderAll();
+  loadWorldMap();
   setTimeout(()=>refresh(false),350);
   let tries=0;
   state.renderTimer=setInterval(()=>{
