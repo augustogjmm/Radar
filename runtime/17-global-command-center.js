@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='1.7.0';
+const VERSION='2.0.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -63,10 +63,10 @@ const COUNTRY_MARKET={
 
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 
-const MAP_VIEW={w:1200,h:560,minLat:-60,maxLat:85};
+const MAP_VIEW={w:1200,h:600,minLat:-90,maxLat:90};
 const REGION_VIEWS={
-  northamerica:[5,18,405,330], europe:[460,52,340,245], asia:[640,36,525,330],
-  latam:[205,245,365,315], oceania:[895,300,300,240]
+  northamerica:[0,72,430,330], europe:[455,68,355,250], asia:[620,62,560,325],
+  latam:[190,250,410,330], oceania:[885,320,315,225]
 };
 const MARKET_CITIES={
   northamerica:[['NUEVA YORK',-74.006,40.7128,'sp500'],['TORONTO',-79.3832,43.6532,'sp500']],
@@ -96,7 +96,7 @@ function marketMarkers(regionOnly=null){
 async function loadWorldMap(){
   if(state.worldMapLoaded)return;
   try{
-    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc4',{cache:'force-cache'});
+    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc8',{cache:'force-cache'});
     if(!r.ok)throw new Error(`Mapa HTTP ${r.status}`);
     const svgText=await r.text();
     const host=$('rtWorldMapHost');
