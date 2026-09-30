@@ -136,7 +136,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 /* Golden top row */
 .rt-main-grid{
   display:grid;
-  grid-template-columns:minmax(0,919fr) minmax(0,441fr) minmax(0,274fr);
+  grid-template-columns:minmax(0,932fr) minmax(0,445fr) minmax(0,257fr);
   gap:9px;
   height:410px;
 }
@@ -246,7 +246,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 /* Middle top column: risk + region */
 .rt-middle-stack{display:grid;grid-template-rows:69px 318px;gap:17px;height:410px;padding-top:6px}
 .rt-risk-card{
-  height:69px;display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:11px;align-items:center;margin-left:85px;width:calc(100% - 85px);
+  height:69px;display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:11px;align-items:center;margin-left:90px;width:calc(100% - 96px);
   padding:8px 12px;border-color:#234a61
 }
 .rt-risk-card-left>span{display:block;color:#b5c6d1;font-size:8px;margin-bottom:6px}
