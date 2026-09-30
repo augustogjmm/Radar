@@ -18,7 +18,7 @@ async function waitForDeployment(){
   let last=null;
   for(let attempt=1;attempt<=30;attempt++){
     try{
-      last=await json(base+'/api/health',20000);
+      last=await json(base+'/api/health?ts='+Date.now(),20000);
       const seen=String(last?.gitSha||'');
       if(!expected||seen===expected||seen.startsWith(expected)||expected.startsWith(seen)){
         console.log('Deployment ready',JSON.stringify({release:last?.release,gitSha:seen,attempt}));
@@ -34,7 +34,7 @@ async function waitForDeployment(){
 }
 
 await waitForDeployment();
-const deep=await json(base+'/api/health/deep',90000);
+const deep=await json(base+'/api/health/deep?ts='+Date.now(),90000);
 const checks=Array.isArray(deep?.checks)?deep.checks:[];
 const byName=new Map(checks.map(x=>[x.name,x]));
 const missing=required.filter(name=>!byName.has(name));
