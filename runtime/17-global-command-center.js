@@ -178,7 +178,13 @@ function insertShell(){
   bar.className='rt-appbar';
   bar.innerHTML=`
     <div class="rt-brand">
-      <div class="rt-logo" aria-hidden="true"><i></i></div>
+      <div class="rt-logo" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="20"/><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="7"/>
+          <path d="M24 1v46M1 24h46"/><path class="sweep" d="M24 24 40 8"/>
+          <circle class="dot" cx="24" cy="24" r="2.2"/>
+        </svg>
+      </div>
       <div class="rt-brand-copy"><b>Radar Técnico</b><small>MERCADOS GLOBALES. SEÑALES REALES. MEJORES DECISIONES.</small></div>
     </div>
     <nav class="rt-nav" aria-label="Navegación principal">
@@ -242,9 +248,12 @@ function setActiveForView(id){
 function tickClock(){
   const now=new Date();
   const t=now.toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit'});
-  const d=now.toLocaleDateString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  const dp=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',weekday:'short',day:'2-digit',month:'short',year:'numeric'}).formatToParts(now);
+  const dm=Object.fromEntries(dp.map(x=>[x.type,x.value.replace('.','')]));
+  const cap=s=>s?String(s).charAt(0).toUpperCase()+String(s).slice(1):'';
+  const d=`${cap(dm.weekday)} ${dm.day} ${cap(dm.month)} ${dm.year}`;
   if($('rtClockText'))$('rtClockText').textContent=t;
-  if($('rtDateText'))$('rtDateText').textContent=d.replace('.','');
+  if($('rtDateText'))$('rtDateText').textContent=d;
   renderSession(now);
 }
 
