@@ -1,27 +1,7 @@
-/* Radar Técnico — final product shell
-   Presentation/IA only. Existing market, scanner, analysis and portfolio engines remain authoritative. */
+/* Radar Técnico · Historial shell only. Keeps product UX independent from audit mounting. */
 (()=>{
 'use strict';
-
 const $=id=>document.getElementById(id);
-
-function setNavCopy(){
-  const copy={
-    homeViewBtn:['Hoy','Decisiones · cartera · mercado'],
-    scannerViewBtn:['Oportunidades','Acciones · CEDEAR · cripto'],
-    fixedIncomeBtn:['Renta fija','Bonos · Letras · ON'],
-    watchlistViewBtn:['Seguimiento','Alertas · zonas · triggers'],
-    portfolioViewBtn:['Cartera','Posiciones · riesgo · performance'],
-    signalsViewBtn:['Historial','Señales · resultados · auditoría']
-  };
-  for(const [id,[title,sub]] of Object.entries(copy)){
-    const b=$(id)?.querySelector('.nav-copy b'),s=$(id)?.querySelector('.nav-copy small');
-    if(b)b.textContent=title;if(s)s.textContent=sub;
-  }
-  const brand=document.querySelector('.sidebar-brand-copy small');
-  if(brand)brand.textContent='Decisión · Análisis · Cartera';
-}
-
 function mountSignalsWorkspace(){
   if($('signalsView'))return;
   const wrap=document.querySelector('.wrap');
@@ -91,83 +71,19 @@ function mountSignalsWorkspace(){
   $('decisionAuditExportBtn')?.addEventListener('click',()=>window.exportDecisionAudit?.());
 }
 
-function foldMarketContext(){
-  const dash=$('dashboardView');
-  if(!dash||$('marketContextDetails'))return;
-  const decision=$('decisionCenter'),brief=dash.querySelector('.daily-brief');
-  if(decision)decision.classList.add('product-home-primary');
-  if(brief)brief.classList.add('product-home-brief');
-
-  const details=document.createElement('details');
-  details.id='marketContextDetails';
-  details.className='market-context-details';
-  details.innerHTML=`
-    <summary>
-      <span><b>Contexto de mercado</b><small>Macro Argentina · breadth · tasas · curvas · mercados globales</small></span>
-      <span class="market-context-action">Abrir contexto completo</span>
-    </summary>
-    <div class="market-context-body"></div>`;
-  dash.appendChild(details);
-  const body=details.querySelector('.market-context-body');
-
-  const keep=new Set([decision,brief,details]);
-  [...dash.children].forEach(el=>{if(!keep.has(el))body.appendChild(el)});
-
-  details.addEventListener('toggle',()=>{
-    const action=details.querySelector('.market-context-action');
-    if(action)action.textContent=details.open?'Cerrar contexto completo':'Abrir contexto completo';
-    if(details.open)setTimeout(()=>window.dispatchEvent(new Event('resize')),80);
-  });
-}
-
-function normalizeHome(){
-  const dash=$('dashboardView');
-  if(!dash)return;
-  dash.classList.add('product-home');
-  const decision=$('decisionCenter');
-  if(decision){
-    const title=decision.querySelector('.alloc-rpt-title-line h2');
-    if(title)title.textContent='Radar de hoy';
-    const p=decision.querySelector('.alloc-rpt-head-main p');
-    if(p)p.innerHTML='Prioridades <i></i> cartera <i></i> oportunidades <i></i> calidad de datos';
-  }
-  const brief=dash.querySelector('.daily-brief h3');
-  if(brief)brief.textContent='Qué cambió desde la última revisión';
-}
-
-function removeRedundantBackButtons(){
-  ['backFromScannerBtn','rfBackBtn','backToAnalysisBtn'].forEach(id=>{
-    const el=$(id);if(el){el.classList.add('product-redundant-back');el.setAttribute('aria-hidden','true');el.tabIndex=-1}
-  });
-}
-
-function setWorkspaceLabels(){
-  const scan=$('scannerView')?.querySelector('.scan-toolbar h2');
-  if(scan)scan.textContent='Oportunidades · Renta variable y cripto';
-  const rf=$('rfScannerView')?.querySelector('.scan-toolbar h2');
-  if(rf)rf.textContent='Oportunidades · Renta fija';
-}
-
 function apply(){
-  document.documentElement.classList.add('radar-product-final');
-  setNavCopy();
   mountSignalsWorkspace();
-  const signalsNav=$('signalsViewBtn');
-  if(signalsNav&&!signalsNav.dataset.productBound){
-    signalsNav.dataset.productBound='1';
-    signalsNav.addEventListener('click',()=>{
+  const nav=$('signalsViewBtn');
+  if(nav&&!nav.dataset.historyBound){
+    nav.dataset.historyBound='1';
+    nav.addEventListener('click',()=>{
       if(typeof window.showSignalsView==='function')window.showSignalsView();
       else if(typeof showSignalsView==='function')showSignalsView();
     });
   }
-  foldMarketContext();
-  normalizeHome();
-  removeRedundantBackButtons();
-  setWorkspaceLabels();
   try{window.renderSignalHistory?.()}catch{}
   try{window.renderDecisionAudit?.()}catch{}
 }
-
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
-window.RadarProductShell=Object.freeze({apply});
+window.RadarHistoryShell=Object.freeze({apply});
 })();

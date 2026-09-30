@@ -57,9 +57,10 @@ try{
     const sr=sidebar?.getBoundingClientRect(),wr=wrap?.getBoundingClientRect(),tr=top?.getBoundingClientRect();
     return {
       productCss:css.some(x=>x.includes('/styles/06-product-design.css')),
-      finalCss:css.some(x=>x.includes('/styles/07-product-shell.css')),
+      productResetCss:css.some(x=>x.includes('/styles/07-product-reset.css')),
+      historyCss:css.some(x=>x.includes('/styles/08-history-shell.css')),
       deployment:document.querySelector('meta[name="radar-deployment"]')?.content||'',
-      finalRoot:document.documentElement.classList.contains('radar-product-final'),
+      productRoot:document.documentElement.classList.contains('radar-product-reset'),
       bodyBg:getComputedStyle(document.body).backgroundColor,
       sidebarWidth:sr?.width||0,
       sidebarRight:sr?.right||0,
@@ -70,9 +71,10 @@ try{
     };
   });
   await assert(design.productCss,'Base product stylesheet no cargó');
-  await assert(design.finalCss,'Final product stylesheet no cargó');
-  await assert(design.finalRoot,'Final product shell no se inicializó');
-  await assert(design.deployment==='radar-product-final-20260930','Deployment marker incorrecto: '+design.deployment);
+  await assert(design.productResetCss,'Product reset stylesheet no cargó');
+  await assert(design.historyCss,'Historial stylesheet no cargó');
+  await assert(design.productRoot,'Product reset no se inicializó');
+  await assert(design.deployment==='radar-professional-ux-20260930','Deployment marker incorrecto: '+design.deployment);
   await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
   await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
   await assert(design.topHeight>=60&&design.topHeight<=90,'Topbar fuera de diseño: '+design.topHeight);
@@ -91,8 +93,11 @@ try{
     ];
     const missing=required.filter(id=>!document.getElementById(id));
     const label=id=>document.querySelector('#'+id+' .nav-copy b')?.textContent?.trim()||'';
-    const details=document.getElementById('marketContextDetails');
     const dashboard=document.getElementById('dashboardView');
+    const hero=document.getElementById('productHomeHero');
+    const daily=document.getElementById('dailyRadarPanel');
+    const market=document.getElementById('productMarketContext');
+    const advanced=document.getElementById('productAdvancedContext');
     return{
       missing,
       nav:{
@@ -100,28 +105,29 @@ try{
         watch:label('watchlistViewBtn'),portfolio:label('portfolioViewBtn'),signals:label('signalsViewBtn')
       },
       home:{
-        decisionDirect:document.getElementById('decisionCenter')?.parentElement===dashboard,
-        briefDirect:dashboard?.querySelector(':scope > .daily-brief')!==null,
-        contextExists:!!details,
-        contextOpen:!!details?.open,
-        dashInside:!!details?.querySelector('.dash-kpis'),
-        intelInside:!!details?.querySelector('.intel-wrap'),
-        marketInside:!!details?.querySelector('.market-board')
+        hero:!!hero,
+        daily:!!daily,
+        decision:!!document.getElementById('decisionCenter'),
+        market:!!market,
+        advanced:!!advanced,
+        advancedOpen:!!advanced?.open,
+        marketHasKpis:!!market?.querySelector('.dash-kpis'),
+        heroTitle:hero?.querySelector('h1')?.textContent?.trim()||''
       },
-      oldWorkspace:!!document.querySelector('script[src*="/workspace/"],link[href*="/workspace/"]'),
-      oldProductHero:!!document.getElementById('productHomeHero'),
-      oldDailyRadar:!!document.getElementById('dailyRadarPanel')
+      analysisAdvanced:!!document.getElementById('productAnalysisAdvanced'),
+      oldWorkspace:!!document.querySelector('script[src*="/workspace/"],link[href*="/workspace/"]')
     }
   });
   await assert(finalContract.missing.length===0,'Capacidades ausentes: '+finalContract.missing.join(', '));
   await assert(finalContract.nav.home==='Hoy','Navegación Inicio no quedó como Hoy');
   await assert(finalContract.nav.scanner==='Oportunidades','Navegación Scanner no quedó como Oportunidades');
   await assert(finalContract.nav.fixed==='Renta fija'&&finalContract.nav.watch==='Seguimiento'&&finalContract.nav.portfolio==='Cartera'&&finalContract.nav.signals==='Historial','Navegación final inconsistente: '+JSON.stringify(finalContract.nav));
-  await assert(finalContract.home.decisionDirect&&finalContract.home.briefDirect,'Inicio no prioriza Radar de hoy + cambios');
-  await assert(finalContract.home.contextExists&&!finalContract.home.contextOpen,'Contexto de mercado debe existir y comenzar plegado');
-  await assert(finalContract.home.dashInside&&finalContract.home.intelInside&&finalContract.home.marketInside,'Contexto plegado perdió módulos de mercado');
-  await assert(!finalContract.oldWorkspace,'La raíz final sigue cargando el prototipo /workspace');
-  await assert(!finalContract.oldProductHero&&!finalContract.oldDailyRadar,'Quedaron capas experimentales antiguas en el producto final');
+  await assert(finalContract.home.hero&&finalContract.home.daily&&finalContract.home.decision,'Inicio perdió portada, Radar de hoy o prioridades');
+  await assert(finalContract.home.market&&finalContract.home.marketHasKpis,'Inicio perdió Mercado en cuatro números');
+  await assert(finalContract.home.advanced&&!finalContract.home.advancedOpen,'Contexto avanzado debe existir y comenzar plegado');
+  await assert(/atención ahora/i.test(finalContract.home.heroTitle),'Portada no está orientada a decisiones: '+finalContract.home.heroTitle);
+  await assert(finalContract.analysisAdvanced,'Análisis avanzado no quedó plegable');
+  await assert(!finalContract.oldWorkspace,'La raíz sigue cargando el prototipo /workspace');
   await fs.writeFile('artifacts/final-product-contract.json',JSON.stringify(finalContract,null,2));
   await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
   await shot('01-home');
@@ -204,6 +210,7 @@ try{
   await page.click('#analyzeBtn');
   await page.waitForFunction(()=>!document.getElementById('analysisView')?.classList.contains('hidden')&&(document.getElementById('lastPrice')?.textContent||'')!=='—',{timeout:30000});
   await assert(await page.evaluate(()=>document.getElementById('technicalStatusGrid')?.style.display!=='none'),'Análisis individual no muestra estados multi-timeframe');
+  await assert(await page.evaluate(()=>{const d=document.getElementById('productAnalysisAdvanced');return !!d&&!d.open}),'Análisis avanzado debe comenzar plegado');
   await shot('05-analysis');
 
   await page.click('#portfolioViewBtn');
