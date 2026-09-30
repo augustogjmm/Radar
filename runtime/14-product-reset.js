@@ -155,6 +155,15 @@ function shapeAnalysis(){
   if(decision)right.prepend(decision);
   if(levels&&decision)decision.insertAdjacentElement('afterend',levels);
   if(decision)text(decision.querySelector('h3'),'DECISIÓN');
+  const position=decision?.querySelector('.position-panel');
+  if(position&&!position.closest('.desk-risk-sizing')){
+    const riskDetails=document.createElement('details');
+    riskDetails.className='desk-risk-sizing';
+    riskDetails.innerHTML='<summary><span><b>Tamaño de posición</b><small>Calculadora de riesgo y cantidad</small></span><span>Abrir</span></summary><div class="desk-risk-sizing-body"></div>';
+    position.parentElement.insertBefore(riskDetails,position);
+    riskDetails.querySelector('.desk-risk-sizing-body').appendChild(position);
+    riskDetails.addEventListener('toggle',()=>{riskDetails.querySelector('summary>span:last-child').textContent=riskDetails.open?'Cerrar':'Abrir'});
+  }
   const secondary=[...right.children].filter(el=>el!==decision&&el!==levels);
   const below=[...view.querySelectorAll('.below-grid')];
   const fundamentals=$('fundamentalsCard');
