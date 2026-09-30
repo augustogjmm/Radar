@@ -380,7 +380,7 @@ function mountDashboard(){
       </div>
       <aside class="rt-opps-aside">
         <div class="rt-legend-panel">
-          <b>Leyenda de colores</b>
+          <b>Leyenda de Colores</b>
           <div><i class="s1"></i><span>Fuerte alza</span><small>&gt; +2%</small></div>
           <div><i class="s2"></i><span>Alza moderada</span><small>+0,5% a +2%</small></div>
           <div><i class="s3"></i><span>Neutral</span><small>-0,5% a +0,5%</small></div>
@@ -389,7 +389,7 @@ function mountDashboard(){
         </div>
         <div class="rt-source-panel">
           <b>Fuentes y mercado</b>
-          <p><span class="rt-status-dot"></span>Datos de mercado actualizados desde las fuentes conectadas de Radar.</p>
+          <p><span class="rt-status-dot"></span>Datos en tiempo real</p>
           <small>Bolsas, índices, commodities, bonos y tipo de cambio. Delayed en algunos mercados.</small>
         </div>
       </aside>
