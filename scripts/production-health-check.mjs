@@ -3,6 +3,7 @@ const expected=(process.env.EXPECTED_SHA||'').trim();
 const required=['Yahoo SPY','Crypto BTC','BYMA acciones','BYMA CEDEAR','BYMA histórico GGAL','Dólar','Renta fija'];
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const sameSha=(seen)=>!expected||seen===expected||String(seen||'').startsWith(expected)||expected.startsWith(String(seen||''));
 async function json(url,timeoutMs=45000){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeoutMs);
@@ -20,7 +21,7 @@ async function waitForDeployment(){
     try{
       last=await json(base+'/api/health?ts='+Date.now(),20000);
       const seen=String(last?.gitSha||'');
-      if(!expected||seen===expected||seen.startsWith(expected)||expected.startsWith(seen)){
+      if(sameSha(seen)){
         console.log('Deployment ready',JSON.stringify({release:last?.release,gitSha:seen,attempt}));
         return last;
       }
@@ -34,7 +35,25 @@ async function waitForDeployment(){
 }
 
 await waitForDeployment();
-const deep=await json(base+'/api/health/deep?ts='+Date.now(),90000);
+async function waitForDeepHealth(){
+  let last=null;
+  for(let attempt=1;attempt<=30;attempt++){
+    try{
+      last=await json(base+'/api/health/deep?ts='+Date.now(),90000);
+      const seen=String(last?.gitSha||'');
+      if(sameSha(seen)){
+        console.log('Deep health ready',JSON.stringify({release:last?.release,gitSha:seen,attempt,status:last?.status}));
+        return last;
+      }
+      console.log('Waiting for deep health from expected deployment',JSON.stringify({attempt,expected,seen}));
+    }catch(e){
+      console.log('Deep health probe pending',JSON.stringify({attempt,error:String(e?.message||e)}));
+    }
+    await sleep(10000);
+  }
+  throw new Error('Deep health never exposed expected git SHA. Last health: '+JSON.stringify(last));
+}
+const deep=await waitForDeepHealth();
 const checks=Array.isArray(deep?.checks)?deep.checks:[];
 const byName=new Map(checks.map(x=>[x.name,x]));
 const missing=required.filter(name=>!byName.has(name));
