@@ -105,7 +105,13 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-head-icon{width:47px;height:36px;display:grid;place-items:center;color:#b5c8d5;background:transparent}
 .rt-head-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .rt-head-avatar{width:82px;height:36px;position:relative;display:grid;place-items:center;color:#d9e7f0;background:transparent}
-.rt-head-avatar svg{width:28px;height:28px;padding:4px;border-radius:50%;fill:#8c6ba7;stroke:#e7d7ef;stroke-width:1.2;background:linear-gradient(145deg,#5b4768,#2d2337)}
+.rt-head-avatar svg{width:30px;height:30px;border-radius:50%;filter:drop-shadow(0 0 4px rgba(155,117,184,.2))}
+.rt-head-avatar .avatar-bg{fill:#7c698e;stroke:#d7c9df;stroke-width:1}
+.rt-head-avatar .avatar-hair{fill:#3f304c;stroke:none}
+.rt-head-avatar .avatar-face{fill:#e5b8aa;stroke:#f3d5c8;stroke-width:.35}
+.rt-head-avatar .avatar-eye{fill:#3d2d3b;stroke:none}
+.rt-head-avatar .avatar-mouth{fill:none;stroke:#9f5d69;stroke-width:.65;stroke-linecap:round}
+.rt-head-avatar .avatar-shirt{fill:#ddd6e2;stroke:none}
 .rt-dateblock{width:132px;height:36px;padding:3px 12px 0;text-align:left;line-height:1.15}
 .rt-dateblock small{display:block;color:#9cafbd;font-size:8px;white-space:nowrap}
 .rt-dateblock b{display:block;margin-top:4px;color:#d5e1e9;font-size:8px;font-weight:700}
