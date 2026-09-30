@@ -75,13 +75,11 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 }
 .rt-brand{display:flex;align-items:center;gap:12px;min-width:0}
 .rt-logo{
-  width:43px;height:43px;border:2px solid #1aa7ff;border-radius:50%;
-  display:grid;place-items:center;position:relative;color:#34bbff;
-  box-shadow:0 0 0 3px rgba(27,156,255,.06),0 0 20px rgba(27,156,255,.22),inset 0 0 18px rgba(27,156,255,.17)
+  width:43px;height:43px;display:grid;place-items:center;position:relative;color:#2bb7ff
 }
-.rt-logo:before,.rt-logo:after{content:"";position:absolute;border:1px solid currentColor;border-radius:50%;opacity:.7}
-.rt-logo:before{inset:7px}.rt-logo:after{inset:14px}
-.rt-logo i{width:2px;height:34px;background:currentColor;opacity:.76}
+.rt-logo svg{width:43px;height:43px;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.35;filter:drop-shadow(0 0 5px rgba(34,174,255,.38))}
+.rt-logo svg circle:nth-child(1){stroke-width:1.8}.rt-logo svg circle:nth-child(2){opacity:.78}.rt-logo svg circle:nth-child(3){opacity:.9}
+.rt-logo svg path{opacity:.72}.rt-logo svg .sweep{stroke:#68ceff;stroke-width:1.7;opacity:.85}.rt-logo svg .dot{fill:#33baff;stroke:none}
 .rt-brand-copy{display:flex;flex-direction:column;min-width:0}
 .rt-brand-copy b{font-size:24px;line-height:1;font-weight:780;letter-spacing:-.025em;color:#e1edf7}
 .rt-brand-copy small{font-size:9px;line-height:1.2;letter-spacing:.05em;color:#9bb0c0;margin-top:5px;white-space:nowrap}
@@ -149,8 +147,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   overflow:visible
 }
 .rt-world-card:before{display:none}
-.rt-map-head{position:absolute;left:12px;top:8px;z-index:20}
-.rt-map-head:before{content:"";position:absolute;left:-8px;top:1px;width:2px;height:17px;background:#20a9ff;box-shadow:0 0 8px rgba(32,169,255,.45)}
+.rt-map-head{position:absolute;left:14px;top:8px;z-index:20}
+.rt-map-head:before{content:"";position:absolute;left:-13px;top:1px;width:2px;height:17px;background:#20a9ff;box-shadow:0 0 8px rgba(32,169,255,.45)}
 .rt-map-head h2{margin:0;font-size:18px;line-height:1.05;font-weight:770;color:#edf6fb}
 .rt-map-head p{margin:3px 0 0;color:#9db0bd;font-size:9px}
 .rt-world-wrap{
@@ -342,9 +340,6 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   .rt-opps-layout{grid-template-columns:minmax(0,1fr) 170px}
 }
 
-.rt-logo i{position:relative}
-.rt-logo i:before{content:"";position:absolute;left:-16px;top:16px;width:34px;height:2px;background:currentColor;opacity:.72}
-.rt-logo i:after{content:"";position:absolute;left:-1px;top:0;width:2px;height:34px;background:currentColor;transform:rotate(42deg);opacity:.28;transform-origin:center}
 
 .rt-session-flag{width:33px;height:33px;display:grid;place-items:center;border-radius:50%;overflow:hidden;background:#0a2030;border:1px solid #3e7695;font-size:27px;line-height:1}
 
