@@ -207,7 +207,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 
 /* Map overlays */
 .rt-session-box{
-  position:absolute;z-index:31;top:6px;right:88px;width:290px;height:63px;
+  position:absolute;z-index:31;top:6px;right:79px;width:290px;height:63px;
   display:flex;align-items:center;gap:9px;padding:7px 10px;
   border:1px solid #216080;border-radius:6px;
   background:linear-gradient(180deg,rgba(6,28,44,.97),rgba(3,17,29,.96));
@@ -217,7 +217,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-session-dot{width:8px;height:8px;border-radius:50%;background:var(--rt-green);box-shadow:0 0 8px rgba(33,231,131,.7)}
 .rt-session-count{margin-left:auto;min-width:91px;padding:5px 8px 4px;border:1px solid #1b3e54;border-radius:5px;background:rgba(4,18,29,.78);text-align:right;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}.rt-session-count small{display:block;font-size:9px;color:#879faf}.rt-session-count b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 .rt-next-sessions{
-  position:absolute;z-index:31;top:6px;right:-80px;width:153px;height:82px;
+  position:absolute;z-index:31;top:6px;right:-84px;width:153px;height:82px;
   padding:6px 8px;border:1px solid #1d455d;border-radius:6px;
   background:linear-gradient(180deg,rgba(5,21,33,.97),rgba(3,14,23,.96));
   box-shadow:0 10px 24px rgba(0,0,0,.32)
@@ -249,7 +249,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 /* Middle top column: risk + region */
 .rt-middle-stack{display:grid;grid-template-rows:72px 318px;gap:14px;height:410px;padding-top:6px}
 .rt-risk-card{
-  height:72px;display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:11px;align-items:center;margin-left:90px;width:calc(100% - 96px);
+  height:72px;display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:11px;align-items:center;margin-left:92px;width:calc(100% - 94px);
   padding:8px 12px;border-color:#234a61
 }
 .rt-risk-card-left>span{display:block;color:#b5c6d1;font-size:11px;margin-bottom:6px}
