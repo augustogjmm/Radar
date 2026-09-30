@@ -142,11 +142,11 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   display:grid;
   grid-template-columns:minmax(0,912fr) minmax(0,445fr) minmax(0,277fr);
   gap:9px;
-  height:410px;
+  height:416px;
 }
 .rt-world-card{
-  height:410px;
-  min-height:410px;
+  height:416px;
+  min-height:416px;
   border-color:transparent;
   background:transparent;
   box-shadow:none;
@@ -290,7 +290,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-up{color:#37e28d!important}.rt-down{color:#ff5668!important}.rt-flat{color:#adbec9!important}
 
 /* Second row */
-.rt-mid-grid{display:grid;grid-template-columns:minmax(0,904fr) minmax(0,739fr);gap:9px;height:208px;margin-top:7px}
+.rt-mid-grid{display:grid;grid-template-columns:minmax(0,904fr) minmax(0,739fr);gap:9px;height:208px;margin-top:1px}
 .rt-arg-card,.rt-signals-card{height:208px}
 .rt-arg-card .rt-section-title{height:35px;padding:8px 11px 4px}.rt-arg-card .rt-section-title h2{font-size:18px}.rt-arg-card .rt-section-title p{display:none}.rt-arg-card .rt-link-button{display:none}
 .rt-traffic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:8px 13px 3px}
