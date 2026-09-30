@@ -184,7 +184,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtWorldGeoSvg .rt-country.neutral{fill:#7f929f;fill-opacity:.29;stroke:#8da1ad}
 #rtWorldGeoSvg .rt-country.mod-down{fill:#ef533f;fill-opacity:.54;stroke:#ff9d8b;filter:drop-shadow(0 0 2px rgba(239,83,63,.3))}
 #rtWorldGeoSvg .rt-country.strong-down{fill:#ff263e;fill-opacity:.69;stroke:#ff9eaa;filter:drop-shadow(0 0 4px rgba(255,38,62,.58))}
-#rtWorldGeoSvg .rt-country[data-code="ARG"]{stroke:#30aaff!important;stroke-width:2!important;fill-opacity:.6!important;filter:drop-shadow(0 0 4px #2aa7ff) drop-shadow(0 0 10px rgba(40,117,255,.45))!important}
+#rtWorldGeoSvg .rt-country[data-code="ARG"]{fill:#1268ff!important;fill-opacity:.50!important;stroke:#47b8ff!important;stroke-width:2!important;filter:drop-shadow(0 0 4px #2aa7ff) drop-shadow(0 0 11px rgba(31,113,255,.62))!important}
 #rtWorldGeoSvg .rt-country:hover{stroke:#fff;stroke-width:1.2;fill-opacity:.78;filter:brightness(1.15) drop-shadow(0 0 4px rgba(90,210,255,.35))}
 #rtWorldGeoSvg .rt-country.selected-region{stroke:#c7efff;stroke-width:1.05}
 .rt-market-marker{pointer-events:none}
