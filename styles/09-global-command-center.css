@@ -190,7 +190,6 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtWorldGeoSvg .rt-country.strong-down{fill:#ff263e;fill-opacity:.69;stroke:#ff9eaa;filter:drop-shadow(0 0 4px rgba(255,38,62,.58))}
 #rtWorldGeoSvg .rt-country[data-code="ARG"]{fill:#1268ff!important;fill-opacity:.50!important;stroke:#47b8ff!important;stroke-width:2!important;filter:drop-shadow(0 0 4px #2aa7ff) drop-shadow(0 0 11px rgba(31,113,255,.62))!important}
 #rtWorldGeoSvg .rt-country:hover{stroke:#fff;stroke-width:1.2;fill-opacity:.78;filter:brightness(1.15) drop-shadow(0 0 4px rgba(90,210,255,.35))}
-#rtWorldGeoSvg .rt-country.selected-region{stroke:#c7efff;stroke-width:1.05}
 .rt-market-marker{pointer-events:none}
 .rt-market-marker circle{fill:#effcff;stroke:#54d8ff;stroke-width:1.5;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 4px #36b9ff)}
 .rt-market-marker .halo{fill:none;stroke:#38b6f3;stroke-width:1;opacity:.42;animation:rtPulse 2.2s ease-out infinite;transform-box:fill-box;transform-origin:center}
@@ -362,7 +361,6 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtHeatGlowLayer .rt-heat-glow.neutral{fill:#3f6478!important;opacity:.10!important}
 #rtHeatGlowLayer .rt-heat-glow.mod-down{fill:#ff624c!important}
 #rtHeatGlowLayer .rt-heat-glow.strong-down{fill:#ff2743!important}
-#rtHeatGlowLayer .rt-heat-glow.selected-region{stroke:none!important}
 
 .rt-world-card{z-index:5}
 .rt-middle-stack{position:relative;z-index:3}
