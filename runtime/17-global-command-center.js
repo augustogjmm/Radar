@@ -255,36 +255,47 @@ function bindDashboard(){
   }));
 }
 
-function baParts(date=new Date()){
-  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(date);
+function zonedParts(date,timeZone){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone,weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
   const o=Object.fromEntries(parts.map(x=>[x.type,x.value]));
-  return{h:Number(o.hour)%24,m:Number(o.minute),s:Number(o.second)};
+  const dayIndex={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[o.weekday];
+  return{day:dayIndex,h:Number(o.hour)%24,m:Number(o.minute),s:Number(o.second)};
+}
+function nextOpenDelta(now,session){
+  const p=zonedParts(now,session.tz),sec=p.h*3600+p.m*60+p.s;
+  const isWeekday=p.day>=1&&p.day<=5;
+  if(isWeekday&&sec<session.open)return session.open-sec;
+  let days=1;
+  while(days<=7){
+    const d=(p.day+days)%7;
+    if(d>=1&&d<=5)break;
+    days++;
+  }
+  return (86400-sec)+(days-1)*86400+session.open;
 }
 function renderSession(date){
   if(!$('rtSessionName'))return;
-  const {h,m,s}=baParts(date),now=h*3600+m*60+s;
   const sessions=[
-    {name:'Nueva York',flag:'🇺🇸',start:10*3600+30*60,end:17*3600},
-    {name:'Londres',flag:'🇬🇧',start:4*3600,end:12*3600+30*60},
-    {name:'Tokio',flag:'🇯🇵',start:21*3600,end:27*3600},
-    {name:'Sídney',flag:'🇦🇺',start:19*3600,end:25*3600}
+    {name:'Nueva York',flag:'🇺🇸',tz:'America/New_York',open:9*3600+30*60,close:16*3600},
+    {name:'Londres',flag:'🇬🇧',tz:'Europe/London',open:8*3600,close:16*3600+30*60},
+    {name:'Tokio',flag:'🇯🇵',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60},
+    {name:'Sídney',flag:'🇦🇺',tz:'Australia/Sydney',open:10*3600,close:16*3600}
   ];
-  const adjusted=x=>x<6*3600?x+24*3600:x;
-  const n=adjusted(now);
-  const active=sessions.find(x=>n>=x.start&&n<x.end)||sessions.find(x=>now>=x.start&&now<x.end)||null;
+  const live=sessions.map(x=>{
+    const p=zonedParts(date,x.tz),sec=p.h*3600+p.m*60+p.s;
+    const active=p.day>=1&&p.day<=5&&sec>=x.open&&sec<x.close;
+    return{...x,sec,active,left:active?x.close-sec:NaN};
+  });
+  const active=live.find(x=>x.active)||null;
   if(active){
     $('rtSessionName').textContent=active.name;$('rtSessionFlag').textContent=active.flag;
-    let left=active.end-(n>=24*3600?n:now);if(left<0)left+=24*3600;
-    const hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
+    const left=Math.max(0,active.left),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
     $('rtSessionCountdown').textContent=[hh,mm,ss].map(x=>String(x).padStart(2,'0')).join(':');
   }else{
     $('rtSessionName').textContent='Entre sesiones';$('rtSessionFlag').textContent='🌐';$('rtSessionCountdown').textContent='—';
   }
   if($('rtNextSessions')){
-    const next=sessions.map(x=>{
-      let delta=x.start-now;if(delta<=0)delta+=24*3600;
-      return{...x,delta};
-    }).sort((a,b)=>a.delta-b.delta).slice(0,3);
+    const next=sessions.map(x=>({...x,delta:nextOpenDelta(date,x)})).sort((a,b)=>a.delta-b.delta).slice(0,3);
     $('rtNextSessions').innerHTML=next.map(x=>`<span>${x.flag} ${x.name} · +${Math.floor(x.delta/3600)}h ${Math.floor((x.delta%3600)/60)}m</span>`).join('');
   }
 }
