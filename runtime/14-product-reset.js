@@ -137,6 +137,9 @@ function shapeFixedIncome(){
   view.classList.add('desk-rf');
   text(view.querySelector('.scan-toolbar h2'),'Renta fija');
   text(view.querySelector('.scan-toolbar .sub'),'Curva, TIR, paridad, duration y liquidez para comparar instrumentos.');
+  view.querySelector('.scanner-analytics-card')?.classList.add('desk-hide');
+  view.querySelector('.rf-context-panel')?.classList.add('desk-rf-context');
+  view.querySelector('.rf-summary')?.classList.add('desk-rf-summary');
   view.querySelector('.rf-table')?.classList.add('desk-data-table');
 }
 
@@ -274,6 +277,7 @@ function apply(){
   shapeAnalysis();
   shapePortfolio();
   shapeWatchlist();
+  ['rfBackBtn','backFromScannerBtn','backToAnalysisBtn'].forEach(id=>$(id)?.classList.add('desk-hide'));
   nav();
   topbar();
 }
