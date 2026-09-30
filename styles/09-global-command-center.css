@@ -615,3 +615,59 @@ body.rt-global-shell .bond-view{margin:12px 6px!important;max-width:none!importa
 }
 
 .rt-light{position:relative}
+
+
+/* === Global Command Center v1.4 · terminal detail completion === */
+#rtWorldGeoSvg .rt-country[data-code="ARG"]{
+  stroke:#43b9ff!important;
+  stroke-width:2.2!important;
+  filter:drop-shadow(0 0 5px rgba(45,174,255,.95)) drop-shadow(0 0 13px rgba(35,116,255,.45))!important;
+  opacity:1!important
+}
+#rtWorldGeoSvg .rt-country[data-code="ARG"]:hover{
+  stroke:#c6efff!important;stroke-width:2.7!important
+}
+.rt-market-marker.up circle{stroke:#51f3a5;fill:#cffff0}
+.rt-market-marker.down circle{stroke:#ff6574;fill:#fff0f2}
+.rt-market-marker.neutral circle{stroke:#62cfff;fill:#eefaff}
+.rt-market-marker.up .halo{stroke:#38e891}
+.rt-market-marker.down .halo{stroke:#ff4b61}
+.rt-market-marker.neutral .halo{stroke:#2baeff}
+.rt-market-marker.argentina circle{stroke:#37aaff;fill:#e8f8ff}
+.rt-market-marker.argentina text{fill:#e7f7ff;stroke:#063151;stroke-width:4px}
+.rt-market-marker.active-session circle:first-of-type{
+  r:5.4;
+  fill:#fff;
+  stroke:#61e8ff;
+  stroke-width:2.1;
+  filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #1acbff)
+}
+.rt-market-marker.active-session .halo{animation-duration:1.15s;stroke:#5ce4ff;opacity:.8}
+
+.rt-market-line{
+  grid-template-columns:minmax(104px,1.15fr) 76px 92px 58px!important;
+  gap:6px!important
+}
+.rt-market-mini{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.rt-market-mini .rt-spark{width:70px;height:19px}
+.rt-market-mini .spark-area{opacity:.55}
+.rt-market-mini .spark-line{stroke-width:1.35}
+
+.rt-detail-geo-svg .rt-country[data-code="ARG"]{
+  stroke:#43b9ff!important;
+  stroke-width:1.5!important
+}
+.rt-detail-geo-svg .rt-market-marker.active-session text{fill:#fff}
+
+.rt-watch-row .wc.rt-up:before{content:"↑ ";font-size:9px}
+.rt-watch-row .wc.rt-down:before{content:"↓ ";font-size:9px}
+.rt-watch-row .wc.rt-flat:before{content:"• ";font-size:9px;color:#8199a9}
+
+.rt-asset-cell{min-width:92px}
+.rt-asset-cell .ticker{min-width:32px}
+.rt-asset-cell small{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+
+.rt-opps-table tbody tr:first-child{
+  box-shadow:inset 2px 0 0 rgba(36,191,255,.75)
+}
+.rt-opps-table tbody tr:first-child .ticker{color:#fff}
