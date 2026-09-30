@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='1.1.0';
+const VERSION='1.2.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -155,6 +155,8 @@ function insertShell(){
       <input id="rtGlobalSearch" placeholder="Buscar activo, índice o ticker…" autocomplete="off">
     </label>
     <div class="rt-livebox">
+      <span class="rt-head-icon" title="Alertas">♢</span>
+      <span class="rt-head-avatar">RT</span>
       <div class="rt-dateblock"><small id="rtDateText">—</small><b id="rtClockText">--:--</b><small>(GMT-3)</small></div>
       <span class="rt-live">En tiempo real</span>
     </div>`;
@@ -236,6 +238,14 @@ function mountDashboard(){
       </div>
     </section>
 
+    <div class="rt-middle-stack">
+    <section class="rt-card rt-risk-card">
+      <div class="rt-risk-card-title"><span>Riesgo Global</span><b id="rtRiskLabel">CALCULANDO</b></div>
+      <div class="rt-risk-card-body">
+        <div class="rt-risk-gauge"><span class="zone low"></span><span class="zone mid"></span><span class="zone high"></span><i id="rtRiskNeedle" style="left:50%"></i></div>
+        <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><span id="rtRiskMove">MOVE —</span><span id="rtRiskTnx">US10Y —</span></div>
+      </div>
+    </section>
     <section id="rtRegionDetail" class="rt-card rt-detail-card">
       <div class="rt-section-title"><div><h3 id="rtDetailTitle">Detalle de Región: Europa</h3><p id="rtDetailSubtitle">Índices principales y tendencia</p></div><button id="rtRegionOpen" class="rt-link-button">Abrir vista completa →</button></div>
       <div class="rt-detail-map">
@@ -252,16 +262,11 @@ function mountDashboard(){
         <div class="rt-detail-axis"><span>-20</span><span>-15</span><span>-10</span><span>-5</span><span>Hoy</span></div>
       </div>
     </section>
+    </div>
 
     <section class="rt-card rt-watch-card">
       <div class="rt-section-title"><div><h3>Watchlist</h3><p>Mercados clave</p></div><button id="rtWatchAll" class="rt-link-button">Ver todo</button></div>
       <div id="rtWatchList" class="rt-watch-list"></div>
-      <div class="rt-risk-strip">
-        <div class="rt-risk-label"><span>Riesgo Global</span><b id="rtRiskLabel">CALCULANDO</b></div>
-        <div class="rt-risk-gauge"><span class="zone low"></span><span class="zone mid"></span><span class="zone high"></span><i id="rtRiskNeedle" style="left:50%"></i></div>
-        <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><span id="rtRiskMove">MOVE —</span><span id="rtRiskTnx">US10Y —</span></div>
-        <div class="rt-risk-scale"><span>Riesgo bajo</span><span>Moderado</span><span>Riesgo alto</span></div>
-      </div>
     </section>
   </div>
 
@@ -442,10 +447,11 @@ function renderWatch(){
 }
 
 function riskModel(){
-  const vix=get('vix'),tnx=get('tnx'),dxy=get('dxy'),eem=get('eem');
+  const vix=get('vix'),move=get('move'),tnx=get('tnx'),dxy=get('dxy'),eem=get('eem');
   let score=50;
-  const vv=num(vix?.last);
+  const vv=num(vix?.last),mv=num(move?.last);
   if(Number.isFinite(vv))score+=(vv-18)*2.2;
+  if(Number.isFinite(mv))score+=(mv-100)*0.18;
   const tc=periodChange(tnx,'day');if(Number.isFinite(tc))score+=clamp(tc*3,-10,10);
   const dc=periodChange(dxy,'day');if(Number.isFinite(dc))score+=clamp(dc*5,-8,8);
   const ec=periodChange(eem,'day');if(Number.isFinite(ec))score-=clamp(ec*5,-10,10);
