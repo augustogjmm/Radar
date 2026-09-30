@@ -214,7 +214,14 @@ function insertShell(){
         <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
       </span>
       <span class="rt-head-avatar" aria-label="Perfil">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6"/></svg>
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <circle class="avatar-bg" cx="16" cy="16" r="14"/>
+          <path class="avatar-hair" d="M8.5 14.3c0-6.2 3.5-9.5 7.9-9.5 5 0 8.1 3.9 7.5 10.3-.4-2.6-2-4.4-4.1-5.3-1.4 2-4.6 3.3-8.7 3.1-.2 2.6.3 5.1 1.7 7.2-2.8-1.1-4.3-3-4.3-5.8Z"/>
+          <ellipse class="avatar-face" cx="16" cy="15" rx="5.3" ry="6.3"/>
+          <circle class="avatar-eye" cx="14" cy="14.8" r=".55"/><circle class="avatar-eye" cx="18.1" cy="14.8" r=".55"/>
+          <path class="avatar-mouth" d="M14.6 17.8c1 .8 2 .8 2.9 0"/>
+          <path class="avatar-shirt" d="M7.7 27c1.1-4.5 4-6.8 8.3-6.8 4.2 0 7.1 2.3 8.3 6.8"/>
+        </svg>
       </span>
       <div class="rt-dateblock"><small id="rtDateText">—</small><b>(GMT-3)</b></div>
       <div class="rt-clockblock"><b id="rtClockText">--:--</b><small>(GMT-3)</small></div>
