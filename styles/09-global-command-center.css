@@ -357,3 +357,9 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtHeatGlowLayer .rt-heat-glow.mod-down{fill:#ff624c!important}
 #rtHeatGlowLayer .rt-heat-glow.strong-down{fill:#ff2743!important}
 #rtHeatGlowLayer .rt-heat-glow.selected-region{stroke:none!important}
+
+.rt-world-card{z-index:5}
+.rt-middle-stack{position:relative;z-index:3}
+.rt-watch-card{z-index:2}
+.rt-session-box,.rt-next-sessions{isolation:isolate}
+.rt-main-grid{isolation:isolate}
