@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.1.0';
+const VERSION='2.2.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -105,6 +105,17 @@ async function loadWorldMap(){
       const svg=q('svg',host);
       if(svg){
         const layer=svg.querySelector('#rtCountryLayer');
+        if(layer&&!svg.querySelector('#rtHeatGlowLayer')){
+          const glow=document.createElementNS('http://www.w3.org/2000/svg','g');
+          glow.setAttribute('id','rtHeatGlowLayer');
+          [...layer.querySelectorAll('.rt-country')].forEach(country=>{
+            const clone=country.cloneNode(false);
+            clone.removeAttribute('id');
+            clone.classList.add('rt-heat-glow');
+            glow.appendChild(clone);
+          });
+          layer.parentNode.insertBefore(glow,layer);
+        }
         layer?.insertAdjacentHTML('beforeend',marketMarkers());
         const tooltip=document.createElement('div');
         tooltip.className='rt-map-tooltip';
