@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='1.3.0';
+const VERSION='1.4.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -34,8 +34,9 @@ const ASSETS=[
   {id:'dax',symbol:'^GDAXI',name:'DAX',region:'europe',flag:'🇩🇪',decimals:1},
   {id:'ftse',symbol:'^FTSE',name:'FTSE 100',region:'europe',flag:'🇬🇧',decimals:1},
   {id:'cac',symbol:'^FCHI',name:'CAC 40',region:'europe',flag:'🇫🇷',decimals:1},
-  {id:'stoxx',symbol:'^STOXX50E',name:'STOXX 50',region:'europe',flag:'🇪🇺',decimals:1},
+  {id:'stoxx',symbol:'^STOXX',name:'STOXX 600',region:'europe',flag:'🇪🇺',decimals:1},
   {id:'ibex',symbol:'^IBEX',name:'IBEX 35',region:'europe',flag:'🇪🇸',decimals:1},
+  {id:'ftsemib',symbol:'FTSEMIB.MI',name:'FTSE MIB',region:'europe',flag:'🇮🇹',decimals:1},
 
   {id:'nikkei',symbol:'^N225',name:'NIKKEI',region:'asia',flag:'🇯🇵',decimals:1},
   {id:'hangseng',symbol:'^HSI',name:'HANG SENG',region:'asia',flag:'🇭🇰',decimals:1},
@@ -50,13 +51,13 @@ const ASSETS=[
 
 const REGIONS={
   northamerica:{label:'América del Norte',short:'Norteamérica',ids:['sp500','nasdaq','dow'],focus:'sp500',indices:'S&P 500 · NASDAQ · DOW'},
-  europe:{label:'Europa',short:'Europa',ids:['ftse','dax','cac','ibex','stoxx'],focus:'stoxx',indices:'DAX · FTSE · CAC'},
+  europe:{label:'Europa',short:'Europa',ids:['ftse','dax','cac','ibex','ftsemib','stoxx'],focus:'stoxx',indices:'DAX · FTSE · CAC'},
   asia:{label:'Asia',short:'Asia',ids:['nikkei','hangseng','shanghai'],focus:'nikkei',indices:'NIKKEI · HANG SENG'},
   latam:{label:'LatAm',short:'LatAm',ids:['merval','bovespa','mexico'],focus:'merval',indices:'MERVAL · BOVESPA'},
   oceania:{label:'Oceanía',short:'Oceanía',ids:['asx'],focus:'asx',indices:'ASX 200'}
 };
 const COUNTRY_MARKET={
-  USA:'sp500',GBR:'ftse',DEU:'dax',FRA:'cac',ESP:'ibex',
+  USA:'sp500',GBR:'ftse',DEU:'dax',FRA:'cac',ESP:'ibex',ITA:'ftsemib',
   JPN:'nikkei',CHN:'shanghai',ARG:'merval',BRA:'bovespa',MEX:'mexico',AUS:'asx'
 };
 
@@ -68,11 +69,11 @@ const REGION_VIEWS={
   latam:[205,245,365,315], oceania:[895,300,300,240]
 };
 const MARKET_CITIES={
-  northamerica:[['NUEVA YORK',-74.006,40.7128],['TORONTO',-79.3832,43.6532]],
-  europe:[['LONDRES',-0.1276,51.5072],['FRANKFURT',8.6821,50.1109],['PARÍS',2.3522,48.8566]],
-  asia:[['TOKIO',139.6917,35.6895],['HONG KONG',114.1694,22.3193],['SHANGHÁI',121.4737,31.2304]],
-  latam:[['SÃO PAULO',-46.6333,-23.5505],['BUENOS AIRES',-58.3816,-34.6037],['CIUDAD DE MÉXICO',-99.1332,19.4326]],
-  oceania:[['SÍDNEY',151.2093,-33.8688]]
+  northamerica:[['NUEVA YORK',-74.006,40.7128,'sp500'],['TORONTO',-79.3832,43.6532,'sp500']],
+  europe:[['LONDRES',-0.1276,51.5072,'ftse'],['FRANKFURT',8.6821,50.1109,'dax'],['PARÍS',2.3522,48.8566,'cac']],
+  asia:[['TOKIO',139.6917,35.6895,'nikkei'],['HONG KONG',114.1694,22.3193,'hangseng'],['SHANGHÁI',121.4737,31.2304,'shanghai']],
+  latam:[['SÃO PAULO',-46.6333,-23.5505,'bovespa'],['ARGENTINA',-58.3816,-34.6037,'merval'],['CIUDAD DE MÉXICO',-99.1332,19.4326,'mexico']],
+  oceania:[['SÍDNEY',151.2093,-33.8688,'asx']]
 };
 function mapXY(lon,lat){
   return [
@@ -80,11 +81,16 @@ function mapXY(lon,lat){
     (MAP_VIEW.maxLat-Math.max(MAP_VIEW.minLat,Math.min(MAP_VIEW.maxLat,lat)))/(MAP_VIEW.maxLat-MAP_VIEW.minLat)*MAP_VIEW.h
   ];
 }
+function markerTone(assetId){
+  const ch=assetId?periodChange(get(assetId),'day'):NaN;
+  return !Number.isFinite(ch)?'neutral':ch>.03?'up':ch<-.03?'down':'neutral';
+}
 function marketMarkers(regionOnly=null){
   const entries=regionOnly?[[regionOnly,MARKET_CITIES[regionOnly]||[]]]:Object.entries(MARKET_CITIES);
-  return entries.flatMap(([region,cities])=>cities.map(([name,lon,lat])=>{
-    const [cx,cy]=mapXY(lon,lat);
-    return `<g class="rt-market-marker" data-marker-region="${region}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="9" y="-7">${name}</text></g>`;
+  return entries.flatMap(([region,cities])=>cities.map(([name,lon,lat,assetId])=>{
+    const [cx,cy]=mapXY(lon,lat),tone=markerTone(assetId);
+    const special=name==='ARGENTINA'?' argentina':'';
+    return `<g class="rt-market-marker ${tone}${special}" data-marker-region="${region}" data-marker-asset="${assetId||''}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="9" y="-7">${name}</text></g>`;
   })).join('');
 }
 async function loadWorldMap(){
@@ -392,8 +398,12 @@ function renderSession(date){
     return{...x,sec,active,left:active?x.close-sec:NaN};
   });
   const active=live.find(x=>x.active)||null;
+  qa('.rt-market-marker').forEach(m=>m.classList.remove('active-session'));
   if(active){
     $('rtSessionName').textContent=active.name;$('rtSessionFlag').textContent=active.flag;
+    const cityMap={'Nueva York':'sp500','Londres':'ftse','Tokio':'nikkei','Sídney':'asx'};
+    const activeAsset=cityMap[active.name];
+    if(activeAsset)qa(`.rt-market-marker[data-marker-asset="${activeAsset}"]`).forEach(m=>m.classList.add('active-session'));
     const left=Math.max(0,active.left),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
     $('rtSessionCountdown').textContent=[hh,mm,ss].map(x=>String(x).padStart(2,'0')).join(':');
   }else{
@@ -440,6 +450,10 @@ function toneClass(v){
 function signClass(v){return !Number.isFinite(v)?'rt-flat':v>.03?'rt-up':v<-.03?'rt-down':'rt-flat'}
 
 function renderMap(){
+  qa('#rtWorldMapHost .rt-market-marker').forEach(m=>{
+    m.classList.remove('up','down','neutral');
+    m.classList.add(markerTone(m.dataset.markerAsset));
+  });
   const countries=qa('#rtWorldMapHost .rt-country');
   countries.forEach(el=>{
     const key=el.dataset.region;
@@ -532,6 +546,7 @@ function renderRegionDetail(){
     const wk=periodChange(m,'week');
     return `<div class="rt-market-line">
       <b>${a.flag} ${esc(a.name)}</b>
+      <span class="rt-market-mini">${miniSpark((m?.bars||[]).slice(-16).map(x=>x.close))}</span>
       <span class="price">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}<small>${Number.isFinite(wk)?'5d '+pct(wk):''}</small></span>
       <span class="chg ${signClass(ch)}">${pct(ch)}</span>
     </div>`;
@@ -647,6 +662,14 @@ function opportunityTrend(r){
   if(/bajista|sell|venta|short/.test(text))return['Bajista','bad'];
   return['Lateral / espera','warn'];
 }
+const TICKER_ALIAS={
+  YPFD:'YPF',PAMP:'PAM',AL30:'AL30',AE38:'AE38',GD30:'GD30',
+  GGAL:'GGAL',VIST:'VIST',TGSU2:'TGSU2',AAPL:'AAPL',NVDA:'NVDA',MELI:'MELI'
+};
+const SECONDARY_TICKER={
+  YPFD:'YPFD',PAMP:'PAMP',AL30:'AL30D',AE38:'AE38D',GD30:'GD30D',
+  GGAL:'GGAL',VIST:'VIST',TGSU2:'TGSU2'
+};
 function oppType(r){
   const t=String(r?.item?.type||'').toLowerCase();
   if(t==='cedear')return'CEDEAR';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Merval';if(t==='crypto')return'Crypto';return t||'Activo';
@@ -695,7 +718,7 @@ function renderOpportunities(){
     const setup=String(r?.status?.label||r?.plan?.label||r?.setup||'Seguimiento').replace(/_/g,' ');
     const comment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||'Lectura técnica disponible al abrir el activo.').replace(/\s+/g,' ').trim();
     return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.type||'auto')}">
-      <td><div class="rt-asset-cell"><b class="ticker">${esc(r.item.symbol)}</b><small>${esc(r.item.label||'')}</small></div></td>
+      <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[r.item.symbol]||r.item.symbol)}</b><small>${esc(SECONDARY_TICKER[r.item.symbol]||r.item.symbol)}</small></div></td>
       <td><span class="rt-type rt-type-${esc(String(r.item.type||'').toLowerCase())}">${esc(oppType(r))}</span></td>
       <td>${Number.isFinite(price)?fmt(price,2):'—'}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
