@@ -193,20 +193,110 @@ async function yahooBatch(url){
   }
   return {source:'Yahoo Finance',updated:new Date().toISOString(),count:items.length,items};
 }
-async function binanceKlines(url){
+function cryptoBaseAsset(symbol){
+  const s=String(symbol||'').replace(/[\/-]/g,'').toUpperCase();
+  for(const q of ['FDUSD','USDT','USDC','BUSD','USD']){
+    if(s.endsWith(q)&&s.length>q.length)return s.slice(0,-q.length);
+  }
+  return s;
+}
+function yahooCryptoSpec(interval){
+  const x=String(interval||'1h').toLowerCase();
+  if(x==='15m')return {interval:'15m',range:'60d',aggregateSeconds:0};
+  if(x==='30m')return {interval:'30m',range:'60d',aggregateSeconds:0};
+  if(x==='4h')return {interval:'1h',range:'6mo',aggregateSeconds:4*3600};
+  if(x==='1d')return {interval:'1d',range:'5y',aggregateSeconds:0};
+  if(x==='1wk')return {interval:'1wk',range:'10y',aggregateSeconds:0};
+  return {interval:'1h',range:'3mo',aggregateSeconds:0};
+}
+function yahooCryptoRows(payload,aggregateSeconds=0){
+  const r=payload?.chart?.result?.[0],q=r?.indicators?.quote?.[0],ts=Array.isArray(r?.timestamp)?r.timestamp:[];
+  if(!r||!q||!ts.length)throw new Error('Yahoo Crypto sin histórico');
+  let bars=[];
+  for(let i=0;i<ts.length;i++){
+    const open=num(q.open?.[i]),high=num(q.high?.[i]),low=num(q.low?.[i]),close=num(q.close?.[i]),volume=num(q.volume?.[i])||0,time=Number(ts[i]);
+    if(!Number.isFinite(time)||[open,high,low,close].some(v=>v===null))continue;
+    bars.push({time,open,high,low,close,volume});
+  }
+  if(aggregateSeconds>0){
+    const groups=new Map();
+    for(const b of bars){
+      const key=Math.floor(b.time/aggregateSeconds)*aggregateSeconds,g=groups.get(key);
+      if(!g)groups.set(key,{time:key,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.volume});
+      else{g.high=Math.max(g.high,b.high);g.low=Math.min(g.low,b.low);g.close=b.close;g.volume+=b.volume}
+    }
+    bars=[...groups.values()].sort((a,b)=>a.time-b.time);
+  }
+  if(bars.length<30)throw new Error('Yahoo Crypto histórico insuficiente');
+  return bars.slice(-1000).map(b=>[b.time*1000,String(b.open),String(b.high),String(b.low),String(b.close),String(b.volume)]);
+}
+async function yahooCryptoKlines(symbol,interval){
+  const base=cryptoBaseAsset(symbol);
+  if(!base)throw new Error('Símbolo crypto inválido');
+  const spec=yahooCryptoSpec(interval),u=new URL('https://radar.local/api/yahoo');
+  u.searchParams.set('symbol',base+'-USD');u.searchParams.set('interval',spec.interval);u.searchParams.set('range',spec.range);
+  return yahooCryptoRows(await yahoo(u),spec.aggregateSeconds);
+}
+async function cryptoKlinesDetailed(url){
   const symbol=(url.searchParams.get('symbol')||'BTCUSDT').replace(/[\/-]/g,'').toUpperCase(),interval=url.searchParams.get('interval')||'1h';
-  return await getJson('https://api.binance.com/api/v3/klines?symbol='+encodeURIComponent(symbol)+'&interval='+encodeURIComponent(interval)+'&limit=1000',{timeout:16000});
+  let primaryError='';
+  try{
+    const rows=await getJson('https://api.binance.com/api/v3/klines?symbol='+encodeURIComponent(symbol)+'&interval='+encodeURIComponent(interval)+'&limit=1000',{timeout:16000});
+    if(!Array.isArray(rows)||rows.length<30)throw new Error('Binance histórico insuficiente');
+    return {rows,source:'Binance Spot',fallback:false};
+  }catch(e){primaryError=String(e?.message||e)}
+  try{
+    const rows=await yahooCryptoKlines(symbol,interval);
+    return {rows,source:'Yahoo Finance Crypto',fallback:true,primaryError};
+  }catch(e){
+    throw new Error('Crypto sin proveedor disponible. Binance: '+primaryError+' | Yahoo: '+String(e?.message||e));
+  }
+}
+async function binanceKlines(url){
+  return (await cryptoKlinesDetailed(url)).rows;
+}
+async function coinGeckoUniverse(url,primaryError=''){
+  const top=Math.max(0,Number(url.searchParams.get('top'))||0),limit=Math.min(100,Math.max(top||60,30));
+  const rows=await getJson('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=volume_desc&per_page='+limit+'&page=1&sparkline=false',{timeout:18000});
+  if(!Array.isArray(rows)||!rows.length)throw new Error('CoinGecko sin universo');
+  const stable=new Set(['USDT','USDC','DAI','FDUSD','TUSD','USDE','PYUSD','USDS','USD1']);
+  const seen=new Set(),items=[];
+  for(const x of rows){
+    const base=String(x?.symbol||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(!base||stable.has(base)||seen.has(base))continue;
+    seen.add(base);
+    items.push({symbol:base+'USDT',baseAsset:base,quoteAsset:'USDT',quoteVolume:Number(x?.total_volume)||0});
+  }
+  const totalAvailable=items.length,cut=top>0?items.slice(0,top):items;
+  return {source:'CoinGecko markets fallback',fallback:true,primaryError,updated:new Date().toISOString(),count:cut.length,totalAvailable,top,items:cut};
+}
+async function yahooCryptoUniverse(url,errors=[]){
+  const top=Math.max(0,Number(url.searchParams.get('top'))||0);
+  const bases=['BTC','ETH','SOL','XRP','BNB','DOGE','ADA','TRX','AVAX','LINK','BCH','LTC','DOT','UNI','NEAR','APT','ATOM','FIL','ETC','ARB','OP'];
+  const symbols=bases.map(x=>x+'-USD'),u=new URL('https://radar.local/api/yahoo-batch');
+  u.searchParams.set('symbols',symbols.join(','));u.searchParams.set('range','5d');u.searchParams.set('interval','1d');
+  const batch=await yahooBatch(u),available=new Set((batch.items||[]).filter(x=>x.ok).map(x=>String(x.symbol||'').replace('-USD','').toUpperCase()));
+  let items=bases.filter(x=>available.has(x)).map((base,i)=>({symbol:base+'USDT',baseAsset:base,quoteAsset:'USDT',quoteVolume:Math.max(1,bases.length-i)}));
+  if(!items.length)throw new Error('Yahoo Crypto sin universo');
+  const totalAvailable=items.length;if(top>0)items=items.slice(0,top);
+  return {source:'Yahoo Finance curated crypto fallback',fallback:true,providerErrors:errors,updated:new Date().toISOString(),count:items.length,totalAvailable,top,items};
 }
 async function binanceUniverse(url){
   const top=Math.max(0,Number(url.searchParams.get('top'))||0);
-  const [ex,tickers]=await Promise.all([
-    getJson('https://api.binance.com/api/v3/exchangeInfo',{timeout:18000}),
-    getJson('https://api.binance.com/api/v3/ticker/24hr',{timeout:18000})
-  ]);
-  const vol=new Map((Array.isArray(tickers)?tickers:[]).map(x=>[x.symbol,Number(x.quoteVolume)||0]));
-  let items=(ex.symbols||[]).filter(x=>x.status==='TRADING'&&x.quoteAsset==='USDT'&&x.isSpotTradingAllowed!==false).map(x=>({symbol:x.symbol,baseAsset:x.baseAsset,quoteAsset:x.quoteAsset,quoteVolume:vol.get(x.symbol)||0})).sort((a,b)=>b.quoteVolume-a.quoteVolume||a.symbol.localeCompare(b.symbol));
-  const totalAvailable=items.length;if(top>0)items=items.slice(0,top);
-  return {source:'Binance Spot exchangeInfo',updated:new Date().toISOString(),count:items.length,totalAvailable,top,items};
+  let primaryError='';
+  try{
+    const [ex,tickers]=await Promise.all([
+      getJson('https://api.binance.com/api/v3/exchangeInfo',{timeout:18000}),
+      getJson('https://api.binance.com/api/v3/ticker/24hr',{timeout:18000})
+    ]);
+    const vol=new Map((Array.isArray(tickers)?tickers:[]).map(x=>[x.symbol,Number(x.quoteVolume)||0]));
+    let items=(ex.symbols||[]).filter(x=>x.status==='TRADING'&&x.quoteAsset==='USDT'&&x.isSpotTradingAllowed!==false).map(x=>({symbol:x.symbol,baseAsset:x.baseAsset,quoteAsset:x.quoteAsset,quoteVolume:vol.get(x.symbol)||0})).sort((a,b)=>b.quoteVolume-a.quoteVolume||a.symbol.localeCompare(b.symbol));
+    const totalAvailable=items.length;if(top>0)items=items.slice(0,top);
+    if(!items.length)throw new Error('Binance universo vacío');
+    return {source:'Binance Spot exchangeInfo',fallback:false,updated:new Date().toISOString(),count:items.length,totalAvailable,top,items};
+  }catch(e){primaryError=String(e?.message||e)}
+  try{return await coinGeckoUniverse(url,primaryError)}
+  catch(e){return await yahooCryptoUniverse(url,[primaryError,String(e?.message||e)])}
 }
 async function bymaEquities(url){
   const mode=url.searchParams.get('mode')||'all';
@@ -462,10 +552,10 @@ async function deepHealth(){
       if(!q.ok||!Array.isArray(q.bars)||q.bars.length<20)throw new Error(q.error||'histórico insuficiente');
       return {bars:q.bars.length,last:q.last};
     }),
-    run('Binance BTC',true,async()=>{
+    run('Crypto BTC',true,async()=>{
       const u=new URL('https://radar.local/api/binance');u.searchParams.set('symbol','BTCUSDT');u.searchParams.set('interval','1h');
-      const rows=await binanceKlines(u);if(!Array.isArray(rows)||rows.length<50)throw new Error('klines insuficientes');
-      return {bars:rows.length};
+      const x=await cryptoKlinesDetailed(u),rows=x.rows;if(!Array.isArray(rows)||rows.length<50)throw new Error('klines insuficientes');
+      return {bars:rows.length,source:x.source,fallback:x.fallback,primaryError:x.fallback?x.primaryError:undefined};
     }),
     run('BYMA acciones',true,async()=>{
       const u=new URL('https://radar.local/api/byma/equities');u.searchParams.set('mode','all');
