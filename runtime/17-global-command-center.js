@@ -65,8 +65,11 @@ const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 
 const MAP_VIEW={w:1200,h:520,minLat:-60,maxLat:85};
 const REGION_VIEWS={
-  northamerica:[0,50,430,300], europe:[450,40,360,235], asia:[620,45,560,300],
-  latam:[180,235,420,285], oceania:[875,285,325,215]
+  northamerica:[130,70,320,220],
+  europe:[515,45,250,195],
+  asia:[790,70,340,240],
+  latam:[290,220,240,300],
+  oceania:[940,280,260,220]
 };
 const MARKET_CITIES={
   northamerica:[['NUEVA YORK',-74.006,40.7128,'sp500'],['TORONTO',-79.3832,43.6532,'sp500']],
