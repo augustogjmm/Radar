@@ -556,7 +556,7 @@ function renderChart(key){
    }
  }
  destroyCharts();
- const common={layout:{background:{type:'solid',color:'#06121d'},textColor:'#9fb5c5'},grid:{vertLines:{color:'#10283a'},horzLines:{color:'#10283a'}},rightPriceScale:{borderColor:'#2f688e',scaleMargins:{top:.08,bottom:.08}},timeScale:{borderColor:'#2f688e',timeVisible:true,secondsVisible:false},crosshair:{mode:0}};
+ const common={localization:{locale:'es-AR'},layout:{background:{type:'solid',color:'#06121d'},textColor:'#9fb5c5'},grid:{vertLines:{color:'#10283a'},horzLines:{color:'#10283a'}},rightPriceScale:{borderColor:'#2f688e',scaleMargins:{top:.08,bottom:.08}},timeScale:{borderColor:'#2f688e',timeVisible:true,secondsVisible:false},crosshair:{mode:0}};
  mainChart=LightweightCharts.createChart($('chart'),{...common,width:Math.max(320,$('chart').clientWidth)});
  const candle=addSeries(mainChart,'CandlestickSeries',{upColor:'#27d17f',downColor:'#ff626e',borderVisible:false,wickUpColor:'#27d17f',wickDownColor:'#ff626e'});
  candle.setData(a.data.map(d=>({time:d.time,open:d.open,high:d.high,low:d.low,close:d.close})));
