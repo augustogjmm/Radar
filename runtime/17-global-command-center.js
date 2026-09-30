@@ -31,12 +31,12 @@ const ASSETS=[
   {id:'wti',symbol:'CL=F',name:'WTI',region:'global',flag:'◉',decimals:2},
   {id:'eem',symbol:'EEM',name:'Emergentes',region:'global',flag:'◈',decimals:2},
 
-  {id:'dax',symbol:'^GDAXI',name:'DAX',region:'europe',flag:'🇩🇪',decimals:1},
+  {id:'dax',symbol:'^GDAXI',name:'DAX',detailName:'DAX (Alemania)',region:'europe',flag:'🇩🇪',decimals:1},
   {id:'ftse',symbol:'^FTSE',name:'FTSE 100',region:'europe',flag:'🇬🇧',decimals:1},
-  {id:'cac',symbol:'^FCHI',name:'CAC 40',region:'europe',flag:'🇫🇷',decimals:1},
+  {id:'cac',symbol:'^FCHI',name:'CAC 40',detailName:'CAC 40 (Francia)',region:'europe',flag:'🇫🇷',decimals:1},
   {id:'stoxx',symbol:'^STOXX',name:'STOXX 600',region:'europe',flag:'🇪🇺',decimals:1},
-  {id:'ibex',symbol:'^IBEX',name:'IBEX 35',region:'europe',flag:'🇪🇸',decimals:1},
-  {id:'ftsemib',symbol:'FTSEMIB.MI',name:'FTSE MIB',region:'europe',flag:'🇮🇹',decimals:1},
+  {id:'ibex',symbol:'^IBEX',name:'IBEX 35',detailName:'IBEX 35 (España)',region:'europe',flag:'🇪🇸',decimals:1},
+  {id:'ftsemib',symbol:'FTSEMIB.MI',name:'FTSE MIB',detailName:'FTSE MIB (Italia)',region:'europe',flag:'🇮🇹',decimals:1},
 
   {id:'nikkei',symbol:'^N225',name:'NIKKEI',region:'asia',flag:'🇯🇵',decimals:1},
   {id:'hangseng',symbol:'^HSI',name:'HANG SENG',region:'asia',flag:'🇭🇰',decimals:1},
@@ -609,7 +609,7 @@ function renderRegionDetail(){
     const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day');
     const wk=periodChange(m,'week');
     return `<div class="rt-market-line">
-      <b>${a.flag} ${esc(a.name)}</b>
+      <b>${a.flag} ${esc(a.detailName||a.name)}</b>
       <span class="price">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}</span>
       <span class="chg ${signClass(ch)}">${pct(ch)}</span>
     </div>`;
