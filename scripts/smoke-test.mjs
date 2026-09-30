@@ -60,7 +60,7 @@ try{
       productResetCss:css.some(x=>x.includes('/styles/07-product-reset.css')),
       historyCss:css.some(x=>x.includes('/styles/08-history-shell.css')),
       deployment:document.querySelector('meta[name="radar-deployment"]')?.content||'',
-      productRoot:document.documentElement.classList.contains('radar-product-reset'),
+      productRoot:document.documentElement.classList.contains('radar-professional-terminal'),
       bodyBg:getComputedStyle(document.body).backgroundColor,
       sidebarWidth:sr?.width||0,
       sidebarRight:sr?.right||0,
@@ -73,7 +73,7 @@ try{
   await assert(design.productCss,'Base product stylesheet no cargó');
   await assert(design.productResetCss,'Product reset stylesheet no cargó');
   await assert(design.historyCss,'Historial stylesheet no cargó');
-  await assert(design.productRoot,'Product reset no se inicializó');
+  await assert(design.productRoot,'Professional terminal UX no se inicializó');
   await assert(design.deployment==='radar-professional-ux-20260930','Deployment marker incorrecto: '+design.deployment);
   await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
   await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
@@ -112,7 +112,9 @@ try{
         advanced:!!advanced,
         advancedOpen:!!advanced?.open,
         marketHasKpis:!!market?.querySelector('.dash-kpis'),
-        heroTitle:hero?.querySelector('h1')?.textContent?.trim()||''
+        heroTitle:hero?.querySelector('h1')?.textContent?.trim()||'',
+        marketCards:market?.querySelectorAll('.dash-kpi').length||0,
+        dailyRows:daily?.querySelectorAll('.daily-radar-item').length||0
       },
       analysisAdvanced:!!document.getElementById('productAnalysisAdvanced'),
       oldWorkspace:!!document.querySelector('script[src*="/workspace/"],link[href*="/workspace/"]')
@@ -125,8 +127,10 @@ try{
   await assert(finalContract.home.hero&&finalContract.home.daily&&finalContract.home.decision,'Inicio perdió portada, Radar de hoy o prioridades');
   await assert(finalContract.home.market&&finalContract.home.marketHasKpis,'Inicio perdió Mercado en cuatro números');
   await assert(finalContract.home.advanced&&!finalContract.home.advancedOpen,'Contexto avanzado debe existir y comenzar plegado');
-  await assert(/atención ahora/i.test(finalContract.home.heroTitle),'Portada no está orientada a decisiones: '+finalContract.home.heroTitle);
+  await assert(/panel de inversión/i.test(finalContract.home.heroTitle),'Inicio no quedó como mesa de trabajo: '+finalContract.home.heroTitle);
+  await assert(finalContract.home.marketCards===4,'Contexto inmediato debe mostrar exactamente 4 métricas de mercado');
   await assert(finalContract.analysisAdvanced,'Análisis avanzado no quedó plegable');
+  await assert(await page.evaluate(()=>!document.documentElement.classList.contains('radar-product-reset')),'Sigue activa la capa visual anterior');
   await assert(!finalContract.oldWorkspace,'La raíz sigue cargando el prototipo /workspace');
   await fs.writeFile('artifacts/final-product-contract.json',JSON.stringify(finalContract,null,2));
   await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
