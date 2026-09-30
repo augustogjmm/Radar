@@ -184,9 +184,14 @@ function insertShell(){
       <input id="rtGlobalSearch" placeholder="Buscar activo, índice o ticker…" autocomplete="off">
     </label>
     <div class="rt-livebox">
-      <span class="rt-head-icon" title="Alertas">♢</span>
-      <span class="rt-head-avatar">RT</span>
-      <div class="rt-dateblock"><small id="rtDateText">—</small><b id="rtClockText">--:--</b><small>(GMT-3)</small></div>
+      <span class="rt-head-icon" title="Alertas" aria-label="Alertas">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+      </span>
+      <span class="rt-head-avatar" aria-label="Perfil">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6"/></svg>
+      </span>
+      <div class="rt-dateblock"><small id="rtDateText">—</small><b>(GMT-3)</b></div>
+      <div class="rt-clockblock"><b id="rtClockText">--:--</b><small>(GMT-3)</small></div>
       <span class="rt-live">En tiempo real</span>
     </div>`;
   document.body.insertAdjacentElement('afterbegin',bar);
