@@ -88,12 +88,18 @@ function markerTone(assetId){
   const ch=assetId?periodChange(get(assetId),'day'):NaN;
   return !Number.isFinite(ch)?'neutral':ch>.03?'up':ch<-.03?'down':'neutral';
 }
+const DETAIL_CITY_LABEL={
+  'NUEVA YORK':'Nueva York','TORONTO':'Toronto','LONDRES':'Londres','FRANKFURT':'Frankfurt','PARÍS':'París',
+  'TOKIO':'Tokio','HONG KONG':'Hong Kong','SHANGHÁI':'Shanghái','SÃO PAULO':'São Paulo','ARGENTINA':'Argentina',
+  'CIUDAD DE MÉXICO':'Ciudad de México','SÍDNEY':'Sídney'
+};
 function marketMarkers(regionOnly=null){
   const entries=regionOnly?[[regionOnly,MARKET_CITIES[regionOnly]||[]]]:Object.entries(MARKET_CITIES);
   return entries.flatMap(([region,cities])=>cities.map(([name,lon,lat,assetId])=>{
     const [cx,cy]=mapXY(lon,lat),tone=markerTone(assetId);
     const special=name==='ARGENTINA'?' argentina':'';
-    return `<g class="rt-market-marker ${tone}${special}" data-marker-region="${region}" data-marker-asset="${assetId||''}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="9" y="-7">${name}</text></g>`;
+    const displayName=regionOnly?(DETAIL_CITY_LABEL[name]||name):name;
+    return `<g class="rt-market-marker ${tone}${special}" data-marker-region="${region}" data-marker-asset="${assetId||''}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="9" y="-7">${displayName}</text></g>`;
   })).join('');
 }
 async function loadWorldMap(){
