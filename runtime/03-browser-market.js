@@ -631,7 +631,7 @@ function renderDashboardChart(k){
 }
 
 function showDashboardView(){
- setInstitutionalView('homeViewBtn','Centro de Mercado','Contexto, inteligencia de mercado y decisiones prioritarias');
+ setInstitutionalView('homeViewBtn','Hoy','Decisiones, cartera y contexto de mercado');
  hideAllMainViews();
  setTechnicalStatusVisible(false);
  $('dashboardView').classList.add('active');
