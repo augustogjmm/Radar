@@ -50,7 +50,7 @@ body.rt-global-shell #dashboardView{
 }
 body.rt-global-shell #dashboardView>#rtGlobalRadar~*,
 body.rt-global-shell #dashboardView>*:not(#rtGlobalRadar){display:none!important}
-body.rt-global-shell #rtGlobalRadar{display:block!important;font-family:"Arial Narrow","Segoe UI",Arial,sans-serif;font-stretch:condensed}
+body.rt-global-shell #rtGlobalRadar{display:block!important;font-family:"Roboto Condensed","Arial Narrow","Segoe UI",Arial,sans-serif;font-stretch:condensed}
 body.rt-global-shell .scanner-view,
 body.rt-global-shell .rf-scanner-view,
 body.rt-global-shell .analysis-view,
