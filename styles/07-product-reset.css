@@ -1,7 +1,8 @@
 /* Radar Técnico G2 · Product reset */
 .radar-product-reset body{background:#071017!important}
 .radar-product-reset .wrap{max-width:1680px!important}
-.radar-product-reset .dashboard-view{display:flex!important;flex-direction:column!important;gap:18px!important}
+.radar-product-reset .dashboard-view{display:none!important}
+.radar-product-reset .dashboard-view.active{display:flex!important;flex-direction:column!important;gap:18px!important}
 .radar-product-reset .product-hidden-legacy-head{display:none!important}
 
 .product-home-hero{
