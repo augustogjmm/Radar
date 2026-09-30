@@ -166,3 +166,38 @@
   .radar-professional-terminal .desk-scan-summary,
   .radar-professional-terminal .desk-portfolio .p360-master-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+/* complete Daily Radar geometry: this shell does not depend on legacy reset selectors */
+.radar-professional-terminal .daily-radar-head{display:flex!important;justify-content:space-between!important;gap:14px!important}
+.radar-professional-terminal .daily-radar-actions{display:flex!important;align-items:center!important;gap:7px!important;flex:0 0 auto!important}
+.radar-professional-terminal .daily-radar-when{font-size:8.5px!important;color:#607785!important;font-variant-numeric:tabular-nums!important}
+.radar-professional-terminal .daily-radar-kpis{display:grid!important}
+.radar-professional-terminal .daily-radar-kpis>div{min-width:0!important;border-right:1px solid var(--desk-line-2)!important}
+.radar-professional-terminal .daily-radar-kpis>div:last-child{border-right:0!important}
+.radar-professional-terminal .daily-radar-kpis small,.radar-professional-terminal .daily-radar-kpis b,.radar-professional-terminal .daily-radar-kpis span{display:block!important}
+.radar-professional-terminal .daily-radar-grid{display:grid!important}
+.radar-professional-terminal .daily-radar-main{border-right:1px solid var(--desk-line-2)!important}
+.radar-professional-terminal .daily-radar-section-head{display:flex!important;align-items:baseline!important;justify-content:space-between!important;gap:8px!important}
+.radar-professional-terminal .daily-radar-section-head h3{margin:0!important;color:#9cafba!important;letter-spacing:.05em!important}
+.radar-professional-terminal .daily-radar-section-head span{font-size:8px!important;color:#5c7380!important}
+.radar-professional-terminal .daily-radar-section-head.portfolio-head{margin-top:9px!important}
+.radar-professional-terminal .daily-radar-list{display:flex!important;flex-direction:column!important;gap:4px!important}
+.radar-professional-terminal .daily-radar-item{width:100%!important;display:grid!important;align-items:center!important;gap:7px!important;text-align:left!important;color:inherit!important}
+.radar-professional-terminal .daily-radar-list.compact .daily-radar-item{grid-template-columns:72px 72px minmax(0,1fr) 42px!important;min-height:40px!important}
+.radar-professional-terminal .daily-radar-item.portfolio{grid-template-columns:68px 72px minmax(0,1fr)!important}
+.radar-professional-terminal .daily-radar-item.portfolio .daily-radar-score{display:none!important}
+.radar-professional-terminal .daily-radar-asset b,.radar-professional-terminal .daily-radar-asset small,
+.radar-professional-terminal .daily-radar-score small,.radar-professional-terminal .daily-radar-score b{display:block!important}
+.radar-professional-terminal .daily-radar-asset small,.radar-professional-terminal .daily-radar-score small{font-size:7.5px!important;color:#5f7683!important}
+.radar-professional-terminal .daily-radar-score{text-align:right!important}
+.radar-professional-terminal .daily-radar-empty{padding:10px!important;border:1px dashed #1b303a!important;border-radius:5px!important;color:#687e8a!important;font-size:9px!important;line-height:1.35!important}
+.radar-professional-terminal .daily-radar-empty.strong{background:#091820!important;color:#8599a5!important}
+
+/* keep the decision panel decision-first; calculator is available on demand */
+.radar-professional-terminal .desk-risk-sizing{margin:8px 0!important;border:1px solid #1b303a!important;border-radius:6px!important;background:#08151c!important}
+.radar-professional-terminal .desk-risk-sizing>summary{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding:8px 9px!important;list-style:none!important;cursor:pointer!important}
+.radar-professional-terminal .desk-risk-sizing>summary::-webkit-details-marker{display:none!important}
+.radar-professional-terminal .desk-risk-sizing>summary b{display:block!important;font-size:9px!important;color:#9fb0ba!important}
+.radar-professional-terminal .desk-risk-sizing>summary small{display:block!important;margin-top:2px!important;font-size:7.5px!important;color:#607784!important}
+.radar-professional-terminal .desk-risk-sizing>summary>span:last-child{font-size:8px!important;color:#79a5bd!important;font-weight:650!important}
+.radar-professional-terminal .desk-risk-sizing-body{padding:8px!important;border-top:1px solid #162a34!important}
+.radar-professional-terminal .desk-risk-sizing .position-panel{margin:0!important}
