@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='1.5.0';
+const VERSION='1.6.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -16,7 +16,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length)return NaN;const m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2};
 
 const state={
-  loading:false,lastUpdate:0,markets:new Map(),selectedRegion:'europe',filter:'all',worldMapLoaded:false,
+  loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),selectedRegion:'europe',filter:'all',worldMapLoaded:false,
   sessionTimer:null,renderTimer:null
 };
 
@@ -282,13 +282,13 @@ function mountDashboard(){
         <div id="rtRegionList" class="rt-detail-list"></div>
       </div>
       <div class="rt-detail-chart">
-        <div class="rt-detail-chart-head"><span id="rtDetailChartName">Índice regional · últimas ruedas</span><b id="rtRegionLastValue">—</b></div>
+        <div class="rt-detail-chart-head"><span id="rtDetailChartName">Índice regional · última sesión</span><b id="rtRegionLastValue">—</b></div>
         <svg viewBox="0 0 520 94" preserveAspectRatio="none">
           <defs><linearGradient id="rtAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#27d77e" stop-opacity=".30"/><stop offset="100%" stop-color="#27d77e" stop-opacity="0"/></linearGradient></defs>
           <g class="rt-chart-grid"><path d="M7 18H513M7 42H513M7 66H513"/><path d="M104 8V80M208 8V80M312 8V80M416 8V80"/></g>
           <path id="rtRegionArea" class="area" d=""/><path id="rtRegionSpark" d=""/>
         </svg>
-        <div class="rt-detail-axis"><span>10:00</span><span>14:00</span><span>18:00</span><span>02:00</span><span>06:00</span><span>10:00</span></div>
+        <div id="rtDetailAxis" class="rt-detail-axis"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>
       </div>
     </section>
     </div>
@@ -419,15 +419,28 @@ function renderSession(date){
 
 async function fetchBatch(force=false){
   const symbols=[...new Set(ASSETS.map(x=>x.symbol))];
+  const intradaySymbols=[...new Set(Object.values(REGIONS).map(r=>ASSET_BY_ID[r.focus]?.symbol).filter(Boolean))];
   const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
   try{
-    const url=`/api/yahoo-batch?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d&fresh=${force?'1':'0'}&_=${Date.now()}`;
-    const r=await fetch(url,{cache:'no-store',signal:ctrl.signal});
-    if(!r.ok)throw new Error(`Mercado HTTP ${r.status}`);
-    const j=await r.json();
+    const stamp=Date.now(),fresh=force?'1':'0';
+    const dailyUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d&fresh=${fresh}&_=${stamp}`;
+    const intraUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(intradaySymbols.join(','))}&range=5d&interval=15m&fresh=${fresh}&_=${stamp}`;
+    const [dailyRes,intraRes]=await Promise.all([
+      fetch(dailyUrl,{cache:'no-store',signal:ctrl.signal}),
+      fetch(intraUrl,{cache:'no-store',signal:ctrl.signal}).catch(()=>null)
+    ]);
+    if(!dailyRes.ok)throw new Error(`Mercado HTTP ${dailyRes.status}`);
+    const j=await dailyRes.json();
     for(const x of (j.items||[])){
       const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
       state.markets.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),bars,source:x.source||j.source||'Yahoo Finance',time:num(x.time),error:x.error||''});
+    }
+    if(intraRes?.ok){
+      const intraday=await intraRes.json();
+      for(const x of (intraday.items||[])){
+        const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
+        if(bars.length>2)state.intraday.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),bars,source:x.source||intraday.source||'Yahoo Finance'});
+      }
     }
   }finally{clearTimeout(tm)}
 }
@@ -515,6 +528,27 @@ function normalizedSeries(item,maxBars=40){
   const base=num(bars[0]?.close);
   return Number.isFinite(base)&&base!==0?bars.map(b=>((num(b.close)/base)-1)*100).filter(Number.isFinite):[];
 }
+function intradaySeries(key){
+  const region=REGIONS[key],asset=ASSET_BY_ID[region?.focus],item=asset?state.intraday.get(asset.symbol):null;
+  const bars=(item?.bars||[]).slice(-40);
+  if(bars.length<3)return null;
+  const base=num(bars[0].close);
+  if(!Number.isFinite(base)||base===0)return null;
+  return {values:bars.map(b=>((b.close/base)-1)*100),bars,item};
+}
+function formatChartTime(ts){
+  if(!Number.isFinite(num(ts)))return'—';
+  return new Date(num(ts)*1000).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
+}
+function renderDetailAxis(bars){
+  const root=$('rtDetailAxis');if(!root)return;
+  const spans=[...root.children];
+  if(!bars?.length){spans.forEach(x=>x.textContent='—');return}
+  spans.forEach((el,i)=>{
+    const idx=Math.round(i*(bars.length-1)/Math.max(1,spans.length-1));
+    el.textContent=formatChartTime(bars[idx]?.time);
+  });
+}
 function regionSeries(key){
   const region=REGIONS[key];
   const focus=region?.focus?get(region.focus):null;
@@ -554,12 +588,14 @@ function renderRegionDetail(){
     </div>`;
   });
   $('rtRegionList').innerHTML=rows.join('');
-  const values=regionSeries(key),d=svgLine(values,520,94,8);$('rtRegionSpark').setAttribute('d',d);
+  const focusAsset=ASSET_BY_ID[region.focus],intra=intradaySeries(key);
+  const values=intra?.values?.length?intra.values:regionSeries(key);
+  const d=svgLine(values,520,94,8);$('rtRegionSpark').setAttribute('d',d);
   const last=regionChange(key,'day');
   $('rtRegionLastValue').textContent=pct(last);
   $('rtRegionLastValue').className=signClass(last);
-  const focusAsset=ASSET_BY_ID[region.focus];
-  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · evolución reciente`;
+  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · ${intra?'última sesión':'evolución reciente'}`;
+  renderDetailAxis(intra?.bars||[]);
   if(d){const area=`${d} L512,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
 }
 
