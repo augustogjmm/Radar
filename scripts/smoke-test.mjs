@@ -130,7 +130,7 @@ try{
   await assert(/panel de inversión/i.test(finalContract.home.heroTitle),'Inicio no quedó como mesa de trabajo: '+finalContract.home.heroTitle);
   await assert(finalContract.home.marketCards===4,'Contexto inmediato debe mostrar exactamente 4 métricas de mercado');
   await assert(finalContract.analysisAdvanced,'Análisis avanzado no quedó plegable');
-  await assert(!document.documentElement.classList.contains('radar-product-reset'),'Sigue activa la capa visual anterior');
+  await assert(await page.evaluate(()=>!document.documentElement.classList.contains('radar-product-reset')),'Sigue activa la capa visual anterior');
   await assert(!finalContract.oldWorkspace,'La raíz sigue cargando el prototipo /workspace');
   await fs.writeFile('artifacts/final-product-contract.json',JSON.stringify(finalContract,null,2));
   await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
