@@ -946,7 +946,7 @@ const HELP_CENTER_HTML=`<div id="helpOverlay" class="help-overlay" aria-hidden="
           <div class="help-card"><h4>Producto</h4><p>Análisis técnico multi-timeframe, scanners RV/RF, Watchlist, Cartera 360, Inteligencia de Riesgo, performance, Stress Test, historial, auditoría, Replay, Backtest y Model Validation.</p></div>
           <div class="help-card"><h4>Desarrollado por</h4><p><b>Augusto García Juárez Matorras</b>.</p></div>
           <div class="help-card"><h4>Contacto</h4><p><a href="mailto:augustogjm@gmail.com">augustogjm@gmail.com</a></p></div>
-          <div class="help-card"><h4>Versión</h4><p>Radar Técnico G2 v4.39.0 · Consola de Asesor y Mercados.</p></div>
+          <div class="help-card"><h4>Versión</h4><p>Radar Técnico · Análisis, decisiones y cartera.</p></div>
         </div>
         <div class="help-callout blue"><b>Arquitectura:</b> aplicación local, uso de fuentes de datos reales según disponibilidad y sin ejecución automática de órdenes.</div>
         <div class="help-callout amber"><b>Aviso:</b> Radar Técnico es una herramienta de análisis y apoyo a la decisión. No constituye asesoramiento financiero ni reemplaza el criterio del usuario.</div>
