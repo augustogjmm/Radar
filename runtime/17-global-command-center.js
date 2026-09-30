@@ -245,7 +245,7 @@ function mountDashboard(){
         <span class="rt-session-dot"></span>
         <div class="rt-session-count"><small>Cierra en</small><b id="rtSessionCountdown">--:--:--</b></div>
       </div>
-      <div id="rtNextSessions" class="rt-next-sessions"></div>
+      <div id="rtNextSessions" class="rt-next-sessions"><b>Próximas sesiones:</b><div id="rtNextSessionRows"></div></div>
       <div class="rt-world-wrap">
         <div id="rtWorldMapHost" class="rt-world-map rt-world-map-host" aria-label="Mapa mundial interactivo">
           <div class="rt-map-loading"><span></span><b>Cargando cartografía de mercado…</b></div>
@@ -267,9 +267,12 @@ function mountDashboard(){
 
     <div class="rt-middle-stack">
     <section class="rt-card rt-risk-card">
-      <div class="rt-risk-card-title"><span>Riesgo Global</span><b id="rtRiskLabel">CALCULANDO</b></div>
-      <div class="rt-risk-card-body">
+      <div class="rt-risk-card-left">
+        <span>Riesgo Global</span>
         <div class="rt-risk-gauge"><span class="zone low"></span><span class="zone mid"></span><span class="zone high"></span><i id="rtRiskNeedle" style="left:50%"></i></div>
+      </div>
+      <div class="rt-risk-card-right">
+        <b id="rtRiskLabel">CALCULANDO</b>
         <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><span id="rtRiskMove">MOVE —</span><span id="rtRiskTnx">US10Y —</span></div>
       </div>
     </section>
@@ -283,6 +286,7 @@ function mountDashboard(){
       </div>
       <div class="rt-detail-chart">
         <div class="rt-detail-chart-head"><span id="rtDetailChartName">Índice regional · última sesión</span><b id="rtRegionLastValue">—</b></div>
+        <div id="rtDetailYAxis" class="rt-detail-yaxis"><span>—</span><span>—</span></div>
         <svg viewBox="0 0 520 94" preserveAspectRatio="none">
           <defs><linearGradient id="rtAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#27d77e" stop-opacity=".30"/><stop offset="100%" stop-color="#27d77e" stop-opacity="0"/></linearGradient></defs>
           <g class="rt-chart-grid"><path d="M7 18H513M7 42H513M7 66H513"/><path d="M104 8V80M208 8V80M312 8V80M416 8V80"/></g>
