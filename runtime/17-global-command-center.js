@@ -240,7 +240,7 @@ function mountDashboard(){
   root.innerHTML=`
   <div class="rt-main-grid">
     <section class="rt-card rt-world-card">
-      <div class="rt-map-head"><h2>Mapa de Sentimiento Global</h2><p>Rendimiento regional · última rueda disponible</p></div>
+      <div class="rt-map-head"><h2>Mapa de Sentimiento Global</h2><p>Rendimiento regional (últimas 24 hs)</p></div>
       <div class="rt-session-box">
         <div id="rtSessionFlag" class="rt-session-flag">🇺🇸</div>
         <div class="rt-session-copy"><small>Sesión activa</small><b id="rtSessionName">Calculando…</b></div>
@@ -275,7 +275,7 @@ function mountDashboard(){
       </div>
       <div class="rt-risk-card-right">
         <b id="rtRiskLabel">CALCULANDO</b>
-        <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><span id="rtRiskMove">MOVE —</span><span id="rtRiskTnx">US10Y —</span></div>
+        <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><i></i><span id="rtRiskMove">MOVE —</span><span id="rtRiskTnx" hidden>US10Y —</span></div>
       </div>
     </section>
     <section id="rtRegionDetail" class="rt-card rt-detail-card">
@@ -606,7 +606,7 @@ function renderRegionDetail(){
   const last=regionChange(key,'day');
   $('rtRegionLastValue').textContent=pct(last);
   $('rtRegionLastValue').className=signClass(last);
-  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · ${intra?'última sesión':'evolución reciente'}`;
+  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · Últimas 24 hs`;
   renderDetailAxis(intra?.bars||[]);
   renderDetailYAxis(values,focusAsset?.decimals??1);
   if(d){const area=`${d} L512,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
@@ -636,9 +636,9 @@ function scoreArgentina(period){
   return used?score/used:0;
 }
 function trafficState(score){
-  if(score>.2)return{key:'positive',label:'POSITIVO',copy:'Contexto combinado favorable para riesgo argentino.'};
-  if(score<-.2)return{key:'negative',label:'NEGATIVO',copy:'Contexto combinado exige mayor cautela y selectividad.'};
-  return{key:'neutral',label:'NEUTRAL',copy:'Señales mixtas; conviene esperar confirmaciones.'};
+  if(score>.2)return{key:'positive',label:'POSITIVO',copy:'Mejora en bonos y flujo de capitales.'};
+  if(score<-.2)return{key:'negative',label:'NEGATIVO',copy:'Mayor aversión al riesgo y presión local.'};
+  return{key:'neutral',label:'NEUTRAL',copy:'Lateral, con volatilidad.'};
 }
 function trafficDrivers(period){
   const raw=[
@@ -652,14 +652,8 @@ function trafficDrivers(period){
   return raw.map(v=>({v,h:clamp(22+Math.abs(v)/max*48,22,70)}));
 }
 function trafficNarrative(period,s){
-  const m=periodChange(get('merval'),period),em=periodChange(get('eem'),period),v=periodChange(get('vix'),period),rp=localRiskChange(period);
-  const favorable=[],adverse=[];
-  if(Number.isFinite(m))(m>=0?favorable:adverse).push('mercado local');
-  if(Number.isFinite(em))(em>=0?favorable:adverse).push('emergentes');
-  if(Number.isFinite(v))(v<=0?favorable:adverse).push('volatilidad');
-  if(Number.isFinite(rp))(rp<=0?favorable:adverse).push('riesgo país');
-  const lead=s.key==='positive'?favorable:s.key==='negative'?adverse:[...favorable,...adverse];
-  return lead.length?`${s.copy} Drivers: ${lead.slice(0,2).join(' + ')}.`:s.copy;
+  if(period==='month'&&s.key==='positive')return'Tendencia alcista si se sostienen las señales.';
+  return s.copy;
 }
 function renderTraffic(){
   const defs=[['Hoy','day'],['Semana','week'],['Mes','month']];
@@ -698,12 +692,12 @@ function renderSignals(){
   const inflationPressure=(Number.isFinite(oil)?oil:0)+(Number.isFinite(yieldCh)?yieldCh*.5:0);
   const emergingRisk=(Number.isFinite(vixCh)?vixCh:0)+(Number.isFinite(yieldCh)?yieldCh:0)-(Number.isFinite(eemCh)?eemCh:0);
   $('rtSignalList').innerHTML=[
-    signalRow('rates','Bonos de EE.UU. (Tasas)',Number.isFinite(tnx?.last)?`${fmt(tnx.last,2)}%`:'—',yieldCh,'upbad','Tasas al alza endurecen condiciones financieras.'),
-    signalRow('vix','VIX (volatilidad)',Number.isFinite(vix?.last)?fmt(vix.last,1):'—',vixCh,'upbad','Más volatilidad implica mayor aversión al riesgo.'),
-    signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?`USD ${fmt(wti.last,2)}`:'—',oil,'upbad','Subas fuertes pueden sumar presión inflacionaria global.'),
-    signalRow('dollar','Dólar / DXY',Number.isFinite(dxy?.last)?fmt(dxy.last,2):'—',dxyCh,'upbad','Dólar fuerte suele presionar activos emergentes.'),
-    signalRow('globe','Inflación global','Derivada',inflationPressure,'upbad','Lectura combinada de energía y tasas; no es IPC oficial.'),
-    signalRow('risk','Riesgo para emergentes','Compuesto',emergingRisk,'upbad','Cruce de VIX, tasas y desempeño de EEM.')
+    signalRow('rates','Bonos de EE.UU. (Tasas)',Number.isFinite(tnx?.last)?`${fmt(tnx.last,2)}%`:'—',yieldCh,'upbad','Presión bajista para emergentes'),
+    signalRow('vix','VIX (volatilidad)',Number.isFinite(vix?.last)?fmt(vix.last,1):'—',vixCh,'upbad','Más aversión al riesgo'),
+    signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'—',oil,'upbad','Presión inflacionaria'),
+    signalRow('dollar','Dólar / DXY',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'—',dxyCh,'upbad','Dólar fuerte, más presión local'),
+    signalRow('globe','Inflación global','Derivada',inflationPressure,'upbad','Presión alcista'),
+    signalRow('risk','Riesgo para emergentes','Compuesto',emergingRisk,'upbad','Salida de capitales, mayor volatilidad')
   ].join('');
 }
 
