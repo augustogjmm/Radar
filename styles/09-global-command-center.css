@@ -85,7 +85,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-brand-copy small{font-size:10px;line-height:1.2;letter-spacing:.05em;color:#9bb0c0;margin-top:5px;white-space:nowrap}
 .rt-nav{display:flex;align-items:center;justify-content:center;gap:3px;min-width:0}
 .rt-nav button{
-  border:0;background:transparent;color:#adbecb;padding:10px 11px;border-radius:5px;
+  height:36px;border:0;background:transparent;color:#adbecb;padding:0 14px;border-radius:5px;
   font:650 11px/1 inherit;white-space:nowrap;cursor:pointer;transition:.16s ease
 }
 .rt-nav button:hover{color:#fff;background:#0a1e2e}
