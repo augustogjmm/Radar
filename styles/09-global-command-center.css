@@ -238,7 +238,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   display:grid;gap:7px;border:1px solid #25516a;border-radius:6px;
   background:rgba(3,14,22,.92);box-shadow:0 10px 25px rgba(0,0,0,.38)
 }
-.rt-legend-line{display:flex;align-items:center;gap:8px;min-height:18px;font-size:11px;color:#c0cdd5}.rt-legend-line i{width:13px;height:13px;border-radius:50%;flex:0 0 13px}
+.rt-legend-line{display:flex;align-items:center;gap:8px;min-height:19px;font-size:11px;color:#c0cdd5}.rt-legend-line i{width:13px;height:13px;border-radius:50%;flex:0 0 13px}
 .rt-map-legend .s1,.rt-legend-panel .s1{background:#18df78}.rt-map-legend .s2,.rt-legend-panel .s2{background:#60d692}.rt-map-legend .s3,.rt-legend-panel .s3{background:#91a3af}.rt-map-legend .s4,.rt-legend-panel .s4{background:#f36d4e}.rt-map-legend .s5,.rt-legend-panel .s5{background:#ff4054}
 
 /* Middle top column: risk + region */
