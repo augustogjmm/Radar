@@ -1,10 +1,18 @@
 <svg id="rtWorldGeoSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" preserveAspectRatio="none" role="img" aria-label="Mapa mundial de mercados">
 <defs>
   <filter id="nightSoft" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".15"/></filter>
+  <filter id="terrainGray" x="-5%" y="-5%" width="110%" height="110%">
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer>
+      <feFuncR type="linear" slope=".78" intercept=".02"/>
+      <feFuncG type="linear" slope=".88" intercept=".02"/>
+      <feFuncB type="linear" slope="1.02" intercept=".03"/>
+    </feComponentTransfer>
+  </filter>
   <filter id="cityGlow" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <linearGradient id="nightShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#02101d" stop-opacity=".12"/><stop offset="58%" stop-color="#00101c" stop-opacity=".05"/><stop offset="100%" stop-color="#000913" stop-opacity=".30"/></linearGradient>
 </defs>
-<image href="https://svs.gsfc.nasa.gov/vis/a000000/a002900/a002915/bluemarble-1024.png" x="0" y="-17.9" width="1200" height="645.5" preserveAspectRatio="none" opacity=".72"/>
+<image href="https://svs.gsfc.nasa.gov/vis/a000000/a002900/a002915/bluemarble-1024.png" x="0" y="-17.9" width="1200" height="645.5" preserveAspectRatio="none" opacity=".76" filter="url(#terrainGray)"/>
 <rect width="1200" height="520" fill="#020b16" opacity=".54"/>
 <image href="https://svs.gsfc.nasa.gov/vis/a000000/a002900/a002916/earthatnight-2048.png" x="0" y="-17.9" width="1200" height="645.5" preserveAspectRatio="none" opacity=".78" style="mix-blend-mode:screen" filter="url(#nightSoft)"/>
 <rect width="1200" height="520" fill="url(#nightShade)"/>
