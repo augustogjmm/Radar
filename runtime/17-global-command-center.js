@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.2.0';
+const VERSION='2.3.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -528,7 +528,10 @@ function renderWatch(){
     return `<div class="rt-watch-row"><span class="rt-watch-symbol"><i>${a.flag}</i><b>${esc(a.name)}</b></span><span class="wv">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}</span><span class="wc ${signClass(ch)}">${pct(ch)}</span></div>`;
   });
   const risk=window.RadarDashboardData?.risk||{};
-  const riskValue=num(risk.value),riskPrev=num(risk.previous),riskPct=Number.isFinite(riskValue)&&Number.isFinite(riskPrev)&&riskPrev!==0?(riskValue/riskPrev-1)*100:NaN;
+  const riskValue=num(risk.value);
+  const hist=(risk.history||[]).map(x=>num(x.value)).filter(Number.isFinite);
+  const riskPrev=Number.isFinite(num(risk.previous))?num(risk.previous):(hist.length>1?hist.at(-2):NaN);
+  const riskPct=Number.isFinite(riskValue)&&Number.isFinite(riskPrev)&&riskPrev!==0?(riskValue/riskPrev-1)*100:NaN;
   rows.push(`<div class="rt-watch-row"><span class="rt-watch-symbol"><i>🇦🇷</i><b>RIESGO PAÍS</b></span><span class="wv">${Number.isFinite(riskValue)?fmt(riskValue,0):'—'}</span><span class="wc ${Number.isFinite(riskPct)?(riskPct<0?'rt-up':riskPct>0?'rt-down':'rt-flat'):'rt-flat'}">${pct(riskPct)}</span></div>`);
   $('rtWatchList').innerHTML=rows.join('');
 }
@@ -699,26 +702,33 @@ const SIGNAL_ICONS={
   globe:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18"/></svg>',
   risk:'<svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg>'
 };
-function signalRow(icon,name,value,change,polarity,note){
+function signalRow(icon,name,value,change,polarity,note,override=null){
   const c=num(change);let stateKey='warn',label='NEUTRAL',arrow='•';
   if(Number.isFinite(c)&&Math.abs(c)>.03){
     const adverse=(c>0&&polarity==='upbad')||(c<0&&polarity==='downbad');
     stateKey=adverse?'bad':'good';label=c>0?'ALZA':'BAJA';arrow=c>0?'↑':'↓';
   }
-  return `<div class="rt-signal-row"><span class="rt-signal-icon">${SIGNAL_ICONS[icon]||''}</span><b>${esc(name)}</b><span class="rt-signal-arrow ${signClass(c)}">${arrow}</span><span class="rt-signal-value">${value}</span><span class="rt-signal-state ${stateKey}">${label}</span><span class="rt-signal-note">${esc(note)}</span></div>`;
+  if(override){
+    if(override.label)label=override.label;
+    if(override.kind)stateKey=override.kind;
+    if(override.arrow!==undefined)arrow=override.arrow;
+  }
+  return `<div class="rt-signal-row"><span class="rt-signal-icon">${SIGNAL_ICONS[icon]||''}</span><b>${esc(name)}</b><span class="rt-signal-arrow ${signClass(c)}">${arrow}</span><span class="rt-signal-value">${value||''}</span><span class="rt-signal-state ${stateKey}">${label}</span><span class="rt-signal-note">${esc(note)}</span></div>`;
 }
 function renderSignals(){
   const tnx=get('tnx'),vix=get('vix'),wti=get('wti'),dxy=get('dxy'),eem=get('eem');
   const oil=periodChange(wti,'day'),yieldCh=periodChange(tnx,'day'),vixCh=periodChange(vix,'day'),dxyCh=periodChange(dxy,'day'),eemCh=periodChange(eem,'day');
   const inflationPressure=(Number.isFinite(oil)?oil:0)+(Number.isFinite(yieldCh)?yieldCh*.5:0);
   const emergingRisk=(Number.isFinite(vixCh)?vixCh:0)+(Number.isFinite(yieldCh)?yieldCh:0)-(Number.isFinite(eemCh)?eemCh:0);
+  const infState=inflationPressure>.2?{label:'ALZA',kind:'bad',arrow:'♨'}:inflationPressure<-.2?{label:'BAJA',kind:'good',arrow:'↓'}:{label:'NEUTRAL',kind:'warn',arrow:'•'};
+  const emState=emergingRisk>1?{label:'ALTO',kind:'bad',arrow:'↘'}:emergingRisk<-.5?{label:'BAJO',kind:'good',arrow:'↗'}:{label:'MODERADO',kind:'warn',arrow:'•'};
   $('rtSignalList').innerHTML=[
     signalRow('rates','Bonos de EE.UU. (Tasas)',Number.isFinite(tnx?.last)?`${fmt(tnx.last,2)}%`:'—',yieldCh,'upbad','Presión bajista para emergentes'),
     signalRow('vix','VIX (volatilidad)',Number.isFinite(vix?.last)?fmt(vix.last,1):'—',vixCh,'upbad','Más aversión al riesgo'),
     signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'—',oil,'upbad','Presión inflacionaria'),
     signalRow('dollar','Dólar / DXY',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'—',dxyCh,'upbad','Dólar fuerte, más presión local'),
-    signalRow('globe','Inflación global','Derivada',inflationPressure,'upbad','Presión alcista'),
-    signalRow('risk','Riesgo para emergentes','Compuesto',emergingRisk,'upbad','Salida de capitales, mayor volatilidad')
+    signalRow('globe','Inflación global','Presión',inflationPressure,'upbad','Presión alcista',infState),
+    signalRow('risk','Riesgo para emergentes','',emergingRisk,'upbad','Salida de capitales, mayor volatilidad',emState)
   ].join('');
 }
 
