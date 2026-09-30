@@ -319,7 +319,7 @@ function mountDashboard(){
           <g class="rt-chart-grid"><path d="M7 18H513M7 42H513M7 66H513"/><path d="M104 8V80M208 8V80M312 8V80M416 8V80"/></g>
           <path id="rtRegionArea" class="area" d=""/><path id="rtRegionSpark" d=""/>
         </svg>
-        <div id="rtDetailAxis" class="rt-detail-axis"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>
+        <div id="rtDetailAxis" class="rt-detail-axis"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>
       </div>
     </section>
     </div>
