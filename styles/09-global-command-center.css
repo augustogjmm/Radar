@@ -66,7 +66,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   grid-template-columns:410px minmax(530px,1fr) 210px 420px;
   align-items:center;
   gap:12px;
-  padding:0 18px;
+  padding:0 12px 0 18px;
   position:sticky;top:0;z-index:1200;
   background:linear-gradient(180deg,rgba(2,13,23,.99),rgba(2,10,18,.985));
   border-bottom:1px solid #17394e;
@@ -102,14 +102,14 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-header-search input::placeholder{color:#6d8799}
 .rt-livebox{display:flex;align-items:center;justify-content:flex-end;gap:0;height:44px}
 .rt-head-icon,.rt-head-avatar,.rt-dateblock,.rt-clockblock,.rt-live{border-left:1px solid #183346}
-.rt-head-icon{width:45px;height:36px;display:grid;place-items:center;color:#b5c8d5;background:transparent}
+.rt-head-icon{width:47px;height:36px;display:grid;place-items:center;color:#b5c8d5;background:transparent}
 .rt-head-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.rt-head-avatar{width:54px;height:36px;display:grid;place-items:center;color:#d9e7f0;background:transparent}
+.rt-head-avatar{width:82px;height:36px;position:relative;display:grid;place-items:center;color:#d9e7f0;background:transparent}
 .rt-head-avatar svg{width:28px;height:28px;padding:4px;border-radius:50%;fill:#8c6ba7;stroke:#e7d7ef;stroke-width:1.2;background:linear-gradient(145deg,#5b4768,#2d2337)}
-.rt-dateblock{width:116px;height:36px;padding:3px 12px 0;text-align:left;line-height:1.15}
+.rt-dateblock{width:132px;height:36px;padding:3px 12px 0;text-align:left;line-height:1.15}
 .rt-dateblock small{display:block;color:#9cafbd;font-size:8px;white-space:nowrap}
 .rt-dateblock b{display:block;margin-top:4px;color:#d5e1e9;font-size:8px;font-weight:700}
-.rt-clockblock{width:86px;height:36px;padding:0 10px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.rt-clockblock{width:95px;height:36px;padding:0 10px;text-align:center;display:flex;flex-direction:column;justify-content:center}
 .rt-clockblock b{display:block;color:#7ad3ff;font-size:18px;line-height:1;font-weight:820;font-variant-numeric:tabular-nums}
 .rt-clockblock small{display:block;margin-top:3px;color:#688293;font-size:6px}
 .rt-live{height:36px;padding-left:10px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:800;color:var(--rt-green);white-space:nowrap}
@@ -363,3 +363,6 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-watch-card{z-index:2}
 .rt-session-box,.rt-next-sessions{isolation:isolate}
 .rt-main-grid{isolation:isolate}
+
+.rt-head-avatar:after{content:"–";position:absolute;right:11px;top:50%;transform:translateY(-52%);color:#688395;font-size:12px;font-weight:700}
+.rt-live{flex:1;min-width:64px}
