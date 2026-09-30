@@ -152,6 +152,14 @@ function apply(){
   document.documentElement.classList.add('radar-product-final');
   setNavCopy();
   mountSignalsWorkspace();
+  const signalsNav=$('signalsViewBtn');
+  if(signalsNav&&!signalsNav.dataset.productBound){
+    signalsNav.dataset.productBound='1';
+    signalsNav.addEventListener('click',()=>{
+      if(typeof window.showSignalsView==='function')window.showSignalsView();
+      else if(typeof showSignalsView==='function')showSignalsView();
+    });
+  }
   foldMarketContext();
   normalizeHome();
   removeRedundantBackButtons();
