@@ -63,10 +63,10 @@ const COUNTRY_MARKET={
 
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 
-const MAP_VIEW={w:1200,h:600,minLat:-90,maxLat:90};
+const MAP_VIEW={w:1200,h:520,minLat:-60,maxLat:85};
 const REGION_VIEWS={
-  northamerica:[0,72,430,330], europe:[455,68,355,250], asia:[620,62,560,325],
-  latam:[190,250,410,330], oceania:[885,320,315,225]
+  northamerica:[0,50,430,300], europe:[450,40,360,235], asia:[620,45,560,300],
+  latam:[180,235,420,285], oceania:[875,285,325,215]
 };
 const MARKET_CITIES={
   northamerica:[['NUEVA YORK',-74.006,40.7128,'sp500'],['TORONTO',-79.3832,43.6532,'sp500']],
@@ -96,7 +96,7 @@ function marketMarkers(regionOnly=null){
 async function loadWorldMap(){
   if(state.worldMapLoaded)return;
   try{
-    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc8',{cache:'force-cache'});
+    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc9',{cache:'force-cache'});
     if(!r.ok)throw new Error(`Mapa HTTP ${r.status}`);
     const svgText=await r.text();
     const host=$('rtWorldMapHost');
@@ -148,6 +148,7 @@ function renderDetailGeo(key){
   clone.removeAttribute('id');
   clone.classList.add('rt-detail-geo-svg');
   clone.setAttribute('viewBox',(REGION_VIEWS[key]||REGION_VIEWS.europe).join(' '));
+  clone.setAttribute('preserveAspectRatio','xMidYMid slice');
   clone.querySelectorAll('.rt-country').forEach(p=>{
     const match=p.dataset.region===key;
     p.classList.toggle('rt-detail-focus',match);
