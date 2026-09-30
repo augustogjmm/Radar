@@ -2,7 +2,7 @@ name: Radar Core Smoke
 
 on:
   push:
-    branches: [main, v8-core-rescue]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
