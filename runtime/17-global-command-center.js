@@ -348,7 +348,7 @@ function mountDashboard(){
         <div class="rt-source-panel">
           <b>Fuentes y mercado</b>
           <p><span class="rt-status-dot"></span>Datos de mercado actualizados desde las fuentes conectadas de Radar.</p>
-          <small>Índices, bonos, tasas, commodities y activos locales pueden tener distinto nivel de demora según origen.</small>
+          <small>Índices, bonos, tasas, commodities y activos locales pueden tener distinto nivel de demora según origen. Mapa base: NASA/NOAA Earth at Night.</small>
         </div>
       </aside>
     </div>
