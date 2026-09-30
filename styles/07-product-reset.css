@@ -201,3 +201,40 @@
 .radar-professional-terminal .desk-risk-sizing>summary>span:last-child{font-size:8px!important;color:#79a5bd!important;font-weight:650!important}
 .radar-professional-terminal .desk-risk-sizing-body{padding:8px!important;border-top:1px solid #162a34!important}
 .radar-professional-terminal .desk-risk-sizing .position-panel{margin:0!important}
+
+/* fixed income: filters -> essential context -> ranking table */
+.radar-professional-terminal .desk-rf-context{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:5px!important;
+  margin:0 0 7px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.radar-professional-terminal .desk-rf-context .rf-context-card{
+  min-height:58px!important;
+  padding:8px 9px!important;
+  border:1px solid #172a34!important;
+  border-radius:6px!important;
+  background:#0a171f!important;
+}
+.radar-professional-terminal .desk-rf-context .rf-context-card:nth-child(4),
+.radar-professional-terminal .desk-rf-context .rf-context-card:nth-child(7),
+.radar-professional-terminal .desk-rf-context .rf-context-card:nth-child(8){display:none!important}
+.radar-professional-terminal .desk-rf-context .rf-context-card small{font-size:7.5px!important}
+.radar-professional-terminal .desk-rf-context .rf-context-card b{font-size:13px!important;line-height:1.15!important}
+.radar-professional-terminal .desk-rf-context .rf-context-card span{font-size:7.5px!important;line-height:1.25!important}
+.radar-professional-terminal .desk-rf-summary{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:5px!important;
+  margin:0 0 7px!important;
+}
+.radar-professional-terminal .desk-rf-summary .metric{min-height:48px!important;padding:7px 9px!important;border:1px solid #172a34!important;border-radius:6px!important;background:#0a171f!important}
+.radar-professional-terminal .desk-rf-summary .metric:nth-child(5){display:none!important}
+.radar-professional-terminal .desk-rf-summary small{font-size:7.5px!important}
+.radar-professional-terminal .desk-rf-summary b{font-size:13px!important}
+@media(max-width:1100px){
+  .radar-professional-terminal .desk-rf-context{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
