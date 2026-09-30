@@ -250,7 +250,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   padding:8px 12px;border-color:#234a61
 }
 .rt-risk-card-left>span{display:block;color:#b5c6d1;font-size:8px;margin-bottom:6px}
-.rt-risk-gauge{height:14px;max-width:195px;position:relative;border-radius:12px;background:linear-gradient(90deg,#16dd78 0%,#83d64f 38%,#ffd13c 66%,#bb741a 100%);border:1px solid #39473c;overflow:visible;box-shadow:0 0 13px rgba(255,190,40,.08),inset 0 1px 0 rgba(255,255,255,.10)}
+.rt-risk-gauge{height:14px;max-width:165px;position:relative;border-radius:12px;background:linear-gradient(90deg,#16dd78 0%,#83d64f 38%,#ffd13c 66%,#bb741a 100%);border:1px solid #39473c;overflow:visible;box-shadow:0 0 13px rgba(255,190,40,.08),inset 0 1px 0 rgba(255,255,255,.10)}
 .rt-risk-gauge:before{content:"";position:absolute;left:-1px;top:-3px;width:20px;height:20px;border-radius:50%;background:#1bed83;box-shadow:0 0 8px rgba(27,237,131,.62),inset 0 0 4px rgba(255,255,255,.35)}
 .rt-risk-gauge .zone{display:none}
 .rt-risk-gauge i{position:absolute;z-index:4;top:-5px;width:11px;height:23px;transform:translateX(-50%);border-radius:4px;background:#ffd969;border:1px solid #fff0a5;box-shadow:0 0 10px rgba(255,218,81,.90)}
