@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.0.0';
+const VERSION='2.1.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -599,8 +599,7 @@ function renderRegionDetail(){
     const wk=periodChange(m,'week');
     return `<div class="rt-market-line">
       <b>${a.flag} ${esc(a.name)}</b>
-      <span class="rt-market-mini">${miniSpark((m?.bars||[]).slice(-16).map(x=>x.close))}</span>
-      <span class="price">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}<small>${Number.isFinite(wk)?'5d '+pct(wk):''}</small></span>
+      <span class="price">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}</span>
       <span class="chg ${signClass(ch)}">${pct(ch)}</span>
     </div>`;
   });
@@ -663,14 +662,11 @@ function trafficNarrative(period,s){
 function renderTraffic(){
   const defs=[['Hoy','day'],['Semana','week'],['Mes','month']];
   $('rtTrafficGrid').innerHTML=defs.map(([label,p])=>{
-    const score=scoreArgentina(p),s=trafficState(score),drivers=trafficDrivers(p);
-    const visible=drivers
-      .map((d,i)=>({...d,label:['MER','EM','VIX','10Y','RP'][i]}))
-      .sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).slice(0,4).reverse();
+    const score=scoreArgentina(p),s=trafficState(score);
     return `<article class="rt-traffic-card">
       <div class="rt-light ${s.key}"><i></i><i></i><i></i></div>
-      <div class="rt-traffic-copy"><small>Argentina ${label}</small><strong class="${s.key}">${s.label}</strong><p>${esc(trafficNarrative(p,s))}</p></div>
-      <div class="rt-driver-chart" aria-label="Drivers principales">${visible.map(d=>`<i class="${d.v>=0?'pos':'neg'}" style="height:${d.h}%"><span>${d.label}</span></i>`).join('')}</div>
+      <div class="rt-traffic-copy"><small>${label==='Hoy'?'Argentina Hoy':label}</small><strong class="${s.key}">${s.label}</strong><p>${esc(trafficNarrative(p,s))}</p></div>
+      <div class="rt-driver-chart ${s.key}" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     </article>`;
   }).join('');
 }
