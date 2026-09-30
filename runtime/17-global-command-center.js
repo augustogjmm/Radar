@@ -415,9 +415,9 @@ function renderSession(date){
   }else{
     $('rtSessionName').textContent='Entre sesiones';$('rtSessionFlag').textContent='🌐';$('rtSessionCountdown').textContent='—';
   }
-  if($('rtNextSessions')){
+  if($('rtNextSessionRows')){
     const next=sessions.map(x=>({...x,delta:nextOpenDelta(date,x)})).sort((a,b)=>a.delta-b.delta).slice(0,3);
-    $('rtNextSessions').innerHTML=next.map(x=>`<span>${x.flag} ${x.name} · +${Math.floor(x.delta/3600)}h ${Math.floor((x.delta%3600)/60)}m</span>`).join('');
+    $('rtNextSessionRows').innerHTML=next.map(x=>`<span><i>${x.flag}</i><b>${x.name}</b><small>+${Math.floor(x.delta/3600)}h ${Math.floor((x.delta%3600)/60)}m</small></span>`).join('');
   }
 }
 
@@ -526,19 +526,16 @@ function renderRisk(){
   $('rtRiskTnx').textContent=`US10Y ${Number.isFinite(t?.last)?fmt(t.last,2)+'%':'—'}`;
 }
 
-function normalizedSeries(item,maxBars=40){
+function focusSeries(item,maxBars=40){
   const bars=(item?.bars||[]).slice(-maxBars);
-  if(bars.length<2)return[];
-  const base=num(bars[0]?.close);
-  return Number.isFinite(base)&&base!==0?bars.map(b=>((num(b.close)/base)-1)*100).filter(Number.isFinite):[];
+  return bars.map(b=>num(b.close)).filter(Number.isFinite);
 }
 function intradaySeries(key){
   const region=REGIONS[key],asset=ASSET_BY_ID[region?.focus],item=asset?state.intraday.get(asset.symbol):null;
   const bars=(item?.bars||[]).slice(-40);
   if(bars.length<3)return null;
-  const base=num(bars[0].close);
-  if(!Number.isFinite(base)||base===0)return null;
-  return {values:bars.map(b=>((b.close/base)-1)*100),bars,item};
+  const values=bars.map(b=>num(b.close)).filter(Number.isFinite);
+  return values.length>2?{values,bars,item}:null;
 }
 function formatChartTime(ts){
   if(!Number.isFinite(num(ts)))return'—';
@@ -553,10 +550,18 @@ function renderDetailAxis(bars){
     el.textContent=formatChartTime(bars[idx]?.time);
   });
 }
+function renderDetailYAxis(values,decimals=1){
+  const root=$('rtDetailYAxis');if(!root)return;
+  const spans=[...root.children],clean=(values||[]).filter(Number.isFinite);
+  if(!clean.length){spans.forEach(x=>x.textContent='—');return}
+  const hi=Math.max(...clean),lo=Math.min(...clean);
+  if(spans[0])spans[0].textContent=fmt(hi,decimals);
+  if(spans[1])spans[1].textContent=fmt(lo,decimals);
+}
 function regionSeries(key){
   const region=REGIONS[key];
   const focus=region?.focus?get(region.focus):null;
-  const direct=normalizedSeries(focus,40);
+  const direct=focusSeries(focus,40);
   if(direct.length>1)return direct;
   const items=(region?.ids||[]).map(get).filter(x=>x?.bars?.length);
   if(!items.length)return[];
@@ -600,6 +605,7 @@ function renderRegionDetail(){
   $('rtRegionLastValue').className=signClass(last);
   $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · ${intra?'última sesión':'evolución reciente'}`;
   renderDetailAxis(intra?.bars||[]);
+  renderDetailYAxis(values,focusAsset?.decimals??1);
   if(d){const area=`${d} L512,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
 }
 
