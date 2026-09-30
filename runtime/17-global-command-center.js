@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.3.0';
+const VERSION='2.4.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -105,7 +105,7 @@ function marketMarkers(regionOnly=null){
 async function loadWorldMap(){
   if(state.worldMapLoaded)return;
   try{
-    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc12',{cache:'force-cache'});
+    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc14',{cache:'force-cache'});
     if(!r.ok)throw new Error(`Mapa HTTP ${r.status}`);
     const svgText=await r.text();
     const host=$('rtWorldMapHost');
