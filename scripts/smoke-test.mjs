@@ -57,9 +57,9 @@ try{
     const sr=sidebar?.getBoundingClientRect(),wr=wrap?.getBoundingClientRect(),tr=top?.getBoundingClientRect();
     return {
       productCss:css.some(x=>x.includes('/styles/06-product-design.css')),
-      resetCss:css.some(x=>x.includes('/styles/07-product-reset.css')),
-      productHero:!!document.getElementById('productHomeHero'),
-      dailyRadar:!!document.getElementById('dailyRadarPanel'),
+      finalCss:css.some(x=>x.includes('/styles/07-product-shell.css')),
+      deployment:document.querySelector('meta[name="radar-deployment"]')?.content||'',
+      finalRoot:document.documentElement.classList.contains('radar-product-final'),
       bodyBg:getComputedStyle(document.body).backgroundColor,
       sidebarWidth:sr?.width||0,
       sidebarRight:sr?.right||0,
@@ -69,16 +69,60 @@ try{
       navCount:document.querySelectorAll('.side-nav-item').length
     };
   });
-  await assert(design.productCss,'Product design stylesheet no cargó');
-  await assert(design.resetCss,'Product reset stylesheet no cargó');
-  await assert(design.productHero,'Home de producto no se montó');
-  await assert(design.dailyRadar,'Radar de Hoy no se montó');
+  await assert(design.productCss,'Base product stylesheet no cargó');
+  await assert(design.finalCss,'Final product stylesheet no cargó');
+  await assert(design.finalRoot,'Final product shell no se inicializó');
+  await assert(design.deployment==='radar-product-final-20260930','Deployment marker incorrecto: '+design.deployment);
   await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
   await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
   await assert(design.topHeight>=60&&design.topHeight<=90,'Topbar fuera de diseño: '+design.topHeight);
   await assert(design.bodyOverflow<=4,'Overflow horizontal global: '+design.bodyOverflow);
-  await assert(await page.evaluate(()=>document.getElementById('dailyRadarPanel')?.getBoundingClientRect().height>150),'Radar de Hoy no tiene layout visible');
   await assert(design.navCount>=8,'Navegación incompleta');
+
+  const finalContract=await page.evaluate(()=>{
+    const required=[
+      'dashboardView','decisionCenter','scannerView','startScanBtn','scanUniverse','scanTf',
+      'rfScannerView','rfStartBtn','rfUniverse','rfObjective','rfHorizon',
+      'analysisView','chart','technicalStatusGrid',
+      'watchlistView','addWatchBtn','refreshWatchlistBtn','enableAlertsBtn',
+      'portfolio360Section','portfolioRiskSection','refreshPortfolioRiskBtn','refreshPerformanceBtn',
+      'signalsView','signalBody','signalAuditBtn','decisionAuditBody',
+      'technicalDrawer','selfTestBtn','regressionBtn','dataDiagBtn'
+    ];
+    const missing=required.filter(id=>!document.getElementById(id));
+    const label=id=>document.querySelector('#'+id+' .nav-copy b')?.textContent?.trim()||'';
+    const details=document.getElementById('marketContextDetails');
+    const dashboard=document.getElementById('dashboardView');
+    return{
+      missing,
+      nav:{
+        home:label('homeViewBtn'),scanner:label('scannerViewBtn'),fixed:label('fixedIncomeBtn'),
+        watch:label('watchlistViewBtn'),portfolio:label('portfolioViewBtn'),signals:label('signalsViewBtn')
+      },
+      home:{
+        decisionDirect:document.getElementById('decisionCenter')?.parentElement===dashboard,
+        briefDirect:dashboard?.querySelector(':scope > .daily-brief')!==null,
+        contextExists:!!details,
+        contextOpen:!!details?.open,
+        dashInside:!!details?.querySelector('.dash-kpis'),
+        intelInside:!!details?.querySelector('.intel-wrap'),
+        marketInside:!!details?.querySelector('.market-board')
+      },
+      oldWorkspace:!!document.querySelector('script[src*="/workspace/"],link[href*="/workspace/"]'),
+      oldProductHero:!!document.getElementById('productHomeHero'),
+      oldDailyRadar:!!document.getElementById('dailyRadarPanel')
+    }
+  });
+  await assert(finalContract.missing.length===0,'Capacidades ausentes: '+finalContract.missing.join(', '));
+  await assert(finalContract.nav.home==='Hoy','Navegación Inicio no quedó como Hoy');
+  await assert(finalContract.nav.scanner==='Oportunidades','Navegación Scanner no quedó como Oportunidades');
+  await assert(finalContract.nav.fixed==='Renta fija'&&finalContract.nav.watch==='Seguimiento'&&finalContract.nav.portfolio==='Cartera'&&finalContract.nav.signals==='Historial','Navegación final inconsistente: '+JSON.stringify(finalContract.nav));
+  await assert(finalContract.home.decisionDirect&&finalContract.home.briefDirect,'Inicio no prioriza Radar de hoy + cambios');
+  await assert(finalContract.home.contextExists&&!finalContract.home.contextOpen,'Contexto de mercado debe existir y comenzar plegado');
+  await assert(finalContract.home.dashInside&&finalContract.home.intelInside&&finalContract.home.marketInside,'Contexto plegado perdió módulos de mercado');
+  await assert(!finalContract.oldWorkspace,'La raíz final sigue cargando el prototipo /workspace');
+  await assert(!finalContract.oldProductHero&&!finalContract.oldDailyRadar,'Quedaron capas experimentales antiguas en el producto final');
+  await fs.writeFile('artifacts/final-product-contract.json',JSON.stringify(finalContract,null,2));
   await fs.writeFile('artifacts/design-check.json',JSON.stringify(design,null,2));
   await shot('01-home');
 
@@ -141,17 +185,26 @@ try{
 
   await page.click('#scannerViewBtn');
   await page.waitForFunction(()=>document.getElementById('scannerView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>!document.getElementById('dashboardView')?.classList.contains('active')),'Dashboard quedó activo debajo del Escáner');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Escáner genera overflow global');
   await shot('02-scanner');
 
   await page.click('#fixedIncomeBtn');
   await page.waitForFunction(()=>document.getElementById('rfScannerView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>!document.getElementById('dashboardView')?.classList.contains('active')),'Dashboard quedó activo debajo de Renta fija');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Renta fija genera overflow global');
   await shot('03-fixed-income');
 
   await page.click('#watchlistViewBtn');
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-watchlist'));
   await shot('04-watchlist');
+
+  await page.fill('#symbol','BTCUSDT');
+  await page.selectOption('#assetType','crypto');
+  await page.click('#analyzeBtn');
+  await page.waitForFunction(()=>!document.getElementById('analysisView')?.classList.contains('hidden')&&(document.getElementById('lastPrice')?.textContent||'')!=='—',{timeout:30000});
+  await assert(await page.evaluate(()=>document.getElementById('technicalStatusGrid')?.style.display!=='none'),'Análisis individual no muestra estados multi-timeframe');
+  await shot('05-analysis');
 
   await page.click('#portfolioViewBtn');
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-portfolio'));
@@ -191,7 +244,18 @@ try{
     return sections.map(el=>({id:el.id||el.className,display:getComputedStyle(el).display,rect:el.getBoundingClientRect().toJSON()}));
   });
   await fs.writeFile('artifacts/portfolio-layout.json',JSON.stringify(layout,null,2));
-  await shot('05-portfolio');
+  await shot('06-portfolio');
+
+  await page.click('#signalsViewBtn');
+  await page.waitForFunction(()=>document.getElementById('signalsView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>!document.getElementById('dashboardView')?.classList.contains('active')),'Dashboard quedó activo debajo de Historial');
+  await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Historial genera overflow global');
+  await shot('07-history');
+
+  await page.click('#homeViewBtn');
+  await page.waitForFunction(()=>document.getElementById('dashboardView')?.classList.contains('active'));
+  await assert(await page.evaluate(()=>!document.getElementById('marketContextDetails')?.open),'Contexto completo no vuelve plegado al Inicio');
+  await shot('08-home-final');
 
   await page.waitForTimeout(500);
   await assert(pageErrors.length===0,'Errores JavaScript: '+pageErrors.join(' | '));

@@ -584,6 +584,7 @@ function renderDashboardChart(k){
 
  dashboardChart=LightweightCharts.createChart(el,{
    width:Math.max(320,el.clientWidth),height:330,
+   localization:{locale:'es-AR'},
    layout:{background:{color:'#06121d'},textColor:'#9fb5c5'},
    grid:{vertLines:{color:'#10283a'},horzLines:{color:'#10283a'}},
    rightPriceScale:{borderColor:'#2f688e'},
@@ -630,7 +631,7 @@ function renderDashboardChart(k){
 }
 
 function showDashboardView(){
- setInstitutionalView('homeViewBtn','Centro de Mercado','Contexto, inteligencia de mercado y decisiones prioritarias');
+ setInstitutionalView('homeViewBtn','Hoy','Decisiones, cartera y contexto de mercado');
  hideAllMainViews();
  setTechnicalStatusVisible(false);
  $('dashboardView').classList.add('active');
@@ -1340,6 +1341,7 @@ function renderMarketLineChart(asset,bars,cfg){
 
  marketChart=LightweightCharts.createChart(el,{
    width:Math.max(320,el.clientWidth),height:430,
+   localization:{locale:'es-AR'},
    layout:{background:{color:'#06121d'},textColor:'#9fb5c5'},
    grid:{vertLines:{color:'#10283a'},horzLines:{color:'#10283a'}},
    rightPriceScale:{borderColor:'#2f688e'},
@@ -1369,7 +1371,7 @@ function renderMarketLineChart(asset,bars,cfg){
 
 function renderMarketCandleChart(asset,bars,cfg){
  const el=$('marketCandleChart');el.innerHTML='';if(marketChart){marketChart.remove();marketChart=null}
- marketChart=LightweightCharts.createChart(el,{width:Math.max(320,el.clientWidth),height:430,layout:{background:{color:'#06121d'},textColor:'#9fb5c5'},grid:{vertLines:{color:'#10283a'},horzLines:{color:'#10283a'}},rightPriceScale:{borderColor:'#284252',scaleMargins:{top:0.08,bottom:0.27}},timeScale:{borderColor:'#2f688e',timeVisible:cfg.interval!=='1d'&&cfg.interval!=='1wk',secondsVisible:false},crosshair:{mode:0}});
+ marketChart=LightweightCharts.createChart(el,{width:Math.max(320,el.clientWidth),height:430,localization:{locale:'es-AR'},layout:{background:{color:'#06121d'},textColor:'#9fb5c5'},grid:{vertLines:{color:'#10283a'},horzLines:{color:'#10283a'}},rightPriceScale:{borderColor:'#284252',scaleMargins:{top:0.08,bottom:0.27}},timeScale:{borderColor:'#2f688e',timeVisible:cfg.interval!=='1d'&&cfg.interval!=='1wk',secondsVisible:false},crosshair:{mode:0}});
  marketCandleSeries=addSeries(marketChart,'CandlestickSeries',{upColor:'#26a69a',downColor:'#ef5350',borderUpColor:'#26a69a',borderDownColor:'#ef5350',wickUpColor:'#26a69a',wickDownColor:'#ef5350',priceLineVisible:true,lastValueVisible:true});
  marketCandleSeries.setData(bars.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close})));
  marketEma20Series=addSeries(marketChart,'LineSeries',{color:'#9d78ff',lineWidth:2,priceLineVisible:false,lastValueVisible:false,lineStyle:0});

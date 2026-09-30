@@ -390,7 +390,7 @@ function showWatchlistView(){
  setPortfolioUiMode('watchlist');setInstitutionalView('watchlistViewBtn','Seguimiento','Activos · alertas · disparadores · monitoreo');hideAllMainViews();setTechnicalStatusVisible(false);$('watchlistView').classList.add('active');renderWatchlist();updatePortfolioSubnav('watchlist');requestAnimationFrame(()=>$('watchlistSection')?.scrollIntoView({behavior:'smooth',block:'start'}))
 }
 function showPortfolioView(){
- setPortfolioUiMode('portfolio');setInstitutionalView('portfolioViewBtn','Cartera 360','P&L · riesgo · diversificación · exposición');hideAllMainViews();setTechnicalStatusVisible(false);$('watchlistView').classList.add('active');renderWatchlist();updatePortfolioSubnav('portfolio');requestAnimationFrame(()=>$('portfolio360Section')?.scrollIntoView({behavior:'smooth',block:'start'}));hydratePortfolioLiveData(false).catch(()=>{})
+ setPortfolioUiMode('portfolio');setInstitutionalView('portfolioViewBtn','Cartera','P&L · riesgo · diversificación · exposición');hideAllMainViews();setTechnicalStatusVisible(false);$('watchlistView').classList.add('active');renderWatchlist();updatePortfolioSubnav('portfolio');requestAnimationFrame(()=>$('portfolio360Section')?.scrollIntoView({behavior:'smooth',block:'start'}));hydratePortfolioLiveData(false).catch(()=>{})
 }
 function showPortfolioRiskView(){
  setPortfolioUiMode('risk');setInstitutionalView('portfolioViewBtn','Riesgo & Performance','Correlación · contribución al riesgo · benchmark · escenarios de estrés');hideAllMainViews();setTechnicalStatusVisible(false);$('watchlistView').classList.add('active');renderWatchlist();updatePortfolioSubnav('risk');requestAnimationFrame(()=>$('portfolioRiskSection')?.scrollIntoView({behavior:'smooth',block:'start'}));hydratePortfolioLiveData(false).catch(()=>{});window.radarRefreshPortfolioAnalyticsIfStale?.().catch?.(()=>{})
@@ -558,7 +558,7 @@ function exportSignalCsv(){
 }
 async function clearSignalHistory(){if(!await window.radarConfirm('¿Borrar todo el historial de señales? Esta acción no se puede deshacer.',{title:'Borrar historial',confirmLabel:'Borrar historial',tone:'bad'}))return;signalJournal.signals=[];await saveSignalJournal();renderSignalHistory()}
 function showSignalsView(){
- setInstitutionalView('signalsViewBtn','Auditoría de Decisiones','Historial de señales, resultados y trazabilidad de decisiones');hideAllMainViews();setTechnicalStatusVisible(false);$('signalsView').classList.add('active');renderSignalHistory()}
+ setInstitutionalView('signalsViewBtn','Historial','Señales, resultados y trazabilidad de decisiones');hideAllMainViews();setTechnicalStatusVisible(false);$('signalsView').classList.add('active');renderSignalHistory()}
 
 
 const __renderSignalHistoryV76=renderSignalHistory;

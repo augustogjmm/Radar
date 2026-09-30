@@ -1264,7 +1264,7 @@ function stopRfScanner(){
 }
 
 function showFixedIncomeScanner(){
- setInstitutionalView('fixedIncomeBtn','Escáner de renta fija','Bonos · Letras · ON · rendimiento, duration, paridad, liquidez y riesgo');
+ setInstitutionalView('fixedIncomeBtn','Renta fija','Bonos · Letras · ON · rendimiento, duration, paridad, liquidez y riesgo');
  showRfScannerView();
  normalizeRfOnSelection();
  $('rfUniverseInfo').textContent=isRfCreditMode()
@@ -1306,10 +1306,10 @@ function setTechnicalStatusVisible(show){
 function showBondView(){
  setInstitutionalView('fixedIncomeBtn','Renta fija · detalle','Flujos · TIR · duration · paridad · escenarios');hideAllMainViews();setTechnicalStatusVisible(false);$('bondView').classList.add('active')}
 function showRfScannerView(){
- setInstitutionalView('fixedIncomeBtn','Escáner de renta fija','Bonos · Letras · ON · rendimiento, duration, paridad, liquidez y riesgo');hideAllMainViews();setTechnicalStatusVisible(false);$('rfScannerView').classList.add('active')}
+ setInstitutionalView('fixedIncomeBtn','Renta fija','Bonos · Letras · ON · rendimiento, duration, paridad, liquidez y riesgo');hideAllMainViews();setTechnicalStatusVisible(false);$('rfScannerView').classList.add('active')}
 
 function showScannerView(){
- setInstitutionalView('scannerViewBtn','Escáner de renta variable','Acciones · CEDEARs · Cripto · ranking técnico y oportunidades');
+ setInstitutionalView('scannerViewBtn','Oportunidades','Acciones · CEDEARs · Cripto · ranking técnico y oportunidades');
  updateScanModeButton();hideAllMainViews(true);setTechnicalStatusVisible(false);$('scannerView').classList.add('active');renderScanner();
 }
 async function startScanner(){
