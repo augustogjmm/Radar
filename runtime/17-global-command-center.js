@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='1.4.0';
+const VERSION='1.5.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -275,18 +275,20 @@ function mountDashboard(){
     </section>
     <section id="rtRegionDetail" class="rt-card rt-detail-card">
       <div class="rt-section-title"><div><h3 id="rtDetailTitle">Detalle de Región: Europa</h3><p id="rtDetailSubtitle">Índices principales y tendencia</p></div><button id="rtRegionOpen" class="rt-link-button">Abrir vista completa →</button></div>
-      <div class="rt-detail-map">
-        <div id="rtDetailGeoHost" class="rt-detail-geo-host"></div>
+      <div class="rt-detail-topgrid">
+        <div class="rt-detail-map">
+          <div id="rtDetailGeoHost" class="rt-detail-geo-host"></div>
+        </div>
+        <div id="rtRegionList" class="rt-detail-list"></div>
       </div>
-      <div id="rtRegionList" class="rt-detail-list"></div>
       <div class="rt-detail-chart">
         <div class="rt-detail-chart-head"><span id="rtDetailChartName">Índice regional · últimas ruedas</span><b id="rtRegionLastValue">—</b></div>
-        <svg viewBox="0 0 400 94" preserveAspectRatio="none">
-          <defs><linearGradient id="rtAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#27d77e" stop-opacity=".28"/><stop offset="100%" stop-color="#27d77e" stop-opacity="0"/></linearGradient></defs>
-          <g class="rt-chart-grid"><path d="M5 18H395M5 42H395M5 66H395"/><path d="M80 8V80M160 8V80M240 8V80M320 8V80"/></g>
+        <svg viewBox="0 0 520 94" preserveAspectRatio="none">
+          <defs><linearGradient id="rtAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#27d77e" stop-opacity=".30"/><stop offset="100%" stop-color="#27d77e" stop-opacity="0"/></linearGradient></defs>
+          <g class="rt-chart-grid"><path d="M7 18H513M7 42H513M7 66H513"/><path d="M104 8V80M208 8V80M312 8V80M416 8V80"/></g>
           <path id="rtRegionArea" class="area" d=""/><path id="rtRegionSpark" d=""/>
         </svg>
-        <div class="rt-detail-axis"><span>-20</span><span>-15</span><span>-10</span><span>-5</span><span>Hoy</span></div>
+        <div class="rt-detail-axis"><span>10:00</span><span>14:00</span><span>18:00</span><span>02:00</span><span>06:00</span><span>10:00</span></div>
       </div>
     </section>
     </div>
@@ -552,13 +554,13 @@ function renderRegionDetail(){
     </div>`;
   });
   $('rtRegionList').innerHTML=rows.join('');
-  const values=regionSeries(key),d=svgLine(values,400,94,8);$('rtRegionSpark').setAttribute('d',d);
+  const values=regionSeries(key),d=svgLine(values,520,94,8);$('rtRegionSpark').setAttribute('d',d);
   const last=regionChange(key,'day');
   $('rtRegionLastValue').textContent=pct(last);
   $('rtRegionLastValue').className=signClass(last);
   const focusAsset=ASSET_BY_ID[region.focus];
-  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · últimas 40 ruedas`;
-  if(d){const area=`${d} L392,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
+  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · evolución reciente`;
+  if(d){const area=`${d} L512,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
 }
 
 function localRiskChange(period='day'){
@@ -614,11 +616,13 @@ function renderTraffic(){
   const defs=[['Hoy','day'],['Semana','week'],['Mes','month']];
   $('rtTrafficGrid').innerHTML=defs.map(([label,p])=>{
     const score=scoreArgentina(p),s=trafficState(score),drivers=trafficDrivers(p);
+    const visible=drivers
+      .map((d,i)=>({...d,label:['MER','EM','VIX','10Y','RP'][i]}))
+      .sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).slice(0,4).reverse();
     return `<article class="rt-traffic-card">
       <div class="rt-light ${s.key}"><i></i><i></i><i></i></div>
-      <div class="rt-traffic-copy"><small>Argentina ${label}</small><strong class="${s.key}">${s.label}</strong><p>${esc(trafficNarrative(p,s))}</p>
-        <div class="rt-driver-chart" aria-label="Contribución de drivers">${drivers.map((d,i)=>`<i class="${d.v>=0?'pos':'neg'}" style="height:${d.h}%"><span>${['MER','EM','VIX','10Y','RP'][i]}</span></i>`).join('')}</div>
-      </div>
+      <div class="rt-traffic-copy"><small>Argentina ${label}</small><strong class="${s.key}">${s.label}</strong><p>${esc(trafficNarrative(p,s))}</p></div>
+      <div class="rt-driver-chart" aria-label="Drivers principales">${visible.map(d=>`<i class="${d.v>=0?'pos':'neg'}" style="height:${d.h}%"><span>${d.label}</span></i>`).join('')}</div>
     </article>`;
   }).join('');
 }
