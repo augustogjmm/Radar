@@ -260,7 +260,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-detail-card{height:318px;display:flex;flex-direction:column}
 .rt-detail-card .rt-section-title{height:37px;flex:0 0 37px;padding:7px 10px 4px}
 .rt-detail-card .rt-section-title h3{font-size:15px}.rt-detail-card .rt-section-title p{display:none}
-.rt-detail-topgrid{height:170px;display:grid;grid-template-columns:42% 58%;margin:0 9px 6px;border:1px solid #17394e;border-radius:4px;overflow:hidden;background:#04111b}
+.rt-detail-topgrid{height:184px;display:grid;grid-template-columns:43.5% 56.5%;margin:0 9px 9px;border:1px solid #17394e;border-radius:4px;overflow:hidden;background:#04111b}
 .rt-detail-map{min-width:0;border-right:1px solid #17394e;background:#03111b;overflow:hidden}
 .rt-detail-geo-host,.rt-detail-geo-svg{display:block;width:100%;height:100%}
 .rt-detail-geo-svg .rt-country{stroke:#668294;stroke-width:.55;fill-opacity:.35}
@@ -268,12 +268,12 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-detail-geo-svg .rt-detail-dim{fill:#1a2933!important;fill-opacity:.42!important;stroke:#314955!important;filter:none!important}
 .rt-detail-geo-svg .rt-market-marker text{font-size:13px;stroke-width:4px}
 .rt-detail-list{padding:0 7px;background:linear-gradient(180deg,rgba(7,23,35,.93),rgba(4,15,24,.95));overflow:hidden}
-.rt-market-line{display:grid;grid-template-columns:minmax(118px,1fr) 72px 48px;gap:6px;align-items:center;height:27px;border-top:1px solid #143142}
+.rt-market-line{display:grid;grid-template-columns:minmax(118px,1fr) 72px 48px;gap:6px;align-items:center;height:30px;border-top:1px solid #143142}
 .rt-market-line:first-child{border-top:0}.rt-market-line b{font-size:8.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rt-market-line .price{display:block;text-align:right;font-size:8.5px;color:#dce7ee;font-variant-numeric:tabular-nums}.rt-market-line .chg{text-align:right;font-size:8.5px;font-weight:850}
-.rt-detail-chart{position:relative;flex:1;margin:0 9px 8px;border:1px solid #17384c;border-radius:4px;background:linear-gradient(180deg,rgba(5,25,39,.82),rgba(3,13,22,.82));padding:0 7px 2px;min-height:100px}
+.rt-detail-chart{position:relative;flex:0 0 84px;height:84px;margin:0 9px 4px;border:1px solid #17384c;border-radius:4px;background:linear-gradient(180deg,rgba(5,25,39,.82),rgba(3,13,22,.82));padding:0 7px 2px;min-height:84px}
 .rt-detail-chart-head{height:22px;display:flex;align-items:center;justify-content:space-between;font-size:7.5px;color:#95a9b7}.rt-detail-chart-head b{font-size:10px;padding:2px 6px;border-radius:3px;background:#0b5736;border:1px solid #226c4a;color:#62efa8!important}
 .rt-detail-chart-head b.rt-down{background:#5c1923;border-color:#76313b;color:#ff8290!important}.rt-detail-chart-head b.rt-flat{background:#172b38;border-color:#345264;color:#c1d0d9!important}
-.rt-detail-chart svg{display:block;width:100%;height:61px;padding-left:16px}
+.rt-detail-chart svg{display:block;width:100%;height:48px;padding-left:16px}
 .rt-chart-grid path{fill:none;stroke:#21455a;stroke-width:.55;opacity:.65}.rt-detail-chart .area{fill:url(#rtAreaFill);fill-opacity:.18;stroke:none}.rt-detail-chart #rtRegionSpark{fill:none;stroke:#24df80;stroke-width:1.35;filter:drop-shadow(0 0 1px rgba(40,221,130,.22))}
 .rt-detail-yaxis{position:absolute;left:8px;top:27px;bottom:18px;z-index:3;display:flex;flex-direction:column;justify-content:space-between}.rt-detail-yaxis span{font-size:6px;color:#7893a6}
 .rt-detail-axis{display:flex;justify-content:space-between;padding:0 2px 0 17px;font-size:6px;color:#6b879a}
