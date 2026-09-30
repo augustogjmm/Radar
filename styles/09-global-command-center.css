@@ -422,3 +422,28 @@ body.rt-global-shell .bond-view{margin:12px 6px!important;max-width:none!importa
   .rt-opps-aside{grid-template-columns:1fr 1fr}
   .rt-map-label{transform:scale(.9);transform-origin:center}
 }
+
+
+/* === Global Command Center v1.2 · layout fidelity === */
+.rt-livebox{gap:11px}
+.rt-head-icon{
+  width:27px;height:27px;border-radius:50%;display:grid;place-items:center;
+  color:#a7c2d3;border:1px solid #17364a;background:#06131e;font-size:13px
+}
+.rt-head-avatar{
+  width:29px;height:29px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(145deg,#374d60,#122333);border:1px solid #496277;
+  color:#dff2ff;font-size:9px;font-weight:900;box-shadow:0 0 14px rgba(55,154,220,.13)
+}
+.rt-middle-stack{display:grid;grid-template-rows:76px minmax(0,1fr);gap:10px;min-height:452px}
+.rt-middle-stack .rt-detail-card{min-height:0;height:100%}
+.rt-risk-card{display:grid;grid-template-columns:122px 1fr;align-items:center;padding:9px 11px;min-height:76px}
+.rt-risk-card-title{padding-right:10px;border-right:1px solid #17384c}
+.rt-risk-card-title span{display:block;color:#91a9ba;font-size:9px;margin-bottom:4px}
+.rt-risk-card-title b{font-size:15px;color:#ffd15a;letter-spacing:.02em}
+.rt-risk-card-body{padding-left:10px}
+.rt-risk-card .rt-risk-gauge{height:14px;margin-bottom:7px}
+.rt-risk-card .rt-risk-meta{margin-top:0}
+.rt-risk-card .rt-risk-meta span{padding:3px 4px;background:#06131e}
+.rt-watch-card{min-height:452px}
+.rt-watch-list{padding-bottom:10px}
