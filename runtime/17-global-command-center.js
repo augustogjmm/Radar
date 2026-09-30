@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='1.2.0';
+const VERSION='1.3.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -49,11 +49,15 @@ const ASSETS=[
 ];
 
 const REGIONS={
-  northamerica:{label:'América del Norte',short:'Norteamérica',ids:['sp500','nasdaq','dow'],indices:'S&P 500 · NASDAQ · DOW'},
-  europe:{label:'Europa',short:'Europa',ids:['ftse','dax','cac','ibex','stoxx'],indices:'DAX · FTSE · CAC'},
-  asia:{label:'Asia',short:'Asia',ids:['nikkei','hangseng','shanghai'],indices:'NIKKEI · HANG SENG'},
-  latam:{label:'LatAm',short:'LatAm',ids:['merval','bovespa','mexico'],indices:'MERVAL · BOVESPA'},
-  oceania:{label:'Oceanía',short:'Oceanía',ids:['asx'],indices:'ASX 200'}
+  northamerica:{label:'América del Norte',short:'Norteamérica',ids:['sp500','nasdaq','dow'],focus:'sp500',indices:'S&P 500 · NASDAQ · DOW'},
+  europe:{label:'Europa',short:'Europa',ids:['ftse','dax','cac','ibex','stoxx'],focus:'stoxx',indices:'DAX · FTSE · CAC'},
+  asia:{label:'Asia',short:'Asia',ids:['nikkei','hangseng','shanghai'],focus:'nikkei',indices:'NIKKEI · HANG SENG'},
+  latam:{label:'LatAm',short:'LatAm',ids:['merval','bovespa','mexico'],focus:'merval',indices:'MERVAL · BOVESPA'},
+  oceania:{label:'Oceanía',short:'Oceanía',ids:['asx'],focus:'asx',indices:'ASX 200'}
+};
+const COUNTRY_MARKET={
+  USA:'sp500',GBR:'ftse',DEU:'dax',FRA:'cac',ESP:'ibex',
+  JPN:'nikkei',CHN:'shanghai',ARG:'merval',BRA:'bovespa',MEX:'mexico',AUS:'asx'
 };
 
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
@@ -86,7 +90,7 @@ function marketMarkers(regionOnly=null){
 async function loadWorldMap(){
   if(state.worldMapLoaded)return;
   try{
-    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc2',{cache:'force-cache'});
+    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc4',{cache:'force-cache'});
     if(!r.ok)throw new Error(`Mapa HTTP ${r.status}`);
     const svgText=await r.text();
     const host=$('rtWorldMapHost');
@@ -96,10 +100,27 @@ async function loadWorldMap(){
       if(svg){
         const layer=svg.querySelector('#rtCountryLayer');
         layer?.insertAdjacentHTML('beforeend',marketMarkers());
+        const tooltip=document.createElement('div');
+        tooltip.className='rt-map-tooltip';
+        tooltip.hidden=true;
+        host.appendChild(tooltip);
+        svg.addEventListener('pointermove',ev=>{
+          const country=ev.target.closest?.('.rt-country[data-region]');
+          if(!country){tooltip.hidden=true;return}
+          const region=country.dataset.region;
+          const id=COUNTRY_MARKET[country.dataset.code];
+          const ch=id?periodChange(get(id),'day'):regionChange(region,'day');
+          tooltip.hidden=false;
+          tooltip.innerHTML=`<b>${esc(country.dataset.country||'Mercado')}</b><span class="${signClass(ch)}">${pct(ch)}</span><small>${id?esc(ASSET_BY_ID[id]?.name||'Índice'):'Sentimiento regional'}</small>`;
+          const box=host.getBoundingClientRect();
+          tooltip.style.left=`${clamp(ev.clientX-box.left+12,8,box.width-150)}px`;
+          tooltip.style.top=`${clamp(ev.clientY-box.top+12,8,box.height-70)}px`;
+        });
+        svg.addEventListener('pointerleave',()=>{tooltip.hidden=true});
         svg.addEventListener('click',ev=>{
           const country=ev.target.closest?.('.rt-country[data-region]');
           const key=country?.dataset?.region;
-          if(key&&REGIONS[key]){state.selectedRegion=key;renderRegionDetail()}
+          if(key&&REGIONS[key]){state.selectedRegion=key;renderMap();renderRegionDetail()}
         });
       }
     }
@@ -414,18 +435,23 @@ function regionChange(key,period='day'){
 }
 function toneClass(v){
   if(!Number.isFinite(v))return'neutral';
-  if(v>=1.2)return'strong-up';if(v>=.15)return'mod-up';if(v<=-1.2)return'strong-down';if(v<=-.15)return'mod-down';return'neutral';
+  if(v>=2)return'strong-up';if(v>=.5)return'mod-up';if(v<=-2)return'strong-down';if(v<=-.5)return'mod-down';return'neutral';
 }
 function signClass(v){return !Number.isFinite(v)?'rt-flat':v>.03?'rt-up':v<-.03?'rt-down':'rt-flat'}
 
 function renderMap(){
+  const countries=qa('#rtWorldMapHost .rt-country');
+  countries.forEach(el=>{
+    const key=el.dataset.region;
+    const mapped=COUNTRY_MARKET[el.dataset.code];
+    const ch=mapped?periodChange(get(mapped),'day'):regionChange(key,'day');
+    const tone=toneClass(ch);
+    el.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');
+    el.classList.add(tone);
+    el.classList.toggle('selected-region',key===state.selectedRegion);
+  });
   for(const key of Object.keys(REGIONS)){
-    const ch=regionChange(key,'day'),tone=toneClass(ch);
-    qa(`[data-region="${key}"]`).forEach(el=>{
-      el.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');
-      el.classList.add(tone);
-      if(el.classList.contains('rt-country'))el.classList.toggle('selected-region',key===state.selectedRegion);
-    });
+    const ch=regionChange(key,'day');
     const label=q(`[data-label-region="${key}"]`);
     if(label){
       label.classList.remove('positive','negative','neutral');
@@ -467,11 +493,20 @@ function renderRisk(){
   $('rtRiskTnx').textContent=`US10Y ${Number.isFinite(t?.last)?fmt(t.last,2)+'%':'—'}`;
 }
 
+function normalizedSeries(item,maxBars=40){
+  const bars=(item?.bars||[]).slice(-maxBars);
+  if(bars.length<2)return[];
+  const base=num(bars[0]?.close);
+  return Number.isFinite(base)&&base!==0?bars.map(b=>((num(b.close)/base)-1)*100).filter(Number.isFinite):[];
+}
 function regionSeries(key){
-  const items=(REGIONS[key]?.ids||[]).map(get).filter(x=>x?.bars?.length);
+  const region=REGIONS[key];
+  const focus=region?.focus?get(region.focus):null;
+  const direct=normalizedSeries(focus,40);
+  if(direct.length>1)return direct;
+  const items=(region?.ids||[]).map(get).filter(x=>x?.bars?.length);
   if(!items.length)return[];
-  const length=Math.min(...items.map(x=>x.bars.length),40);
-  const series=[];
+  const length=Math.min(...items.map(x=>x.bars.length),40),series=[];
   for(let i=-length;i<0;i++){
     const vals=items.map(x=>x.bars.at(i)?.close).filter(Number.isFinite);
     if(vals.length)series.push(median(vals));
@@ -506,7 +541,8 @@ function renderRegionDetail(){
   const last=regionChange(key,'day');
   $('rtRegionLastValue').textContent=pct(last);
   $('rtRegionLastValue').className=signClass(last);
-  $('rtDetailChartName').textContent=`${region.short} · índice regional normalizado`;
+  const focusAsset=ASSET_BY_ID[region.focus];
+  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · últimas 40 ruedas`;
   if(d){const area=`${d} L392,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
 }
 
@@ -549,13 +585,23 @@ function trafficDrivers(period){
   const max=Math.max(0.15,...raw.map(v=>Math.abs(v)));
   return raw.map(v=>({v,h:clamp(22+Math.abs(v)/max*48,22,70)}));
 }
+function trafficNarrative(period,s){
+  const m=periodChange(get('merval'),period),em=periodChange(get('eem'),period),v=periodChange(get('vix'),period),rp=localRiskChange(period);
+  const favorable=[],adverse=[];
+  if(Number.isFinite(m))(m>=0?favorable:adverse).push('mercado local');
+  if(Number.isFinite(em))(em>=0?favorable:adverse).push('emergentes');
+  if(Number.isFinite(v))(v<=0?favorable:adverse).push('volatilidad');
+  if(Number.isFinite(rp))(rp<=0?favorable:adverse).push('riesgo país');
+  const lead=s.key==='positive'?favorable:s.key==='negative'?adverse:[...favorable,...adverse];
+  return lead.length?`${s.copy} Drivers: ${lead.slice(0,2).join(' + ')}.`:s.copy;
+}
 function renderTraffic(){
   const defs=[['Hoy','day'],['Semana','week'],['Mes','month']];
   $('rtTrafficGrid').innerHTML=defs.map(([label,p])=>{
     const score=scoreArgentina(p),s=trafficState(score),drivers=trafficDrivers(p);
     return `<article class="rt-traffic-card">
       <div class="rt-light ${s.key}"><i></i><i></i><i></i></div>
-      <div class="rt-traffic-copy"><small>Argentina ${label}</small><strong class="${s.key}">${s.label}</strong><p>${s.copy}</p>
+      <div class="rt-traffic-copy"><small>Argentina ${label}</small><strong class="${s.key}">${s.label}</strong><p>${esc(trafficNarrative(p,s))}</p>
         <div class="rt-driver-chart" aria-label="Contribución de drivers">${drivers.map((d,i)=>`<i class="${d.v>=0?'pos':'neg'}" style="height:${d.h}%"><span>${['MER','EM','VIX','10Y','RP'][i]}</span></i>`).join('')}</div>
       </div>
     </article>`;
@@ -563,12 +609,12 @@ function renderTraffic(){
 }
 
 function signalRow(icon,name,value,change,polarity,note){
-  const c=num(change);let stateKey='warn',label='NEUTRAL';
+  const c=num(change);let stateKey='warn',label='NEUTRAL',arrow='•';
   if(Number.isFinite(c)&&Math.abs(c)>.03){
     const adverse=(c>0&&polarity==='upbad')||(c<0&&polarity==='downbad');
-    stateKey=adverse?'bad':'good';label=c>0?'ALZA':'BAJA';
+    stateKey=adverse?'bad':'good';label=c>0?'ALZA':'BAJA';arrow=c>0?'↑':'↓';
   }
-  return `<div class="rt-signal-row"><span class="rt-signal-icon">${icon}</span><b>${esc(name)}</b><span class="rt-signal-value ${signClass(c)}">${value}</span><span class="rt-signal-state ${stateKey}">${label}</span><span class="rt-signal-note">${esc(note)}</span></div>`;
+  return `<div class="rt-signal-row"><span class="rt-signal-icon">${icon}</span><b>${esc(name)}</b><span class="rt-signal-arrow ${signClass(c)}">${arrow}</span><span class="rt-signal-value">${value}</span><span class="rt-signal-state ${stateKey}">${label}</span><span class="rt-signal-note">${esc(note)}</span></div>`;
 }
 function renderSignals(){
   const tnx=get('tnx'),vix=get('vix'),wti=get('wti'),dxy=get('dxy'),eem=get('eem');
@@ -633,8 +679,12 @@ function scoreBars(score){
 }
 function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
-  let results=[...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol);
-  if(state.filter!=='all')results=results.filter(r=>String(r.item.type||'').toLowerCase()===state.filter);
+  const allowed=new Set(['cedear','argstock','argbond','bond']);
+  let results=[...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(String(r.item.type||'').toLowerCase()));
+  if(state.filter!=='all')results=results.filter(r=>{
+    const t=String(r.item.type||'').toLowerCase();
+    return state.filter==='argbond'?(t==='argbond'||t==='bond'):t===state.filter;
+  });
   results=results.sort((a,b)=>(num(b?.status?.oppScore??b?.rfScore??b?.score)||0)-(num(a?.status?.oppScore??a?.rfScore??a?.score)||0)).slice(0,6);
   if(!results.length){
     $('rtOppsBody').innerHTML='<tr><td colspan="10" class="rt-opps-empty">No hay oportunidades válidas para mostrar con el filtro actual.</td></tr>';return;
@@ -645,14 +695,14 @@ function renderOpportunities(){
     const setup=String(r?.status?.label||r?.plan?.label||r?.setup||'Seguimiento').replace(/_/g,' ');
     const comment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||'Lectura técnica disponible al abrir el activo.').replace(/\s+/g,' ').trim();
     return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.type||'auto')}">
-      <td><b class="ticker">${esc(r.item.symbol)}</b></td>
-      <td><span class="rt-type">${esc(oppType(r))}</span></td>
+      <td><div class="rt-asset-cell"><b class="ticker">${esc(r.item.symbol)}</b><small>${esc(r.item.label||'')}</small></div></td>
+      <td><span class="rt-type rt-type-${esc(String(r.item.type||'').toLowerCase())}">${esc(oppType(r))}</span></td>
       <td>${Number.isFinite(price)?fmt(price,2):'—'}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
       <td><div class="rt-volume-cell">${volumeChart(bars)}<small>${Number.isFinite(rv)?fmt(rv,1)+'x':'s/d'}</small></div></td>
       <td>${miniSpark(bars.map(x=>x.close))}</td>
       <td>${esc(setup)}</td>
-      <td><span class="rt-pill ${trend[1]}">${trend[0]}</span></td>
+      <td><span class="rt-trend ${trend[1]}"><i>${trend[1]==='bad'?'↓':trend[1]==='warn'?'●':'↑'}</i>${trend[0]}</span></td>
       <td><span class="rt-pill ${tm[1]}">${tm[0]}</span></td>
       <td>${esc(comment.slice(0,110))}</td>
     </tr>`;
