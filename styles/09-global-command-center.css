@@ -399,19 +399,19 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtTextureLayer{pointer-events:none;opacity:.80;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
 #rtTextureLayer .rt-land-texture{
   fill:#8fa3ad;
-  fill-opacity:.46;
-  stroke:#a2b3bc;
-  stroke-opacity:.14;
+  fill-opacity:.58;
+  stroke:#b8c8d0;
+  stroke-opacity:.22;
   stroke-width:.25;
   vector-effect:non-scaling-stroke
 }
 #rtCityLightsLayer{pointer-events:none;mix-blend-mode:screen}
 #rtCityLightsLayer .rt-city-light{
-  fill:#ffd88a;
-  opacity:.86;
+  fill:#ffe0a0;
+  opacity:.94;
   filter:url(#rtUrbanGlow)
 }
-.rt-detail-geo-svg #rtTextureLayer{opacity:.34}
+.rt-detail-geo-svg #rtTextureLayer{opacity:.52}
 .rt-detail-geo-svg #rtCityLightsLayer{opacity:.48}
 
 
@@ -496,15 +496,15 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-tabs .rt-tab:nth-child(3){min-width:82px}
 .rt-tabs .rt-tab:nth-child(4){min-width:85px}
 
-#rtTerrainOverlay{pointer-events:none;mix-blend-mode:soft-light}
+#rtTerrainOverlay{pointer-events:none;mix-blend-mode:overlay}
 #rtTerrainOverlay .rt-terrain-overlay{
   fill:#b6c5cc;
-  fill-opacity:.18;
-  stroke:#d3dde2;
-  stroke-opacity:.16;
+  fill-opacity:.29;
+  stroke:#dce8ed;
+  stroke-opacity:.23;
   stroke-width:.22;
   vector-effect:non-scaling-stroke;
   filter:url(#rtProceduralTerrain);
   pointer-events:none
 }
-.rt-detail-geo-svg #rtTerrainOverlay{opacity:.72}
+.rt-detail-geo-svg #rtTerrainOverlay{opacity:.88}
