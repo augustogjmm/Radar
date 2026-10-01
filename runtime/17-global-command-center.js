@@ -122,6 +122,46 @@ async function loadWorldMap(){
       const svg=q('svg',host);
       if(svg){
         const layer=svg.querySelector('#rtCountryLayer');
+        if(layer&&!svg.querySelector('#rtTextureLayer')){
+          let defs=svg.querySelector('defs');
+          if(!defs){
+            defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+            svg.insertBefore(defs,svg.firstChild);
+          }
+          defs.insertAdjacentHTML('beforeend',`
+            <filter id="rtProceduralTerrain" x="-10%" y="-10%" width="120%" height="120%">
+              <feTurbulence type="fractalNoise" baseFrequency=".012 .028" numOctaves="4" seed="23" result="noise"/>
+              <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
+              <feComponentTransfer in="mono" result="terrain"><feFuncA type="table" tableValues="0 .46"/></feComponentTransfer>
+              <feBlend in="SourceGraphic" in2="terrain" mode="soft-light"/>
+            </filter>
+            <filter id="rtUrbanGlow" x="-250%" y="-250%" width="500%" height="500%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>`);
+          const texture=layer.cloneNode(true);
+          texture.id='rtTextureLayer';
+          texture.querySelectorAll('.rt-country').forEach(p=>{
+            p.removeAttribute('data-region');p.removeAttribute('data-country');p.removeAttribute('data-code');
+            p.setAttribute('class','rt-land-texture');
+          });
+          layer.parentNode.insertBefore(texture,layer);
+          const lights=document.createElementNS('http://www.w3.org/2000/svg','g');
+          lights.id='rtCityLightsLayer';
+          const points=[
+            [-74,40.7],[-87.6,41.9],[-95.4,29.8],[-118.2,34],[-122.4,37.8],[-79.4,43.7],
+            [-0.1,51.5],[2.35,48.85],[4.9,52.37],[8.68,50.1],[13.4,52.5],[12.5,41.9],[-3.7,40.4],
+            [37.6,55.75],[28.98,41.0],[31.2,30.0],[3.38,6.45],[28.0,-26.2],
+            [72.9,19.1],[77.2,28.6],[80.3,13.1],[103.8,1.35],[100.5,13.75],
+            [116.4,39.9],[121.47,31.23],[114.17,22.32],[126.98,37.57],[139.69,35.69],[135.5,34.7],
+            [151.2,-33.87],[144.96,-37.8],[-46.63,-23.55],[-43.2,-22.9],[-58.38,-34.6],[-70.65,-33.45],
+            [-99.13,19.43],[-77.04,-12.05]
+          ];
+          lights.innerHTML=points.map(([lon,lat],i)=>{
+            const [lx,ly]=mapXY(lon,lat),r=i%5===0?1.8:1.25;
+            return `<circle class="rt-city-light" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="${r}"/>`;
+          }).join('');
+          layer.parentNode.insertBefore(lights,layer);
+        }
         if(layer&&!svg.querySelector('#rtHeatGlowLayer')){
           const glow=document.createElementNS('http://www.w3.org/2000/svg','g');
           glow.setAttribute('id','rtHeatGlowLayer');
