@@ -63,7 +63,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-appbar{
   height:64px;
   display:grid;
-  grid-template-columns:410px minmax(530px,1fr) 210px 420px;
+  grid-template-columns:435px minmax(505px,1fr) 210px 420px;
   align-items:center;
   gap:12px;
   padding:0 12px 0 18px;
@@ -85,7 +85,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-brand-copy small{font-size:10px;line-height:1.2;letter-spacing:.05em;color:#9bb0c0;margin-top:5px;white-space:nowrap}
 .rt-nav{display:flex;align-items:center;justify-content:flex-end;gap:3px;min-width:0}
 .rt-nav button{
-  height:36px;border:0!important;background:transparent!important;box-shadow:none!important;color:#adbecb;padding:0 9px;border-radius:5px;
+  height:36px;border:0!important;background:transparent!important;box-shadow:none!important;color:#adbecb;padding:0 6px;border-radius:5px;
   font:650 11px/1 inherit;white-space:nowrap;cursor:pointer;transition:.16s ease
 }
 .rt-nav button:hover{color:#fff;background:#0a1e2e}
@@ -104,7 +104,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-head-icon,.rt-head-avatar,.rt-dateblock,.rt-clockblock,.rt-live{border-left:1px solid #183346}
 .rt-head-icon{width:47px;height:36px;display:grid;place-items:center;color:#b5c8d5;background:transparent}
 .rt-head-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.rt-head-avatar{width:72px;height:36px;position:relative;display:grid;place-items:center;color:#d9e7f0;background:transparent}
+.rt-head-avatar{width:54px;height:36px;position:relative;display:grid;place-items:center;color:#d9e7f0;background:transparent}
 .rt-head-avatar svg{width:30px;height:30px;border-radius:50%;filter:drop-shadow(0 0 4px rgba(155,117,184,.2))}
 .rt-head-avatar .avatar-bg{fill:#7c698e;stroke:#d7c9df;stroke-width:1}
 .rt-head-avatar .avatar-hair{fill:#3f304c;stroke:none}
@@ -175,8 +175,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-graticule path{fill:none;stroke:#1b506d;stroke-width:.45;opacity:.16;vector-effect:non-scaling-stroke}
 .rt-equator{fill:none;stroke:#2a617e;stroke-width:.7;stroke-dasharray:3 7;opacity:.15;vector-effect:non-scaling-stroke}
 #rtWorldGeoSvg .rt-country{
-  stroke:#7990a0;stroke-width:.42;
-  fill:#758591;fill-opacity:.26;
+  stroke:#617786;stroke-width:.34;stroke-opacity:.72;
+  fill:#6f828e;fill-opacity:.15;
   vector-effect:non-scaling-stroke;
   transition:fill .18s ease,fill-opacity .18s ease,stroke .18s ease,filter .18s ease;
   cursor:pointer
@@ -185,7 +185,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtWorldGeoSvg .rt-country.region-neutral{fill:#82919b;fill-opacity:.16}
 #rtWorldGeoSvg .rt-country.strong-up{fill:#00ef72;fill-opacity:.72;stroke:#9effca;filter:drop-shadow(0 0 5px rgba(0,239,114,.72));mix-blend-mode:screen}
 #rtWorldGeoSvg .rt-country.mod-up{fill:#37c772;fill-opacity:.56;stroke:#86ebb0;filter:drop-shadow(0 0 3px rgba(52,202,116,.34));mix-blend-mode:screen}
-#rtWorldGeoSvg .rt-country.neutral{fill:#7f929f;fill-opacity:.19;stroke:#8da1ad}
+#rtWorldGeoSvg .rt-country.neutral{fill:#70838f;fill-opacity:.12;stroke:#748a98;stroke-opacity:.68}
 #rtWorldGeoSvg .rt-country.mod-down{fill:#ef533f;fill-opacity:.60;stroke:#ff9d8b;filter:drop-shadow(0 0 3px rgba(239,83,63,.40));mix-blend-mode:screen}
 #rtWorldGeoSvg .rt-country.strong-down{fill:#ff263e;fill-opacity:.74;stroke:#ffadb7;filter:drop-shadow(0 0 5px rgba(255,38,62,.72));mix-blend-mode:screen}
 #rtWorldGeoSvg .rt-country[data-code="ARG"]{fill:#1268ff!important;fill-opacity:.50!important;stroke:#47b8ff!important;stroke-width:2!important;filter:drop-shadow(0 0 4px #2aa7ff) drop-shadow(0 0 11px rgba(31,113,255,.62))!important}
@@ -269,7 +269,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-detail-geo-svg .rt-country{stroke:#668294;stroke-width:.55;fill-opacity:.35}
 .rt-detail-geo-svg .rt-detail-focus{opacity:1!important;filter:brightness(1.12) saturate(1.1)}
 .rt-detail-geo-svg .rt-detail-dim{fill:#1a2933!important;fill-opacity:.42!important;stroke:#314955!important;filter:none!important}
-.rt-detail-geo-svg .rt-market-marker text{font-size:13px;stroke-width:4px}
+.rt-detail-geo-svg .rt-market-marker text{font-size:11px;stroke-width:3px;font-weight:800}
 .rt-detail-list{padding:0 7px;background:linear-gradient(180deg,rgba(7,23,35,.93),rgba(4,15,24,.95));overflow:hidden}
 .rt-market-line{display:grid;grid-template-columns:minmax(96px,1fr) 66px 42px;gap:4px;align-items:center;height:30px;border-top:1px solid #143142}
 .rt-market-line:first-child{border-top:0}.rt-market-line b{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rt-market-line .price{display:block;text-align:right;font-size:9.5px;color:#dce7ee;font-variant-numeric:tabular-nums}.rt-market-line .chg{text-align:right;font-size:9.5px;font-weight:850}
@@ -377,16 +377,16 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 /* Golden reference 2.5 — continuous market heat */
 #rtRegionAuraLayer{pointer-events:none;mix-blend-mode:screen;opacity:.42}
 #rtRegionAuraLayer .rt-region-aura{
-  opacity:.10;
-  filter:blur(18px);
+  opacity:.14;
+  filter:blur(22px);
   transform-box:fill-box;
   transform-origin:center;
 }
-#rtRegionAuraLayer .rt-region-aura.strong-up{fill:#00ff73;opacity:.17}
-#rtRegionAuraLayer .rt-region-aura.mod-up{fill:#32e77e;opacity:.12}
+#rtRegionAuraLayer .rt-region-aura.strong-up{fill:#00ff73;opacity:.24}
+#rtRegionAuraLayer .rt-region-aura.mod-up{fill:#32e77e;opacity:.18}
 #rtRegionAuraLayer .rt-region-aura.neutral{fill:#557485;opacity:.025}
-#rtRegionAuraLayer .rt-region-aura.mod-down{fill:#ff5a43;opacity:.13}
-#rtRegionAuraLayer .rt-region-aura.strong-down{fill:#ff233f;opacity:.18}
+#rtRegionAuraLayer .rt-region-aura.mod-down{fill:#ff5a43;opacity:.19}
+#rtRegionAuraLayer .rt-region-aura.strong-down{fill:#ff233f;opacity:.25}
 
 .rt-detail-geo-svg #rtRegionAuraLayer{opacity:1}
 .rt-detail-geo-svg #rtRegionAuraLayer .rt-region-aura{
@@ -423,3 +423,30 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   mix-blend-mode:screen
 }
 .rt-detail-geo-svg #rtOceanTexture{opacity:.10}
+
+
+/* Golden reference 2.9 — loading density and terminal polish */
+.rt-opportunity-loading td{opacity:.86}
+.rt-cell-skeleton,
+.rt-spark-loading{
+  display:inline-block;
+  height:8px;
+  border-radius:3px;
+  background:linear-gradient(90deg,#173043,#244a61,#173043);
+  background-size:180% 100%;
+  animation:rtShimmer 1.4s linear infinite;
+  vertical-align:middle
+}
+.rt-cell-skeleton.w38{width:38px}.rt-cell-skeleton.w48{width:48px}.rt-cell-skeleton.w55{width:55px}
+.rt-cell-skeleton.w56{width:56px}.rt-cell-skeleton.w78{width:78px}.rt-cell-skeleton.w90{width:90px}
+.rt-spark-loading{width:82px;height:12px}
+.rt-mini-bars-loading{display:inline-flex;align-items:flex-end;gap:2px;width:55px;height:18px}
+.rt-mini-bars-loading i{display:block;width:4px;border-radius:1px 1px 0 0;background:#225c7f;animation:rtPulseBars 1.3s ease-in-out infinite}
+.rt-mini-bars-loading i:nth-child(1){height:32%}.rt-mini-bars-loading i:nth-child(2){height:54%}.rt-mini-bars-loading i:nth-child(3){height:44%}
+.rt-mini-bars-loading i:nth-child(4){height:73%}.rt-mini-bars-loading i:nth-child(5){height:61%}.rt-mini-bars-loading i:nth-child(6){height:88%}
+@keyframes rtShimmer{to{background-position:-180% 0}}
+@keyframes rtPulseBars{50%{opacity:.45}}
+
+.rt-opps-table tbody td:last-child{font-size:9.5px;color:#aec0cb}
+.rt-opps-table tbody tr[data-rt-symbol]{cursor:pointer}
+.rt-opps-table tbody tr[data-rt-symbol]:hover{background:linear-gradient(90deg,rgba(19,65,91,.30),rgba(8,31,46,.12))}
