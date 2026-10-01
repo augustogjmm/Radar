@@ -102,7 +102,8 @@ const REGION_VIEWS={
   europe:[490,45,280,195],
   asia:[790,70,340,240],
   latam:[290,220,240,300],
-  oceania:[940,280,260,220]
+  oceania:[940,280,260,220],
+  argentina:[350,255,115,225]
 };
 const MARKET_CITIES={
   northamerica:[['NUEVA YORK',-74.006,40.7128,'sp500'],['TORONTO',-79.3832,43.6532,'sp500']],
@@ -303,10 +304,11 @@ function renderDetailGeo(key){
   const clone=source.cloneNode(true);
   clone.removeAttribute('id');
   clone.classList.add('rt-detail-geo-svg');
-  clone.setAttribute('viewBox',(REGION_VIEWS[key]||REGION_VIEWS.europe).join(' '));
+  const detailView=state.selectedCountry==='ARG'?REGION_VIEWS.argentina:(REGION_VIEWS[key]||REGION_VIEWS.europe);
+  clone.setAttribute('viewBox',detailView.join(' '));
   clone.setAttribute('preserveAspectRatio','xMidYMid slice');
   clone.querySelectorAll('.rt-country').forEach(p=>{
-    const match=p.dataset.region===key;
+    const match=state.selectedCountry?p.dataset.code===state.selectedCountry:p.dataset.region===key;
     p.classList.toggle('rt-detail-focus',match);
     p.classList.toggle('rt-detail-dim',!match);
   });
@@ -315,9 +317,10 @@ function renderDetailGeo(key){
     a.style.display=a.dataset.glowRegion===key?'':'none';
   });
   clone.querySelector('#rtCountryLayer')?.insertAdjacentHTML('beforeend',marketMarkers(key));
+  if(state.selectedCountry==='ARG')clone.querySelectorAll('.rt-market-marker').forEach(m=>{if(m.dataset.markerName!=='ARGENTINA')m.remove()});
   host.replaceChildren(clone);
   const panel=host.closest('.rt-detail-map');
-  const view=REGION_VIEWS[key]||REGION_VIEWS.europe;
+  const view=state.selectedCountry==='ARG'?REGION_VIEWS.argentina:(REGION_VIEWS[key]||REGION_VIEWS.europe);
   if(panel&&view){
     const [vx,vy,vw,vh]=view,rect=panel.getBoundingClientRect();
     const sx=rect.width/Math.max(1,vw),sy=rect.height/Math.max(1,vh);
@@ -1009,10 +1012,10 @@ function opportunityTrend(r){
   return['Lateral','warn'];
 }
 function opportunityPrice(r,price){
-  if(!Number.isFinite(price))return'—';
-  const t=opportunityAssetType(r);
-  if(t==='argbond'||t==='bond')return 'USD '+fmt(price,2);
-  if(t==='cedear')return 'USD '+fmt(price,1);
+  if(!Number.isFinite(price))return's/d';
+  const t=opportunityAssetType(r),ccy=String(r?.item?.panel?.denominationCcy||'').toUpperCase();
+  if(t==='adr')return 'USD '+fmt(price,2);
+  if((t==='argbond'||t==='bond'||t==='bill'||t==='letra')&&ccy==='USD')return 'USD '+fmt(price,2);
   return '$ '+fmt(price,price>=1000?0:2);
 }
 const TICKER_ALIAS={
@@ -1080,14 +1083,14 @@ function timing(r){
   return['Seguimiento','warn'];
 }
 function miniSpark(values){
-  if(!values.length)return'<span style="color:#667f92">—</span>';
+  if(!values.length)return'<span class="rt-data-missing">SIN HIST.</span>';
   const vals=values.slice(-20),d=svgLine(vals,104,30,2),down=vals.at(-1)<vals[0];
   const area=d?`${d} L102,28 L2,28 Z`:'';
   return `<svg class="rt-spark ${down?'down':''}" viewBox="0 0 104 30" preserveAspectRatio="none"><path class="spark-area" d="${area}"/><path class="spark-line" d="${d}"/></svg>`;
 }
 function volumeChart(bars){
   const vals=(bars||[]).slice(-14).map(x=>num(x.volume)).filter(Number.isFinite);
-  if(vals.length<3)return'<span style="color:#667f92">—</span>';
+  if(vals.length<3)return'<span class="rt-data-missing">VOL. ACTUAL</span>';
   const max=Math.max(...vals)||1;
   return `<span class="rt-volume-bars">${vals.map((v,i)=>{
     const up=i===0||num(bars.slice(-14)[i]?.close)>=num(bars.slice(-14)[Math.max(0,i-1)]?.close);
@@ -1155,18 +1158,18 @@ function renderOpportunities(){
 
   const bySymbol=new Map();
   for(const r of results){
-    const s=String(r.item.symbol||'').toUpperCase();
-    const prev=bySymbol.get(s);
+    const s=String(r.item.symbol||'').toUpperCase(),k=opportunityAssetType(r)+'|'+s;
+    const prev=bySymbol.get(k);
     const score=num(r?.status?.oppScore??r?.rfScore??r?.score)||0;
     const prevScore=num(prev?.status?.oppScore??prev?.rfScore??prev?.score)||-Infinity;
-    if(!prev||score>prevScore)bySymbol.set(s,r);
+    if(!prev||score>prevScore)bySymbol.set(k,r);
   }
 
   for(const symbol of OPPORTUNITY_ORDER){
-    if(bySymbol.has(symbol))continue;
+    if([...bySymbol.keys()].some(k=>k.endsWith('|'+symbol)))continue;
     const market=state.markets.get(OPPORTUNITY_MARKET_SYMBOL[symbol]);
     const fixed=state.fixedIncome.get(symbol+'D')||state.fixedIncome.get(symbol);
-    if(market?.bars?.length>2||Number.isFinite(market?.last)||Number.isFinite(fixed?.last))bySymbol.set(symbol,opportunityFallback(symbol));
+    if(market?.bars?.length>2||Number.isFinite(market?.last)||Number.isFinite(fixed?.last)){const r=opportunityFallback(symbol);bySymbol.set(opportunityAssetType(r)+'|'+symbol,r);}
   }
 
   results=[...bySymbol.values()];
