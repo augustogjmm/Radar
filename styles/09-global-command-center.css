@@ -39,7 +39,7 @@ body.rt-global-shell .wrap{
   padding:7px 10px 10px!important;
   width:100%!important;
   max-width:none!important;
-  min-height:calc(100vh - 63px)!important;
+  min-height:calc(100vh - 64px)!important;
 }
 body.rt-global-shell #dashboardView{
   display:block;
@@ -61,7 +61,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 
 /* Header */
 .rt-appbar{
-  height:63px;
+  height:64px;
   display:grid;
   grid-template-columns:410px minmax(530px,1fr) 210px 420px;
   align-items:center;
