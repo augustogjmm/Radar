@@ -81,8 +81,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-logo svg circle:nth-child(1){stroke-width:1.8}.rt-logo svg circle:nth-child(2){opacity:.78}.rt-logo svg circle:nth-child(3){opacity:.9}
 .rt-logo svg path{opacity:.72}.rt-logo svg .sweep{stroke:#68ceff;stroke-width:1.7;opacity:.85}.rt-logo svg .dot{fill:#33baff;stroke:none}
 .rt-brand-copy{display:flex;flex-direction:column;min-width:0}
-.rt-brand-copy b{font-size:28px;line-height:1;font-weight:780;letter-spacing:-.025em;color:#e1edf7}
-.rt-brand-copy small{font-size:10px;line-height:1.2;letter-spacing:.05em;color:#9bb0c0;margin-top:5px;white-space:nowrap}
+.rt-brand-copy b{font-size:27px;line-height:1;font-weight:770;letter-spacing:-.025em;color:#e1edf7}
+.rt-brand-copy small{font-size:9px;line-height:1.2;letter-spacing:.05em;color:#9bb0c0;margin-top:5px;white-space:nowrap}
 .rt-nav{display:flex;align-items:center;justify-content:flex-end;gap:3px;min-width:0}
 .rt-nav button{
   height:36px;border:0!important;background:transparent!important;box-shadow:none!important;color:#adbecb;padding:0 6px;border-radius:5px;
@@ -183,11 +183,11 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 }
 #rtWorldGeoSvg .rt-country.region-africa,
 #rtWorldGeoSvg .rt-country.region-neutral{fill:#82919b;fill-opacity:.16}
-#rtWorldGeoSvg .rt-country.strong-up{fill:#00ef72;fill-opacity:.92;stroke:#9effca;filter:drop-shadow(0 0 6px rgba(0,239,114,.72));mix-blend-mode:color}
-#rtWorldGeoSvg .rt-country.mod-up{fill:#37c772;fill-opacity:.78;stroke:#86ebb0;filter:drop-shadow(0 0 4px rgba(52,202,116,.34));mix-blend-mode:color}
+#rtWorldGeoSvg .rt-country.strong-up{fill:#00ef72;fill-opacity:.62;stroke:#9effca;filter:drop-shadow(0 0 6px rgba(0,239,114,.58));mix-blend-mode:color}
+#rtWorldGeoSvg .rt-country.mod-up{fill:#37c772;fill-opacity:.46;stroke:#86ebb0;filter:drop-shadow(0 0 4px rgba(52,202,116,.30));mix-blend-mode:color}
 #rtWorldGeoSvg .rt-country.neutral{fill:#70838f;fill-opacity:.12;stroke:#748a98;stroke-opacity:.68}
-#rtWorldGeoSvg .rt-country.mod-down{fill:#ef533f;fill-opacity:.80;stroke:#ff9d8b;filter:drop-shadow(0 0 4px rgba(239,83,63,.40));mix-blend-mode:color}
-#rtWorldGeoSvg .rt-country.strong-down{fill:#ff263e;fill-opacity:.94;stroke:#ffadb7;filter:drop-shadow(0 0 6px rgba(255,38,62,.72));mix-blend-mode:color}
+#rtWorldGeoSvg .rt-country.mod-down{fill:#ef533f;fill-opacity:.48;stroke:#ff9d8b;filter:drop-shadow(0 0 4px rgba(239,83,63,.34));mix-blend-mode:color}
+#rtWorldGeoSvg .rt-country.strong-down{fill:#ff263e;fill-opacity:.64;stroke:#ffadb7;filter:drop-shadow(0 0 6px rgba(255,38,62,.58));mix-blend-mode:color}
 #rtWorldGeoSvg .rt-country[data-code="ARG"]{fill:#1268ff!important;fill-opacity:.50!important;stroke:#47b8ff!important;stroke-width:2!important;filter:drop-shadow(0 0 4px #2aa7ff) drop-shadow(0 0 11px rgba(31,113,255,.62))!important}
 #rtWorldGeoSvg .rt-country:hover{stroke:#fff;stroke-width:1.2;fill-opacity:.78;filter:brightness(1.15) drop-shadow(0 0 4px rgba(90,210,255,.35))}
 .rt-market-marker{pointer-events:none}
@@ -233,7 +233,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   box-shadow:0 9px 24px rgba(0,0,0,.40),inset 0 1px 0 rgba(255,255,255,.025);
   backdrop-filter:blur(5px);pointer-events:none
 }
-.rt-map-label b{display:block;font-size:13px;line-height:1;color:#e7f1f6}.rt-map-label strong{display:block;margin:3px 0 2px;font-size:23px;line-height:1;font-weight:860}.rt-map-label small{display:block;font-size:9px;color:#b1c0c9;letter-spacing:.015em}
+.rt-map-label b{display:block;font-size:11px;line-height:1;color:#e7f1f6}.rt-map-label strong{display:block;margin:3px 0 2px;font-size:20px;line-height:1;font-weight:850}.rt-map-label small{display:block;font-size:8px;color:#b1c0c9;letter-spacing:.015em}
 .rt-map-label.positive{background:linear-gradient(180deg,rgba(5,84,48,.95),rgba(2,40,26,.95));border-color:#2c9565}.rt-map-label.positive strong{color:#45f3a2}
 .rt-map-label.negative{background:linear-gradient(180deg,rgba(89,25,30,.95),rgba(46,12,17,.95));border-color:#a3424c}.rt-map-label.negative strong{color:#ff6a78}
 .rt-map-label.neutral strong{color:#c7d5de}
@@ -290,11 +290,11 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-up{color:#37e28d!important}.rt-down{color:#ff5668!important}.rt-flat{color:#adbec9!important}
 
 /* Second row */
-.rt-mid-grid{display:grid;grid-template-columns:minmax(0,906fr) minmax(0,737fr);gap:9px;height:216px;margin-top:1px}
-.rt-arg-card,.rt-signals-card{height:216px}
+.rt-mid-grid{display:grid;grid-template-columns:minmax(0,906fr) minmax(0,737fr);gap:9px;height:208px;margin-top:6px}
+.rt-arg-card,.rt-signals-card{height:208px}
 .rt-arg-card .rt-section-title{height:35px;padding:8px 11px 4px}.rt-arg-card .rt-section-title h2{font-size:18px}.rt-arg-card .rt-section-title p{display:none}.rt-arg-card .rt-link-button{display:none}
 .rt-traffic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:8px 13px 3px}
-.rt-traffic-card{height:162px;display:grid;grid-template-columns:94px minmax(0,1fr) 34px;gap:8px;align-items:center;padding:8px;border:1px solid #183a50;border-radius:6px;background:linear-gradient(180deg,#091d2c,#06141f);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.rt-traffic-card{height:158px;display:grid;grid-template-columns:94px minmax(0,1fr) 34px;gap:8px;align-items:center;padding:8px;border:1px solid #183a50;border-radius:6px;background:linear-gradient(180deg,#091d2c,#06141f);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
 .rt-light{width:54px;height:139px;justify-self:center;position:relative;border-radius:27px;border:1px solid #8a9ba4;background:linear-gradient(90deg,#010405,#10191e 48%,#030708);box-shadow:0 0 0 2px #071015,0 0 0 3px #354751,inset 0 0 0 3px #020608,inset 0 0 16px #000,0 8px 18px rgba(0,0,0,.42);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px}
 .rt-light:before,.rt-light:after{content:"";position:absolute;left:50%;transform:translateX(-50%);width:33px;height:1px;background:rgba(255,255,255,.08)}.rt-light:before{top:44px}.rt-light:after{bottom:44px}
 .rt-light i{width:32px;height:32px;border-radius:50%;background:#07150f;border:1px solid #29483a;box-shadow:inset 0 0 9px rgba(0,0,0,.85);opacity:.38}
@@ -310,7 +310,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 
 .rt-signals-head{height:35px;padding:8px 10px 4px;display:flex;align-items:flex-start}.rt-signals-head>div{display:flex;align-items:baseline;gap:13px}.rt-signals-head h2{margin:0;font-size:18px}.rt-signals-head small{font-size:11px;color:#8ba3b4}
 .rt-signal-list{padding:0 10px 8px}
-.rt-signal-row{display:grid;grid-template-columns:24px minmax(150px,1.05fr) 26px 62px 66px minmax(170px,1fr);gap:6px;align-items:center;height:28px;border-top:1px solid #173445;font-size:10px}.rt-signal-row:first-child{border-top:0}.rt-signal-row b{font-size:11px;font-weight:650}.rt-signal-icon{width:18px;height:18px;display:grid;place-items:center}.rt-signal-icon svg{width:16px;height:16px;fill:none;stroke:#d7e3ea;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}.rt-signal-row:last-child .rt-signal-icon svg{stroke:#ff6576}.rt-signal-arrow{text-align:center;font-size:15px;font-weight:900}.rt-signal-value{font-size:11px;font-variant-numeric:tabular-nums;color:#dce8ef}.rt-signal-state{padding:3px 6px;border-radius:3px;text-align:center;font-size:9px;font-weight:850}.rt-signal-state.bad{background:#651823;color:#ff8b96}.rt-signal-state.good{background:#0d462f;color:#60eaa2}.rt-signal-state.warn{background:#5b4312;color:#ffd76b}.rt-signal-note{font-size:10px;color:#9eb1bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt-signal-row{display:grid;grid-template-columns:24px minmax(150px,1.05fr) 26px 62px 66px minmax(170px,1fr);gap:6px;align-items:center;height:28px;border-top:1px solid #173445;font-size:11px}.rt-signal-row:first-child{border-top:0}.rt-signal-row b{font-size:12px;font-weight:650}.rt-signal-icon{width:18px;height:18px;display:grid;place-items:center}.rt-signal-icon svg{width:16px;height:16px;fill:none;stroke:#d7e3ea;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}.rt-signal-row:last-child .rt-signal-icon svg{stroke:#ff6576}.rt-signal-arrow{text-align:center;font-size:15px;font-weight:900}.rt-signal-value{font-size:12px;font-variant-numeric:tabular-nums;color:#dce8ef}.rt-signal-state{padding:3px 6px;border-radius:3px;text-align:center;font-size:9px;font-weight:850}.rt-signal-state.bad{background:#651823;color:#ff8b96}.rt-signal-state.good{background:#0d462f;color:#60eaa2}.rt-signal-state.warn{background:#5b4312;color:#ffd76b}.rt-signal-note{font-size:11px;color:#9eb1bd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Opportunities */
 .rt-opps-card{height:220px;margin-top:7px;overflow:visible;display:grid;grid-template-columns:minmax(0,1fr) 193px;grid-template-rows:35px 185px;column-gap:11px;border:0;background:transparent;box-shadow:none}
@@ -320,9 +320,9 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-tabs{display:flex;gap:5px}.rt-tab{height:25px;padding:0 14px;border:1px solid #1d4259;border-radius:3px;background:#061522;color:#9ab0be;font-size:9px;font-weight:700;cursor:pointer}.rt-tab.active{background:#0d4f86;border-color:#238cd0;color:#fff;box-shadow:0 0 11px rgba(27,156,255,.15)}
 .rt-opps-layout{display:contents}
 .rt-opps-wrap{grid-column:1;grid-row:2;overflow:hidden;border:1px solid #17394e;border-top:0;border-radius:0 0 7px 7px;background:#03101a}
-.rt-opps-table{width:100%;height:100%;border-collapse:collapse;table-layout:fixed;font-size:10px}
+.rt-opps-table{width:100%;height:100%;border-collapse:collapse;table-layout:fixed;font-size:11px}
 .rt-opps-table th,.rt-opps-table td{overflow:hidden;text-overflow:ellipsis}
-.rt-opps-table thead th{height:23px;padding:4px 7px;text-align:left;color:#9cafbd;background:linear-gradient(180deg,#0f293c,#0b2030);border-bottom:1px solid #193a4e;border-right:1px solid #17394d;font-size:9px;font-weight:700;white-space:nowrap}
+.rt-opps-table thead th{height:23px;padding:4px 7px;text-align:left;color:#9cafbd;background:linear-gradient(180deg,#0f293c,#0b2030);border-bottom:1px solid #193a4e;border-right:1px solid #17394d;font-size:10px;font-weight:700;white-space:nowrap}
 .rt-opps-table tbody td{height:26px;padding:0 7px;border-bottom:1px solid #143245;border-right:1px solid #123044;color:#d5e0e7;vertical-align:middle;white-space:nowrap;line-height:1.1}
 .rt-opps-table tbody tr:last-child td{border-bottom:0}.rt-opps-table tbody tr:hover{background:#0a1d2a}
 .rt-opps-table th:nth-child(1),.rt-opps-table td:nth-child(1){width:9%}.rt-opps-table th:nth-child(2),.rt-opps-table td:nth-child(2){width:6.5%}.rt-opps-table th:nth-child(3),.rt-opps-table td:nth-child(3){width:8.2%}.rt-opps-table th:nth-child(4),.rt-opps-table td:nth-child(4){width:6.8%}.rt-opps-table th:nth-child(5),.rt-opps-table td:nth-child(5){width:8.8%}.rt-opps-table th:nth-child(6),.rt-opps-table td:nth-child(6){width:9%}.rt-opps-table th:nth-child(7),.rt-opps-table td:nth-child(7){width:11.5%}.rt-opps-table th:nth-child(8),.rt-opps-table td:nth-child(8){width:9.2%}.rt-opps-table th:nth-child(9),.rt-opps-table td:nth-child(9){width:10.2%}.rt-opps-table th:nth-child(10),.rt-opps-table td:nth-child(10){width:20.8%}
@@ -396,7 +396,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 
 
 /* Golden reference 2.6 — self-contained terrain depth */
-#rtTextureLayer{pointer-events:none;opacity:.80;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
+#rtTextureLayer{pointer-events:none;opacity:.96;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
 #rtTextureLayer .rt-land-texture{
   fill:#8fa3ad;
   fill-opacity:.58;
@@ -411,8 +411,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   opacity:.94;
   filter:url(#rtUrbanGlow)
 }
-.rt-detail-geo-svg #rtTextureLayer{opacity:.52}
-.rt-detail-geo-svg #rtCityLightsLayer{opacity:.48}
+.rt-detail-geo-svg #rtTextureLayer{opacity:.90}
+.rt-detail-geo-svg #rtCityLightsLayer{opacity:.86}
 
 
 /* Golden reference 2.7 — ocean grain */
@@ -447,7 +447,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 @keyframes rtShimmer{to{background-position:-180% 0}}
 @keyframes rtPulseBars{50%{opacity:.45}}
 
-.rt-opps-table tbody td:last-child{font-size:9.5px;color:#aec0cb}
+.rt-opps-table tbody td:last-child{font-size:10.5px;color:#aec0cb}
 .rt-opps-table tbody tr[data-rt-symbol]{cursor:pointer}
 .rt-opps-table tbody tr[data-rt-symbol]:hover{background:linear-gradient(90deg,rgba(19,65,91,.30),rgba(8,31,46,.12))}
 
@@ -496,15 +496,23 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-tabs .rt-tab:nth-child(3){min-width:82px}
 .rt-tabs .rt-tab:nth-child(4){min-width:85px}
 
-#rtTerrainOverlay{pointer-events:none;mix-blend-mode:overlay}
+#rtTerrainOverlay{pointer-events:none;mix-blend-mode:soft-light}
 #rtTerrainOverlay .rt-terrain-overlay{
   fill:#b6c5cc;
-  fill-opacity:.29;
+  fill-opacity:.46;
   stroke:#dce8ed;
-  stroke-opacity:.23;
+  stroke-opacity:.30;
   stroke-width:.22;
   vector-effect:non-scaling-stroke;
   filter:url(#rtProceduralTerrain);
   pointer-events:none
 }
-.rt-detail-geo-svg #rtTerrainOverlay{opacity:.88}
+.rt-detail-geo-svg #rtTerrainOverlay{opacity:1}
+
+/* Approved-reference fidelity: preserve regional texture under live heat. */
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-up{fill-opacity:.42!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-up{fill-opacity:.34!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-down{fill-opacity:.35!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-down{fill-opacity:.44!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.neutral{fill-opacity:.12!important}
+.rt-detail-geo-svg .rt-market-marker text{font-size:10px;stroke-width:2.6px}
