@@ -558,3 +558,24 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 }
 .rt-signal-icon svg{width:18px;height:18px}
 .rt-signal-state{font-size:10px;padding:3px 7px}
+
+/* Correct the over-bright regional pass: keep terrain visible, never wash countries white. */
+.rt-detail-geo-svg #rtTerrainOverlay{
+  opacity:.58!important;
+  mix-blend-mode:soft-light!important
+}
+.rt-detail-geo-svg #rtTerrainOverlay .rt-terrain-overlay{
+  fill:#9aadb8!important;
+  fill-opacity:.26!important;
+  stroke:#b8c9d1!important;
+  stroke-opacity:.22!important
+}
+.rt-detail-geo-svg #rtTextureLayer{
+  opacity:.78!important;
+  mix-blend-mode:soft-light!important
+}
+.rt-detail-geo-svg #rtCityLightsLayer{opacity:.74!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-up{fill-opacity:.46!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-up{fill-opacity:.36!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-down{fill-opacity:.38!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-down{fill-opacity:.48!important}
