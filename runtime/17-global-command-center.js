@@ -66,7 +66,7 @@ const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 const MAP_VIEW={w:1200,h:520,minLat:-60,maxLat:85};
 const REGION_VIEWS={
   northamerica:[130,70,320,220],
-  europe:[515,45,250,195],
+  europe:[490,45,280,195],
   asia:[790,70,340,240],
   latam:[290,220,240,300],
   oceania:[940,280,260,220]
