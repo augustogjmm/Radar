@@ -290,8 +290,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-up{color:#37e28d!important}.rt-down{color:#ff5668!important}.rt-flat{color:#adbec9!important}
 
 /* Second row */
-.rt-mid-grid{display:grid;grid-template-columns:minmax(0,906fr) minmax(0,737fr);gap:9px;height:208px;margin-top:1px}
-.rt-arg-card,.rt-signals-card{height:208px}
+.rt-mid-grid{display:grid;grid-template-columns:minmax(0,906fr) minmax(0,737fr);gap:9px;height:216px;margin-top:1px}
+.rt-arg-card,.rt-signals-card{height:216px}
 .rt-arg-card .rt-section-title{height:35px;padding:8px 11px 4px}.rt-arg-card .rt-section-title h2{font-size:18px}.rt-arg-card .rt-section-title p{display:none}.rt-arg-card .rt-link-button{display:none}
 .rt-traffic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:8px 13px 3px}
 .rt-traffic-card{height:162px;display:grid;grid-template-columns:94px minmax(0,1fr) 34px;gap:8px;align-items:center;padding:8px;border:1px solid #183a50;border-radius:6px;background:linear-gradient(180deg,#091d2c,#06141f);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
