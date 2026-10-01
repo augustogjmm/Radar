@@ -64,7 +64,7 @@ const COUNTRY_MARKET={
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 const OPPORTUNITY_MARKET_SYMBOL={
   GGAL:'GGAL.BA',YPFD:'YPFD.BA',PAMP:'PAMP.BA',VIST:'VIST.BA',TGSU2:'TGSU2.BA',
-  AAPL:'AAPL.BA',NVDA:'NVDA.BA',MELI:'MELI.BA',
+  AAPL:'AAPL',NVDA:'NVDA',MELI:'MELI',
   AL30:'AL30.BA',AE38:'AE38.BA',GD30:'GD30.BA'
 };
 const OPPORTUNITY_TYPE={
@@ -890,7 +890,13 @@ function opportunityTrend(r){
   const text=[r?.status?.label,r?.trend,r?.plan?.trend,r?.reason,r?.why].filter(Boolean).join(' ').toLowerCase();
   if(/alcista|buy|compra|long|ruptura/.test(text))return['Alcista',''];
   if(/bajista|sell|venta|short/.test(text))return['Bajista','bad'];
-  return['Lateral / espera','warn'];
+  const market=opportunityMarket(r),closes=(market?.bars||[]).slice(-21).map(x=>num(x.close)).filter(Number.isFinite);
+  if(closes.length>5){
+    const base=closes[0],last=closes.at(-1),change=base?((last/base)-1)*100:0;
+    if(change>=2)return['Alcista',''];
+    if(change<=-2)return['Bajista','bad'];
+  }
+  return['Lateral','warn'];
 }
 function opportunityPrice(r,price){
   if(!Number.isFinite(price))return'—';
@@ -1040,9 +1046,12 @@ function renderOpportunities(){
   }
   $('rtOppsBody').innerHTML=results.map(r=>{
     const market=opportunityMarket(r);
+    const sourceBars=extractBars(r);
     const marketBars=(market?.bars||[]).map(x=>({close:num(x.close),volume:num(x.volume)})).filter(x=>Number.isFinite(x.close));
-    const bars=marketBars.length>2?marketBars:extractBars(r);
-    const rv=relVolume(bars),trend=opportunityTrend(r),tm=timing(r);
+    const bars=marketBars.length>2?marketBars:sourceBars;
+    const marketVolumeCount=marketBars.filter(x=>Number.isFinite(x.volume)&&x.volume>0).length;
+    const volumeBars=marketVolumeCount>=5?marketBars:sourceBars;
+    const rv=relVolume(volumeBars),trend=opportunityTrend(r),tm=timing(r);
     const price=Number.isFinite(num(market?.last))?num(market.last):num(r.price??r.last??r.panel?.price);
     const score=num(r?.status?.oppScore??r?.rfScore??r?.score);
     const day=Number.isFinite(num(market?.changePct))?num(market.changePct):(bars.length>1&&bars.at(-2).close?(bars.at(-1).close/bars.at(-2).close-1)*100:NaN);
@@ -1054,7 +1063,7 @@ function renderOpportunities(){
       <td><span class="rt-type rt-type-${esc(opportunityAssetType(r))}">${esc(oppType(r))}</span></td>
       <td>${opportunityPrice(r,price)}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
-      <td><div class="rt-volume-cell">${volumeChart(bars)}<small>${Number.isFinite(rv)?fmt(rv,1)+'x':'s/d'}</small></div></td>
+      <td><div class="rt-volume-cell">${volumeChart(volumeBars)}<small>${Number.isFinite(rv)?fmt(rv,1)+'x':'s/d'}</small></div></td>
       <td>${miniSpark(bars.map(x=>x.close))}</td>
       <td>${esc(setup)}</td>
       <td><span class="rt-trend ${trend[1]}"><i>${trend[1]==='bad'?'↓':trend[1]==='warn'?'●':'↑'}</i>${trend[0]}</span></td>
