@@ -639,3 +639,64 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-up{fill-opacity:.36!important}
 .rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-down{fill-opacity:.38!important}
 .rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-down{fill-opacity:.48!important}
+
+
+/* Map fidelity fix — remove unintended terrain/shadow treatment.
+   Keep market heat, borders, labels and city markers clean and legible. */
+#rtTextureLayer,
+#rtTerrainOverlay,
+#rtOceanTexture{
+  display:none!important;
+}
+
+#rtCountryLayer>.rt-country{
+  mix-blend-mode:normal!important;
+  filter:none!important;
+}
+
+#rtCountryLayer>.rt-country.strong-up{
+  fill:#08d96f!important;
+  fill-opacity:.76!important;
+}
+#rtCountryLayer>.rt-country.mod-up{
+  fill:#46cc7c!important;
+  fill-opacity:.66!important;
+}
+#rtCountryLayer>.rt-country.neutral{
+  fill:#60798a!important;
+  fill-opacity:.42!important;
+}
+#rtCountryLayer>.rt-country.mod-down{
+  fill:#f05a45!important;
+  fill-opacity:.67!important;
+}
+#rtCountryLayer>.rt-country.strong-down{
+  fill:#ef3348!important;
+  fill-opacity:.77!important;
+}
+
+#rtHeatGlowLayer{
+  opacity:.22!important;
+  filter:blur(6px)!important;
+}
+#rtHeatGlowLayer .rt-heat-glow{
+  opacity:.22!important;
+}
+
+.rt-world-map-host>svg,
+.rt-detail-geo-svg{
+  filter:none!important;
+}
+
+.rt-detail-geo-svg #rtTextureLayer,
+.rt-detail-geo-svg #rtTerrainOverlay,
+.rt-detail-geo-svg #rtOceanTexture{
+  display:none!important;
+}
+
+.rt-detail-geo-svg #rtCountryLayer>.rt-country{
+  mix-blend-mode:normal!important;
+  filter:none!important;
+  stroke:#7f9aab!important;
+  stroke-opacity:.58!important;
+}
