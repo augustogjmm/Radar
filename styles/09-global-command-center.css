@@ -174,7 +174,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   position:absolute;
   inset:0;
   z-index:0;
-  background-image:url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74192/world.topo.bathy.200408.3x5400x2700.jpg");
+  background-image:url("/assets/earth-day-2048.jpg");
   background-repeat:no-repeat;
   background-size:100% 124.14%;
   background-position:center -3.45%;
@@ -187,7 +187,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   position:absolute;
   inset:0;
   z-index:1;
-  background-image:url("https://svs.gsfc.nasa.gov/vis/a000000/a002900/a002916/earthatnight-2048.png");
+  background-image:url("/assets/earth-night-2048.jpg");
   background-repeat:no-repeat;
   background-size:100% 124.14%;
   background-position:center -3.45%;
