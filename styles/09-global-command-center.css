@@ -725,3 +725,40 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-detail-map{
   background:#020b13!important;
 }
+
+
+/* Opportunity table: liquidity first, then independent opportunity decision. */
+.rt-opps-header{gap:8px}
+.rt-tabs{flex-wrap:wrap;justify-content:flex-end}
+.rt-tab{padding:0 10px;min-width:62px!important}
+.rt-type-adr{color:#7dd3fc}
+.rt-type-bill,.rt-type-letra{color:#c4b5fd}
+
+.rt-volume-cell{
+  align-items:center!important;
+  min-width:0;
+}
+.rt-volume-cell small{
+  display:block;
+  min-width:72px;
+  font-size:7px!important;
+  color:#8da5b5!important;
+  white-space:nowrap;
+}
+
+.rt-opp-decision{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:72px;
+  padding:3px 7px;
+  border-radius:9px;
+  font-size:8px;
+  font-weight:850;
+  letter-spacing:.15px;
+  white-space:nowrap;
+}
+.rt-opp-decision.yes{background:#0d4a32;color:#68edaa;border:1px solid #176844}
+.rt-opp-decision.near{background:#514011;color:#ffd665;border:1px solid #765f1e}
+.rt-opp-decision.watch{background:#183548;color:#8fc8e9;border:1px solid #245169}
+.rt-opp-decision.no{background:#541a25;color:#ff8793;border:1px solid #762534}
