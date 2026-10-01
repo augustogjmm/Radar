@@ -249,9 +249,15 @@ try{
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-watchlist'));
   await shot('04-watchlist');
 
-  await page.fill('#symbol','BTCUSDT');
-  await page.selectOption('#assetType','crypto');
-  await page.click('#analyzeBtn');
+  const globalShellForAnalysis=await page.evaluate(()=>document.body.classList.contains('rt-global-shell'));
+  if(globalShellForAnalysis){
+    await page.fill('#rtGlobalSearch','BTCUSDT');
+    await page.press('#rtGlobalSearch','Enter');
+  }else{
+    await page.fill('#symbol','BTCUSDT');
+    await page.selectOption('#assetType','crypto');
+    await page.click('#analyzeBtn');
+  }
   await page.waitForFunction(()=>!document.getElementById('analysisView')?.classList.contains('hidden')&&(document.getElementById('lastPrice')?.textContent||'')!=='—',{timeout:30000});
   await assert(await page.evaluate(()=>document.getElementById('technicalStatusGrid')?.style.display!=='none'),'Análisis individual no muestra estados multi-timeframe');
   await assert(await page.evaluate(()=>{const d=document.getElementById('productAnalysisAdvanced');return !!d&&!d.open}),'Análisis avanzado debe comenzar plegado');
