@@ -285,6 +285,16 @@ function renderDetailGeo(key){
   });
   clone.querySelector('#rtCountryLayer')?.insertAdjacentHTML('beforeend',marketMarkers(key));
   host.replaceChildren(clone);
+  const panel=host.closest('.rt-detail-map');
+  const view=REGION_VIEWS[key]||REGION_VIEWS.europe;
+  if(panel&&view){
+    const [vx,vy,vw,vh]=view,rect=panel.getBoundingClientRect();
+    const sx=rect.width/Math.max(1,vw),sy=rect.height/Math.max(1,vh);
+    panel.style.setProperty('--rt-detail-bg-w',`${(MAP_VIEW.w*sx).toFixed(1)}px`);
+    panel.style.setProperty('--rt-detail-bg-h',`${(MAP_VIEW.h*sy).toFixed(1)}px`);
+    panel.style.setProperty('--rt-detail-bg-x',`${(-vx*sx).toFixed(1)}px`);
+    panel.style.setProperty('--rt-detail-bg-y',`${(-vy*sy).toFixed(1)}px`);
+  }
 }
 
 function insertShell(){
