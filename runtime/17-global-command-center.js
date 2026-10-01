@@ -876,10 +876,28 @@ function relVolume(bars){
   const last=vols.at(-1),avg=vols.slice(0,-1).reduce((a,b)=>a+b,0)/Math.max(1,vols.length-1);return avg?last/avg:NaN;
 }
 function opportunityTrend(r){
+  if(r?.marketOnly){
+    const bars=opportunityMarket(r)?.bars||[];
+    const closes=bars.slice(-21).map(x=>num(x.close)).filter(Number.isFinite);
+    if(closes.length>5){
+      const last=closes.at(-1),base=closes[0];
+      const change=base?((last/base)-1)*100:0;
+      if(change>=2)return['Alcista',''];
+      if(change<=-2)return['Bajista','bad'];
+    }
+    return['Lateral','warn'];
+  }
   const text=[r?.status?.label,r?.trend,r?.plan?.trend,r?.reason,r?.why].filter(Boolean).join(' ').toLowerCase();
   if(/alcista|buy|compra|long|ruptura/.test(text))return['Alcista',''];
   if(/bajista|sell|venta|short/.test(text))return['Bajista','bad'];
   return['Lateral / espera','warn'];
+}
+function opportunityPrice(r,price){
+  if(!Number.isFinite(price))return'—';
+  const t=opportunityAssetType(r);
+  if(t==='argbond'||t==='bond')return \`USD \${fmt(price,2)}\`;
+  if(t==='cedear')return \`USD \${fmt(price,1)}\`;
+  return \`$ \${fmt(price,price>=1000?0:2)}\`;
 }
 const TICKER_ALIAS={
   YPFD:'YPF',PAMP:'PAM',AL30:'AL30',AE38:'AE38',GD30:'GD30',
@@ -1034,7 +1052,7 @@ function renderOpportunities(){
     return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.requestedType||r.item.type||'auto')}">
       <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[r.item.symbol]||r.item.symbol)}</b><small>${esc(SECONDARY_TICKER[r.item.symbol]||r.item.symbol)}</small></div></td>
       <td><span class="rt-type rt-type-${esc(opportunityAssetType(r))}">${esc(oppType(r))}</span></td>
-      <td>${Number.isFinite(price)?fmt(price,2):'—'}</td>
+      <td>${opportunityPrice(r,price)}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
       <td><div class="rt-volume-cell">${volumeChart(bars)}<small>${Number.isFinite(rv)?fmt(rv,1)+'x':'s/d'}</small></div></td>
       <td>${miniSpark(bars.map(x=>x.close))}</td>
