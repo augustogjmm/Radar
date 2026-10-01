@@ -491,7 +491,20 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtRegionAuraLayer .rt-region-aura.mod-up,
 #rtRegionAuraLayer .rt-region-aura.mod-down{filter:blur(19px)}
 
-.rt-tabs .rt-tab:nth-child(1){min-width:78px}
+.rt-tabs .rt-tab:nth-child(1){min-width:85px}
 .rt-tabs .rt-tab:nth-child(2){min-width:82px}
-.rt-tabs .rt-tab:nth-child(3){min-width:75px}
-.rt-tabs .rt-tab:nth-child(4){min-width:78px}
+.rt-tabs .rt-tab:nth-child(3){min-width:82px}
+.rt-tabs .rt-tab:nth-child(4){min-width:85px}
+
+#rtTerrainOverlay{pointer-events:none;mix-blend-mode:soft-light}
+#rtTerrainOverlay .rt-terrain-overlay{
+  fill:#b6c5cc;
+  fill-opacity:.18;
+  stroke:#d3dde2;
+  stroke-opacity:.16;
+  stroke-width:.22;
+  vector-effect:non-scaling-stroke;
+  filter:url(#rtProceduralTerrain);
+  pointer-events:none
+}
+.rt-detail-geo-svg #rtTerrainOverlay{opacity:.72}
