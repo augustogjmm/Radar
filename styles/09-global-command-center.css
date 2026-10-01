@@ -412,3 +412,13 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 }
 .rt-detail-geo-svg #rtTextureLayer{opacity:.26}
 .rt-detail-geo-svg #rtCityLightsLayer{opacity:.48}
+
+
+/* Golden reference 2.7 — ocean grain */
+#rtOceanTexture{
+  pointer-events:none;
+  fill:#0c4561;
+  opacity:.18;
+  mix-blend-mode:screen
+}
+.rt-detail-geo-svg #rtOceanTexture{opacity:.10}
