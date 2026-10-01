@@ -164,8 +164,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   background:#020a12
 }
 .rt-world-map-host{
-  position:absolute;inset:0;
-  width:100%;height:100%;
+  position:absolute;left:0;top:0;bottom:0;right:24px;
+  width:auto;height:auto;
   overflow:hidden
 }
 .rt-world-map-host>svg{display:block;width:100%;height:100%}
@@ -207,7 +207,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 
 /* Map overlays */
 .rt-session-box{
-  position:absolute;z-index:31;top:6px;right:97px;width:292px;height:63px;
+  position:absolute;z-index:31;top:6px;right:87px;width:292px;height:63px;
   display:flex;align-items:center;gap:9px;padding:7px 10px;
   border:1px solid #216080;border-radius:6px;
   background:linear-gradient(180deg,rgba(6,28,44,.97),rgba(3,17,29,.96));
@@ -217,7 +217,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-session-dot{width:8px;height:8px;border-radius:50%;background:var(--rt-green);box-shadow:0 0 8px rgba(33,231,131,.7)}
 .rt-session-count{margin-left:auto;min-width:91px;padding:5px 8px 4px;border:1px solid #1b3e54;border-radius:5px;background:rgba(4,18,29,.78);text-align:right;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}.rt-session-count small{display:block;font-size:9px;color:#879faf}.rt-session-count b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 .rt-next-sessions{
-  position:absolute;z-index:31;top:6px;right:-68px;width:157px;height:79px;
+  position:absolute;z-index:31;top:6px;right:-82px;width:157px;height:79px;
   padding:6px 8px;border:1px solid #1d455d;border-radius:6px;
   background:linear-gradient(180deg,rgba(5,21,33,.97),rgba(3,14,23,.96));
   box-shadow:0 10px 24px rgba(0,0,0,.32)
@@ -260,7 +260,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-risk-card-right{display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
 .rt-risk-card-right>b{font-size:17px;font-weight:850;color:#ffd15a;line-height:1;margin-bottom:6px}
 .rt-risk-meta{display:flex;gap:6px;align-items:center}.rt-risk-meta span{font-size:10px;color:#a8bac6;white-space:nowrap}.rt-risk-meta i{width:1px;height:10px;background:#2a4658;display:block}
-.rt-detail-card{height:318px;display:flex;flex-direction:column}
+.rt-detail-card{height:318px;display:flex;flex-direction:column;margin-left:3px;width:calc(100% - 3px)}
 .rt-detail-card .rt-section-title{height:37px;flex:0 0 37px;padding:7px 10px 4px}
 .rt-detail-card .rt-section-title h3{font-size:17px}.rt-detail-card .rt-section-title p{display:none}.rt-detail-card .rt-link-button{border:0!important;background:transparent!important;box-shadow:none!important;color:#27b6ff!important;padding:2px 0!important}
 .rt-detail-topgrid{height:184px;display:grid;grid-template-columns:43.5% 56.5%;margin:0 9px 9px;border:1px solid #17394e;border-radius:4px;overflow:hidden;background:#04111b}
@@ -490,3 +490,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtRegionAuraLayer .rt-region-aura.strong-down{filter:blur(22px)}
 #rtRegionAuraLayer .rt-region-aura.mod-up,
 #rtRegionAuraLayer .rt-region-aura.mod-down{filter:blur(19px)}
+
+.rt-tabs .rt-tab:nth-child(1){min-width:78px}
+.rt-tabs .rt-tab:nth-child(2){min-width:82px}
+.rt-tabs .rt-tab:nth-child(3){min-width:75px}
+.rt-tabs .rt-tab:nth-child(4){min-width:78px}
