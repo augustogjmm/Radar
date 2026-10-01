@@ -104,7 +104,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-head-icon,.rt-head-avatar,.rt-dateblock,.rt-clockblock,.rt-live{border-left:1px solid #183346}
 .rt-head-icon{width:47px;height:36px;display:grid;place-items:center;color:#b5c8d5;background:transparent}
 .rt-head-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.rt-head-avatar{width:82px;height:36px;position:relative;display:grid;place-items:center;color:#d9e7f0;background:transparent}
+.rt-head-avatar{width:72px;height:36px;position:relative;display:grid;place-items:center;color:#d9e7f0;background:transparent}
 .rt-head-avatar svg{width:30px;height:30px;border-radius:50%;filter:drop-shadow(0 0 4px rgba(155,117,184,.2))}
 .rt-head-avatar .avatar-bg{fill:#7c698e;stroke:#d7c9df;stroke-width:1}
 .rt-head-avatar .avatar-hair{fill:#3f304c;stroke:none}
@@ -112,13 +112,13 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-head-avatar .avatar-eye{fill:#3d2d3b;stroke:none}
 .rt-head-avatar .avatar-mouth{fill:none;stroke:#9f5d69;stroke-width:.65;stroke-linecap:round}
 .rt-head-avatar .avatar-shirt{fill:#ddd6e2;stroke:none}
-.rt-dateblock{width:132px;height:36px;padding:3px 12px 0;text-align:left;line-height:1.15}
+.rt-dateblock{width:124px;height:36px;padding:3px 8px 0;text-align:left;line-height:1.15}
 .rt-dateblock small{display:block;color:#9cafbd;font-size:8px;white-space:nowrap}
 .rt-dateblock b{display:block;margin-top:4px;color:#d5e1e9;font-size:8px;font-weight:700}
-.rt-clockblock{width:95px;height:36px;padding:0 10px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.rt-clockblock{width:88px;height:36px;padding:0 8px;text-align:center;display:flex;flex-direction:column;justify-content:center}
 .rt-clockblock b{display:block;color:#7ad3ff;font-size:18px;line-height:1;font-weight:820;font-variant-numeric:tabular-nums}
 .rt-clockblock small{display:block;margin-top:3px;color:#688293;font-size:6px}
-.rt-live{height:36px;padding-left:10px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:800;color:var(--rt-green);white-space:nowrap}
+.rt-live{height:36px;padding-left:8px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:800;color:var(--rt-green);white-space:nowrap}
 .rt-live:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--rt-green);box-shadow:0 0 9px rgba(33,231,131,.75)}
 
 /* General cards */
@@ -368,14 +368,14 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-session-box,.rt-next-sessions{isolation:isolate}
 .rt-main-grid{isolation:isolate}
 
-.rt-head-avatar:after{content:"–";position:absolute;right:11px;top:50%;transform:translateY(-52%);color:#688395;font-size:12px;font-weight:700}
-.rt-live{flex:1;min-width:64px}
+.rt-head-avatar:after{content:"–";position:absolute;right:8px;top:50%;transform:translateY(-52%);color:#688395;font-size:12px;font-weight:700}
+.rt-live{flex:1;min-width:84px}
 
 .rt-opps-table th:last-child,.rt-opps-table td:last-child{border-right:0}
 
 
 /* Golden reference 2.5 — continuous market heat */
-#rtRegionAuraLayer{pointer-events:none;mix-blend-mode:screen}
+#rtRegionAuraLayer{pointer-events:none;mix-blend-mode:screen;opacity:.42}
 #rtRegionAuraLayer .rt-region-aura{
   opacity:.10;
   filter:blur(18px);
@@ -388,6 +388,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtRegionAuraLayer .rt-region-aura.mod-down{fill:#ff5a43;opacity:.13}
 #rtRegionAuraLayer .rt-region-aura.strong-down{fill:#ff233f;opacity:.18}
 
+.rt-detail-geo-svg #rtRegionAuraLayer{opacity:1}
 .rt-detail-geo-svg #rtRegionAuraLayer .rt-region-aura{
   opacity:.23;
   filter:blur(20px)
@@ -395,7 +396,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 
 
 /* Golden reference 2.6 — self-contained terrain depth */
-#rtTextureLayer{pointer-events:none;opacity:.52;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
+#rtTextureLayer{pointer-events:none;opacity:.68;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
 #rtTextureLayer .rt-land-texture{
   fill:#8fa3ad;
   fill-opacity:.46;
@@ -418,7 +419,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtOceanTexture{
   pointer-events:none;
   fill:#0c4561;
-  opacity:.18;
+  opacity:.26;
   mix-blend-mode:screen
 }
 .rt-detail-geo-svg #rtOceanTexture{opacity:.10}
