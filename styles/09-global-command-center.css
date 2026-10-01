@@ -392,3 +392,23 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   opacity:.23;
   filter:blur(20px)
 }
+
+
+/* Golden reference 2.6 — self-contained terrain depth */
+#rtTextureLayer{pointer-events:none;opacity:.34;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
+#rtTextureLayer .rt-land-texture{
+  fill:#8fa3ad;
+  fill-opacity:.34;
+  stroke:#a2b3bc;
+  stroke-opacity:.14;
+  stroke-width:.25;
+  vector-effect:non-scaling-stroke
+}
+#rtCityLightsLayer{pointer-events:none;mix-blend-mode:screen}
+#rtCityLightsLayer .rt-city-light{
+  fill:#ffd88a;
+  opacity:.72;
+  filter:url(#rtUrbanGlow)
+}
+.rt-detail-geo-svg #rtTextureLayer{opacity:.26}
+.rt-detail-geo-svg #rtCityLightsLayer{opacity:.48}
