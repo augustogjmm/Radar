@@ -372,3 +372,23 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-live{flex:1;min-width:64px}
 
 .rt-opps-table th:last-child,.rt-opps-table td:last-child{border-right:0}
+
+
+/* Golden reference 2.5 — continuous market heat */
+#rtRegionAuraLayer{pointer-events:none;mix-blend-mode:screen}
+#rtRegionAuraLayer .rt-region-aura{
+  opacity:.20;
+  filter:blur(26px);
+  transform-box:fill-box;
+  transform-origin:center;
+}
+#rtRegionAuraLayer .rt-region-aura.strong-up{fill:#00ff73;opacity:.33}
+#rtRegionAuraLayer .rt-region-aura.mod-up{fill:#32e77e;opacity:.24}
+#rtRegionAuraLayer .rt-region-aura.neutral{fill:#557485;opacity:.07}
+#rtRegionAuraLayer .rt-region-aura.mod-down{fill:#ff5a43;opacity:.25}
+#rtRegionAuraLayer .rt-region-aura.strong-down{fill:#ff233f;opacity:.34}
+
+.rt-detail-geo-svg #rtRegionAuraLayer .rt-region-aura{
+  opacity:.23;
+  filter:blur(20px)
+}
