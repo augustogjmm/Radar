@@ -762,3 +762,63 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-opp-decision.near{background:#514011;color:#ffd665;border:1px solid #765f1e}
 .rt-opp-decision.watch{background:#183548;color:#8fc8e9;border:1px solid #245169}
 .rt-opp-decision.no{background:#541a25;color:#ff8793;border:1px solid #762534}
+
+/* ===== FINAL REFERENCE FIDELITY PASS ===== */
+.rt-session-flag,#rtDetailFlag,.rt-next-sessions i,.rt-watch-symbol i,.rt-context-badge{font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif}
+.rt-session-flag{font-size:25px!important;background:radial-gradient(circle at 35% 28%,#173a52 0,#0b2233 42%,#06131d 100%)!important;box-shadow:inset 0 0 12px rgba(84,216,255,.16),0 0 12px rgba(42,174,255,.12)!important}
+.rt-detail-flag{display:inline-block;margin-right:5px;font-size:17px;filter:drop-shadow(0 0 5px rgba(255,255,255,.16));vertical-align:-1px}
+.rt-context-badge{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 8px;border:1px solid rgba(50,150,205,.42);border-radius:11px;background:linear-gradient(180deg,rgba(7,34,52,.92),rgba(4,21,32,.92));color:#cfeeff;font-size:9px;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 5px 14px rgba(0,0,0,.2)}
+
+/* Single aligned vector geography: texture/relief without duplicate raster continents. */
+.rt-world-map-host:before,.rt-world-map-host:after,.rt-detail-map:before,.rt-detail-map:after{content:none!important;display:none!important;background-image:none!important}
+#rtTextureLayer{display:block!important;opacity:.24!important;mix-blend-mode:soft-light!important;filter:url(#rtProceduralTerrain)!important;pointer-events:none!important}
+#rtTextureLayer .rt-land-texture{fill:#b1c3cc!important;fill-opacity:.20!important;stroke:none!important}
+#rtTerrainOverlay{display:none!important}
+#rtOceanTexture{display:block!important;opacity:.08!important;mix-blend-mode:screen!important}
+#rtCityLightsLayer{display:block!important;opacity:.60!important}
+#rtWorldGeoSvg .rt-country{filter:none!important;mix-blend-mode:normal!important;stroke-width:.42!important;stroke-opacity:.78!important}
+#rtWorldGeoSvg .rt-country.strong-up{fill:#00db6c!important;fill-opacity:.72!important;stroke:#82ffc0!important}
+#rtWorldGeoSvg .rt-country.mod-up{fill:#3bd07a!important;fill-opacity:.60!important;stroke:#7fe5aa!important}
+#rtWorldGeoSvg .rt-country.neutral{fill:#607887!important;fill-opacity:.28!important;stroke:#7690a0!important}
+#rtWorldGeoSvg .rt-country.mod-down{fill:#ef5944!important;fill-opacity:.62!important;stroke:#ff9a88!important}
+#rtWorldGeoSvg .rt-country.strong-down{fill:#ee2f48!important;fill-opacity:.74!important;stroke:#ff9dac!important}
+#rtRegionAuraLayer{display:block!important;opacity:.32!important;mix-blend-mode:screen!important}
+#rtRegionAuraLayer .rt-region-aura{filter:blur(18px)!important}
+#rtWorldGeoSvg .rt-country.selected-region{stroke-width:1.1!important;stroke-opacity:.96!important}
+#rtWorldGeoSvg .rt-country.selected-country{stroke:#dff8ff!important;stroke-width:2.2!important;filter:drop-shadow(0 0 4px rgba(84,216,255,.9))!important}
+
+/* More physical semaphores, matching the approved reference depth. */
+.rt-light{background:linear-gradient(180deg,#0d1519,#03080b)!important;border:1px solid #40505a!important;box-shadow:inset 0 0 0 2px #020609,inset 0 0 18px rgba(0,0,0,.95),0 4px 14px rgba(0,0,0,.45)!important}
+.rt-light:before{content:"";position:absolute;inset:5px;border-radius:24px;background:linear-gradient(90deg,rgba(255,255,255,.05),transparent 26%,transparent 70%,rgba(255,255,255,.03));pointer-events:none}
+.rt-light i{position:relative;background:radial-gradient(circle at 36% 30%,#1c2a2e,#07100f 66%,#020505 100%)!important;border:1px solid #30454a!important;box-shadow:inset 0 3px 6px rgba(255,255,255,.04),inset 0 -7px 12px rgba(0,0,0,.75)!important}
+.rt-light.positive i:nth-child(2){background:radial-gradient(circle at 35% 28%,#aaffce 0,#28f08a 28%,#08bf62 64%,#04522d 100%)!important;box-shadow:0 0 7px #28f08a,0 0 24px rgba(40,240,138,.82),inset 0 2px 5px rgba(255,255,255,.55),inset 0 -6px 10px rgba(0,75,40,.45)!important}
+.rt-light.neutral i:nth-child(2){background:radial-gradient(circle at 35% 28%,#fff7bc 0,#ffd43f 31%,#d89c0c 67%,#5b4205 100%)!important;box-shadow:0 0 7px #ffd43f,0 0 24px rgba(255,212,63,.78),inset 0 2px 5px rgba(255,255,255,.55),inset 0 -6px 10px rgba(92,65,0,.45)!important}
+.rt-light.negative i:nth-child(2){background:radial-gradient(circle at 35% 28%,#ffd2d8 0,#ff5368 30%,#d9253c 66%,#5e0b18 100%)!important;box-shadow:0 0 7px #ff5368,0 0 24px rgba(255,83,104,.78),inset 0 2px 5px rgba(255,255,255,.5),inset 0 -6px 10px rgba(95,0,20,.5)!important}
+
+/* Opportunity semantics: green/yellow/red must be obvious, never ambiguous. */
+.rt-opps-table tbody tr{transition:background .14s ease,box-shadow .14s ease}
+.rt-opps-table tbody tr:has(.rt-opp-decision.yes){box-shadow:inset 3px 0 0 #25e887}
+.rt-opps-table tbody tr:has(.rt-opp-decision.near),.rt-opps-table tbody tr:has(.rt-opp-decision.watch){box-shadow:inset 3px 0 0 #ffd04a}
+.rt-opps-table tbody tr:has(.rt-opp-decision.no){box-shadow:inset 3px 0 0 #ff4f63}
+.rt-opp-decision.yes{background:linear-gradient(180deg,#14543b,#0b3928)!important;color:#7dffc0!important;border-color:#237553!important;box-shadow:0 0 10px rgba(36,232,134,.12)}
+.rt-opp-decision.near,.rt-opp-decision.watch{background:linear-gradient(180deg,#5b4715,#3a2e0e)!important;color:#ffe17c!important;border-color:#7b6424!important}
+.rt-opp-decision.no{background:linear-gradient(180deg,#67202b,#43141c)!important;color:#ff9ba7!important;border-color:#87303d!important}
+.rt-trend{color:#56ef9e!important}.rt-trend.warn{color:#ffd45a!important}.rt-trend.bad{color:#ff6575!important}
+.rt-type-argstock{color:#e4edf3!important}.rt-type-cedear{color:#ffc84d!important}.rt-type-adr{color:#70d8ff!important}.rt-type-argbond,.rt-type-bond{color:#ff6f7d!important}.rt-type-bill,.rt-type-letra{color:#caa8ff!important}
+.rt-data-missing{display:inline-flex;align-items:center;height:18px;padding:0 6px;border:1px solid #294457;border-radius:3px;background:#071722;color:#7893a5;font-size:7px;font-weight:800;letter-spacing:.04em}
+
+/* Refresh is deliberately obvious while active, but disappears completely afterwards. */
+.rt-refresh-overlay{position:fixed;inset:64px 0 0;z-index:5000;display:none;align-items:flex-start;justify-content:center;padding-top:82px;background:rgba(1,8,14,.58);backdrop-filter:blur(2px);pointer-events:none}
+body.rt-refreshing .rt-refresh-overlay{display:flex}
+.rt-refresh-core{min-width:360px;padding:17px 22px 16px;border:1px solid #2a789f;border-radius:9px;background:linear-gradient(180deg,rgba(7,33,49,.98),rgba(3,16,25,.99));box-shadow:0 18px 55px rgba(0,0,0,.55),0 0 28px rgba(27,163,236,.13);display:grid;grid-template-columns:32px 1fr;column-gap:12px;row-gap:3px;align-items:center}
+.rt-refresh-core b{font-size:17px;color:#f0f8fc}.rt-refresh-core small{grid-column:2;color:#8eb4c8;font-size:10px}
+.rt-refresh-spinner{grid-row:1/3;width:28px;height:28px;border-radius:50%;border:3px solid #17415a;border-top-color:#40c2ff;box-shadow:0 0 12px rgba(64,194,255,.25);animation:rtSpin .75s linear infinite}
+body.rt-refreshing #rtGlobalRadar{filter:saturate(.75) brightness(.76)}
+.rt-live{min-width:110px}
+.rt-watch-empty{padding:18px 10px;color:#708b9d;font-size:10px;text-align:center}
+
+/* Dense chart/detail polish */
+.rt-detail-card,.rt-watch-card,.rt-arg-card,.rt-signals-card{box-shadow:0 12px 28px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.025)!important}
+.rt-detail-chart svg{filter:drop-shadow(0 0 4px rgba(39,215,126,.10))}
+.rt-spark{filter:drop-shadow(0 0 3px rgba(41,223,132,.12))}
+.rt-map-label{backdrop-filter:blur(4px);box-shadow:0 8px 22px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.05)!important}
