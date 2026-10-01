@@ -614,54 +614,85 @@ function renderSession(date){
   }
 }
 
+async function fetchHistoryBars(symbol,signal){
+  try{
+    const r=await fetch(`/api/byma/history?symbol=${encodeURIComponent(symbol)}&days=180&tf=short&_=${Date.now()}`,{cache:'no-store',signal});
+    if(!r.ok)return[];
+    const h=await r.json(),t=h.t||[],c=h.c||[],v=h.v||[];
+    return t.map((time,i)=>({time:num(time),close:num(c[i]),volume:num(v[i])})).filter(x=>Number.isFinite(x.time)&&Number.isFinite(x.close));
+  }catch{return[]}
+}
+function techFromBars(bars){
+  const closes=(bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+  if(closes.length<8)return{kind:'wait',label:'SEGUIMIENTO',oppScore:35,setup:'Histórico insuficiente',trend:'Lateral'};
+  const last=closes.at(-1),ma5=closes.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,closes.length),ma20=closes.slice(-20).reduce((a,b)=>a+b,0)/Math.min(20,closes.length);
+  const hi20=Math.max(...closes.slice(-20,-1)),lo20=Math.min(...closes.slice(-20,-1));
+  const mom5=closes.length>5&&closes.at(-6)?(last/closes.at(-6)-1)*100:0;
+  if(last>hi20&&ma5>ma20&&mom5>1)return{kind:'buy',label:'OPORTUNIDAD',oppScore:88,setup:'Ruptura con momentum',trend:'Alcista'};
+  if(ma5>ma20&&mom5>.25)return{kind:'near',label:'POSIBLE',oppScore:72,setup:'Tendencia alcista',trend:'Alcista'};
+  if(last<lo20||(ma5<ma20&&mom5<-1))return{kind:'sell',label:'NO',oppScore:18,setup:'Presión bajista',trend:'Bajista'};
+  return{kind:'wait',label:'SEGUIMIENTO',oppScore:48,setup:'Esperar confirmación',trend:ma5>=ma20?'Alcista':'Lateral'};
+}
+async function buildLocalOpportunityLeaders(signal){
+  const pools=[
+    ...(state.universes.equities||[]).slice(0,5).map(x=>({panel:x,type:'argstock'})),
+    ...(state.universes.cedears||[]).slice(0,5).map(x=>({panel:x,type:'cedear'})),
+    ...(state.universes.fixed||[]).filter(x=>x.category==='LECAP/BONCAP').slice(0,4).map(x=>({panel:x,type:'bill'})),
+    ...(state.universes.fixed||[]).filter(x=>x.category!=='LECAP/BONCAP'&&x.type==='bond').slice(0,5).map(x=>({panel:x,type:'argbond'}))
+  ];
+  const rows=await Promise.all(pools.map(async x=>{
+    const symbol=String(x.panel.symbol||'').toUpperCase(),bars=await fetchHistoryBars(symbol,signal),tech=techFromBars(bars);
+    const last=num(x.panel.trade??x.panel.closingPrice??bars.at(-1)?.close),prev=bars.length>1?num(bars.at(-2)?.close):NaN;
+    const changePct=Number.isFinite(last)&&Number.isFinite(prev)&&prev?((last/prev)-1)*100:NaN;
+    const volume=num(x.panel.volumeAmount??x.panel.tradeVolume??x.panel.volume);
+    return{item:{symbol,type:x.type,requestedType:x.type,label:symbol,panel:x.panel},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars,marketData:{last,changePct,volume,bars,source:'Open BYMADATA'}};
+  }));
+  state.opportunityLeaders=rows.filter(r=>Number.isFinite(r.marketData?.last)&&Number.isFinite(r.marketData?.volume)&&r.marketData.volume>0);
+}
 async function fetchBatch(force=false){
-  const symbols=[...new Set([...ASSETS.map(x=>x.symbol),...Object.values(OPPORTUNITY_MARKET_SYMBOL)])];
+  const adrSymbols=['YPF','GGAL','VIST','PAM'];
+  const symbols=[...new Set([...ASSETS.map(x=>x.symbol),...Object.values(OPPORTUNITY_MARKET_SYMBOL),...adrSymbols])];
   const intradaySymbols=[...new Set(Object.values(REGIONS).map(r=>ASSET_BY_ID[r.focus]?.symbol).filter(Boolean))];
   const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
   try{
     const stamp=Date.now(),fresh=force?'1':'0';
     const dailyUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d&fresh=${fresh}&_=${stamp}`;
     const intraUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(intradaySymbols.join(','))}&range=5d&interval=15m&fresh=${fresh}&_=${stamp}`;
-    const [dailyRes,intraRes,fixedRes,bondHistRes]=await Promise.all([
+    const [dailyRes,intraRes,equityRes,cedearRes,fixedRes]=await Promise.all([
       fetch(dailyUrl,{cache:'no-store',signal:ctrl.signal}),
       fetch(intraUrl,{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
-      fetch('/api/byma/fixed-income?kind=sovereign&currency=ALL&liquid=0',{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
-      fetch('/api/byma/history?symbol=AL30D&days=180&tf=short',{cache:'no-store',signal:ctrl.signal}).catch(()=>null)
+      fetch('/api/byma/equities?mode=all',{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
+      fetch('/api/byma/cedears?liquid=1',{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
+      fetch('/api/byma/fixed-income?kind=all&currency=ALL&liquid=1',{cache:'no-store',signal:ctrl.signal}).catch(()=>null)
     ]);
     if(!dailyRes.ok)throw new Error(`Mercado HTTP ${dailyRes.status}`);
     const j=await dailyRes.json();
     for(const x of (j.items||[])){
       const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
-      state.markets.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),bars,source:x.source||j.source||'Yahoo Finance',time:num(x.time),error:x.error||''});
+      state.markets.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),volume:num(x.volume),bars,source:x.source||j.source||'Yahoo Finance',time:num(x.time),error:x.error||''});
     }
     if(intraRes?.ok){
       const intraday=await intraRes.json();
       for(const x of (intraday.items||[])){
-        const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
+        const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
         if(bars.length>2)state.intraday.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),bars,source:x.source||intraday.source||'Yahoo Finance'});
       }
     }
+    if(equityRes?.ok){const x=await equityRes.json();state.universes.equities=(x.items||[]).sort((a,b)=>(num(b.volumeAmount)||0)-(num(a.volumeAmount)||0))}
+    if(cedearRes?.ok){const x=await cedearRes.json();state.universes.cedears=(x.items||[]).sort((a,b)=>(num(b.volumeAmount)||0)-(num(a.volumeAmount)||0))}
     if(fixedRes?.ok){
-      const fixed=await fixedRes.json();
-      for(const x of (fixed.items||[])){
-        const symbol=String(x.symbol||'').toUpperCase();
-        if(!['AL30','AL30D','AE38','AE38D','GD30','GD30D'].includes(symbol))continue;
-        const last=num(x.trade??x.closingPrice),volume=num(x.volumeAmount??x.tradeVolume??x.volume);
-        state.fixedIncome.set(symbol,{ok:Number.isFinite(last),last,changePct:NaN,bars:[],volume,source:fixed.source||'BYMA'});
-      }
+      const x=await fixedRes.json();state.universes.fixed=(x.items||[]).sort((a,b)=>(num(b.volumeAmount)||0)-(num(a.volumeAmount)||0));state.fixedIncome.clear();
+      for(const item of state.universes.fixed){const symbol=String(item.symbol||'').toUpperCase(),last=num(item.trade??item.closingPrice),volume=num(item.volumeAmount??item.tradeVolume??item.volume);state.fixedIncome.set(symbol,{ok:Number.isFinite(last),last,changePct:NaN,bars:[],volume,source:x.source||'BYMA',panel:item})}
     }
-    if(bondHistRes?.ok){
-      const h=await bondHistRes.json(),t=h.t||[],cl=h.c||[],v=h.v||[];
-      const bars=t.map((time,i)=>({time:num(time),close:num(cl[i]),volume:num(v[i])})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
-      if(bars.length>2){
-        const last=bars.at(-1).close,prev=bars.at(-2).close,changePct=prev?((last/prev)-1)*100:NaN;
-        const prevQuote=state.fixedIncome.get('AL30D')||{};
-        state.fixedIncome.set('AL30D',{...prevQuote,ok:true,last,changePct,bars,source:'BYMA'});
-      }
-    }
+    await buildLocalOpportunityLeaders(ctrl.signal);
+    const adrRows=adrSymbols.map(symbol=>{
+      const market=state.markets.get(symbol);if(!market||!Number.isFinite(market.last)||!(num(market.volume)>0))return null;
+      const tech=techFromBars(market.bars||[]);
+      return{item:{symbol,type:'adr',requestedType:'stock',label:symbol},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars:market.bars||[],marketData:market};
+    }).filter(Boolean);
+    state.opportunityLeaders.push(...adrRows);
   }finally{clearTimeout(tm)}
 }
-
 function get(id){const a=ASSET_BY_ID[id];return a?state.markets.get(a.symbol):null}
 function periodChange(item,period='day'){
   if(!item)return NaN;
