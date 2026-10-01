@@ -717,6 +717,7 @@ function regionalToneClass(v){
 function signClass(v){return !Number.isFinite(v)?'rt-flat':v>.03?'rt-up':v<-.03?'rt-down':'rt-flat'}
 
 function renderMap(){
+  const ctx=contextInfo();if($('rtContextBadge'))$('rtContextBadge').textContent=`${ctx.flag} ${ctx.label}`;
   qa('#rtWorldMapHost .rt-market-marker').forEach(m=>{
     m.classList.remove('up','down','neutral');
     m.classList.add(markerTone(m.dataset.markerAsset));
@@ -735,6 +736,7 @@ function renderMap(){
     el.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');
     el.classList.add(tone);
     el.classList.toggle('selected-region',key===state.selectedRegion);
+    el.classList.toggle('selected-country',!!state.selectedCountry&&el.dataset.code===state.selectedCountry);
   });
   for(const key of Object.keys(REGIONS)){
     const ch=regionChange(key,'day');
@@ -748,20 +750,22 @@ function renderMap(){
 }
 
 function renderWatch(){
-  const ids=['sp500','nasdaq','dow','dax','nikkei','hangseng','merval'];
-  const rows=ids.map(id=>{
-    const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day');
-    return `<div class="rt-watch-row"><span class="rt-watch-symbol"><i>${a.flag}</i><b>${esc(a.name)}</b></span><span class="wv">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}</span><span class="wc ${signClass(ch)}">${pct(ch)}</span></div>`;
-  });
-  const risk=window.RadarDashboardData?.risk||{};
-  const riskValue=num(risk.value);
-  const hist=(risk.history||[]).map(x=>num(x.value)).filter(Number.isFinite);
-  const riskPrev=Number.isFinite(num(risk.previous))?num(risk.previous):(hist.length>1?hist.at(-2):NaN);
-  const riskPct=Number.isFinite(riskValue)&&Number.isFinite(riskPrev)&&riskPrev!==0?(riskValue/riskPrev-1)*100:NaN;
-  rows.push(`<div class="rt-watch-row"><span class="rt-watch-symbol"><i>🇦🇷</i><b>RIESGO PAÍS</b></span><span class="wv">${Number.isFinite(riskValue)?fmt(riskValue,0):'—'}</span><span class="wc ${Number.isFinite(riskPct)?(riskPct<0?'rt-up':riskPct>0?'rt-down':'rt-flat'):'rt-flat'}">${pct(riskPct)}</span></div>`);
-  $('rtWatchList').innerHTML=rows.join('');
+  const ctx=contextInfo(),rows=[];
+  const make=(flag,name,last,ch,dec=2,invert=false)=>{if(!Number.isFinite(last))return;const cls=!Number.isFinite(ch)?'rt-flat':invert?(ch<0?'rt-up':ch>0?'rt-down':'rt-flat'):signClass(ch);rows.push(`<div class="rt-watch-row"><span class="rt-watch-symbol"><i>${flag}</i><b>${esc(name)}</b></span><span class="wv">${fmt(last,dec)}</span><span class="wc ${cls}">${pct(ch)}</span></div>`)};
+  if(ctx.isArgentina){
+    const m=get('merval');make('🇦🇷','MERVAL',num(m?.last),periodChange(m,'day'),0);
+    const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rch=Number.isFinite(rv)&&Number.isFinite(rp)&&rp?(rv/rp-1)*100:NaN;make('🇦🇷','RIESGO PAÍS',rv,rch,0,true);
+    for(const x of (state.universes.equities||[]).slice(0,3))make('🇦🇷',String(x.symbol||''),num(x.trade),NaN,num(x.trade)>=1000?0:2);
+    for(const x of (state.universes.fixed||[]).filter(x=>x.type==='bond').slice(0,2))make('🇦🇷',String(x.symbol||''),num(x.trade??x.closingPrice),NaN,2);
+  }else if(state.scope==='region'){
+    for(const id of (REGIONS[state.selectedRegion]?.ids||[])){const asset=ASSET_BY_ID[id],m=get(id);make(asset.flag,asset.name,num(m?.last),periodChange(m,'day'),asset.decimals)}
+    const v=get('vix');make('⚡','VIX',num(v?.last),periodChange(v,'day'),1);
+  }else{
+    for(const id of ['sp500','nasdaq','dow','dax','nikkei','hangseng','merval']){const asset=ASSET_BY_ID[id],m=get(id);make(asset.flag,asset.name,num(m?.last),periodChange(m,'day'),asset.decimals)}
+  }
+  const h=q('.rt-watch-card .rt-section-title h3');if(h)h.textContent=ctx.isArgentina?'Watchlist Argentina':state.scope==='region'?`Watchlist ${ctx.label}`:'Watchlist';
+  $('rtWatchList').innerHTML=rows.slice(0,8).join('')||'<div class="rt-watch-empty">Sin datos válidos para este contexto.</div>';
 }
-
 function riskModel(){
   const vix=get('vix'),move=get('move'),tnx=get('tnx'),dxy=get('dxy'),eem=get('eem');
   let score=50;
@@ -839,32 +843,28 @@ function svgLine(values,w=400,h=80,p=5){
   }).join(' ');
 }
 function renderRegionDetail(){
-  const key=state.selectedRegion,region=REGIONS[key]||REGIONS.europe;
-  $('rtDetailTitle').textContent=`Detalle de Región: ${region.label}`;
-  $('rtDetailSubtitle').textContent=`${region.indices} · rendimiento y amplitud`;
+  const ctx=contextInfo(),key=state.selectedRegion,region=REGIONS[key]||REGIONS.europe,title=ctx.isArgentina?'Argentina':region.label,flag=ctx.isArgentina?'🇦🇷':(ctx.flag||REGION_FLAGS[key]||'🌐');
+  const titleNode=$('rtDetailTitle');if(titleNode)titleNode.innerHTML=`<span id="rtDetailFlag" class="rt-detail-flag">${flag}</span> Detalle de ${ctx.isArgentina?'País':'Región'}: ${esc(title)}`;
+  $('rtDetailSubtitle').textContent=ctx.isArgentina?'MERVAL · Riesgo País · Bonos · acciones líderes':`${region.indices} · rendimiento y amplitud`;
   renderDetailGeo(key);
-  const rows=region.ids.map(id=>{
-    const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day');
-    const wk=periodChange(m,'week');
-    return `<div class="rt-market-line">
-      <b>${a.flag} ${esc(a.detailName||a.name)}</b>
-      <span class="price">${Number.isFinite(m?.last)?fmt(m.last,a.decimals):'—'}</span>
-      <span class="chg ${signClass(ch)}">${pct(ch)}</span>
-    </div>`;
-  });
-  $('rtRegionList').innerHTML=rows.join('');
-  const focusAsset=ASSET_BY_ID[region.focus],intra=intradaySeries(key);
-  const values=intra?.values?.length?intra.values:regionSeries(key);
+  if(ctx.isArgentina){
+    const rows=[],m=get('merval'),mch=periodChange(m,'day');
+    if(Number.isFinite(m?.last))rows.push(`<div class="rt-market-line"><b>🇦🇷 MERVAL</b><span class="price">${fmt(m.last,0)}</span><span class="chg ${signClass(mch)}">${pct(mch)}</span></div>`);
+    const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rch=Number.isFinite(rv)&&Number.isFinite(rp)&&rp?(rv/rp-1)*100:NaN;
+    if(Number.isFinite(rv))rows.push(`<div class="rt-market-line"><b>🇦🇷 Riesgo País</b><span class="price">${fmt(rv,0)}</span><span class="chg ${rch<0?'rt-up':rch>0?'rt-down':'rt-flat'}">${pct(rch)}</span></div>`);
+    for(const x of (state.universes.equities||[]).slice(0,4)){const p=num(x.trade),vol=num(x.volumeAmount);if(!Number.isFinite(p))continue;rows.push(`<div class="rt-market-line"><b>🇦🇷 ${esc(x.symbol)}</b><span class="price">${fmt(p,p>=1000?0:2)}</span><span class="chg rt-flat">${Number.isFinite(vol)?compactVolume(vol):'liq.'}</span></div>`)}
+    $('rtRegionList').innerHTML=rows.slice(0,6).join('');
+  }else{
+    $('rtRegionList').innerHTML=region.ids.map(id=>{const asset=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day');return `<div class="rt-market-line"><b>${asset.flag} ${esc(asset.detailName||asset.name)}</b><span class="price">${Number.isFinite(m?.last)?fmt(m.last,asset.decimals):'s/d'}</span><span class="chg ${signClass(ch)}">${pct(ch)}</span></div>`}).join('');
+  }
+  const focusAsset=ASSET_BY_ID[ctx.isArgentina?'merval':region.focus],intra=intradaySeries(ctx.isArgentina?'latam':key),focusItem=ctx.isArgentina?get('merval'):null;
+  const values=ctx.isArgentina?focusSeries(focusItem,40):(intra?.values?.length?intra.values:regionSeries(key));
   const d=svgLine(values,520,94,8);$('rtRegionSpark').setAttribute('d',d);
-  const last=regionChange(key,'day');
-  $('rtRegionLastValue').textContent=pct(last);
-  $('rtRegionLastValue').className=signClass(last);
-  $('rtDetailChartName').textContent=`${focusAsset?.name||region.short} · Últimas 24 hs`;
-  renderDetailAxis(intra?.bars||[]);
-  renderDetailYAxis(values,focusAsset?.decimals??1);
-  if(d){const area=`${d} L512,86 L8,86 Z`;$('rtRegionArea').setAttribute('d',area)}else $('rtRegionArea').setAttribute('d','');
+  const last=ctx.isArgentina?periodChange(get('merval'),'day'):regionChange(key,'day');$('rtRegionLastValue').textContent=pct(last);$('rtRegionLastValue').className=signClass(last);
+  $('rtDetailChartName').textContent=`${focusAsset?.name||title} · Últimas 24 hs`;
+  renderDetailAxis(ctx.isArgentina?(get('merval')?.bars||[]):(intra?.bars||[]));renderDetailYAxis(values,focusAsset?.decimals??1);
+  if(d)$('rtRegionArea').setAttribute('d',`${d} L512,86 L8,86 Z`);else $('rtRegionArea').setAttribute('d','');
 }
-
 function localRiskChange(period='day'){
   const r=window.RadarDashboardData?.risk||{};
   if(period==='day')return num(r.change);
