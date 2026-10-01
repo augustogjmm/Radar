@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 const base=process.env.RADAR_URL||'http://127.0.0.1:4173';
 await fs.mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true});
-const page=await browser.newPage({viewport:{width:1440,height:1000}});
+const page=await browser.newPage({viewport:{width:1672,height:941}});
 const pageErrors=[];
 page.on('pageerror',e=>pageErrors.push(String(e?.stack||e)));
 
