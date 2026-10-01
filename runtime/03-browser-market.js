@@ -2557,6 +2557,7 @@ async function scanOne(item,key){
    item:{symbol:pack.symbol,type:pack.type,panel:item.panel||null},
    key,tfLabel:pack.tfs[key]?.label||key,
    analysis:a,plan,status,macroTrend,marketContext,price:a.c,
+   bars:Array.isArray(pack.data)?pack.data:[],
    provider:pack.provider||'Scanner',providerFallback:pack.providerFallback===true,
    rf,
    why:(pack.providerFallback?`Fuente alternativa: ${pack.provider}. `:'')+why
