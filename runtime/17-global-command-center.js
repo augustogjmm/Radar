@@ -199,6 +199,21 @@ async function loadWorldMap(){
           });
           layer.parentNode.insertBefore(glow,layer);
         }
+        if(layer&&!svg.querySelector('#rtTerrainOverlay')){
+          const terrain=document.createElementNS('http://www.w3.org/2000/svg','g');
+          terrain.setAttribute('id','rtTerrainOverlay');
+          terrain.setAttribute('pointer-events','none');
+          [...layer.querySelectorAll(':scope > .rt-country')].forEach(country=>{
+            const clone=country.cloneNode(false);
+            clone.removeAttribute('id');
+            clone.removeAttribute('data-region');
+            clone.removeAttribute('data-country');
+            clone.removeAttribute('data-code');
+            clone.setAttribute('class','rt-terrain-overlay');
+            terrain.appendChild(clone);
+          });
+          layer.appendChild(terrain);
+        }
         layer?.insertAdjacentHTML('beforeend',marketMarkers());
         const tooltip=document.createElement('div');
         tooltip.className='rt-map-tooltip';
