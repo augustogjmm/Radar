@@ -63,7 +63,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-appbar{
   height:64px;
   display:grid;
-  grid-template-columns:435px minmax(505px,1fr) 210px 420px;
+  grid-template-columns:418px minmax(522px,1fr) 210px 420px;
   align-items:center;
   gap:12px;
   padding:0 12px 0 18px;
@@ -396,7 +396,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 
 
 /* Golden reference 2.6 — self-contained terrain depth */
-#rtTextureLayer{pointer-events:none;opacity:.68;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
+#rtTextureLayer{pointer-events:none;opacity:.80;mix-blend-mode:soft-light;filter:url(#rtProceduralTerrain)}
 #rtTextureLayer .rt-land-texture{
   fill:#8fa3ad;
   fill-opacity:.46;
@@ -411,7 +411,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   opacity:.86;
   filter:url(#rtUrbanGlow)
 }
-.rt-detail-geo-svg #rtTextureLayer{opacity:.26}
+.rt-detail-geo-svg #rtTextureLayer{opacity:.34}
 .rt-detail-geo-svg #rtCityLightsLayer{opacity:.48}
 
 
@@ -450,3 +450,16 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-opps-table tbody td:last-child{font-size:9.5px;color:#aec0cb}
 .rt-opps-table tbody tr[data-rt-symbol]{cursor:pointer}
 .rt-opps-table tbody tr[data-rt-symbol]:hover{background:linear-gradient(90deg,rgba(19,65,91,.30),rgba(8,31,46,.12))}
+
+
+/* Golden reference 3.0 — final map richness */
+.rt-world-map-host>svg{
+  filter:saturate(1.14) contrast(1.055) brightness(1.015);
+}
+.rt-detail-geo-svg{
+  filter:saturate(1.10) contrast(1.04);
+}
+#rtWorldGeoSvg .rt-country.region-africa,
+#rtWorldGeoSvg .rt-country.region-neutral{
+  stroke-opacity:.56;
+}
