@@ -157,12 +157,16 @@ async function yahoo(url){
 }
 function compactYahooChart(symbol,payload,source='Yahoo Finance'){
   const r=payload?.chart?.result?.[0];if(!r)return {symbol,ok:false,error:'Sin datos',bars:[]};
-  const ts=Array.isArray(r.timestamp)?r.timestamp:[],cl=Array.isArray(r?.indicators?.quote?.[0]?.close)?r.indicators.quote[0].close:[],bars=[];
-  for(let i=0;i<Math.min(ts.length,cl.length);i++){const c=num(cl[i]);if(c!==null)bars.push({time:Number(ts[i]),close:c})}
+  const q=r?.indicators?.quote?.[0]||{},ts=Array.isArray(r.timestamp)?r.timestamp:[],cl=Array.isArray(q.close)?q.close:[],vol=Array.isArray(q.volume)?q.volume:[],bars=[];
+  for(let i=0;i<Math.min(ts.length,cl.length);i++){
+    const c=num(cl[i]);if(c===null)continue;
+    bars.push({time:Number(ts[i]),close:c,volume:num(vol[i])??0});
+  }
   let last=bars.at(-1)?.close??num(r?.meta?.regularMarketPrice),previous=bars.length>1?bars.at(-2)?.close:num(r?.meta?.chartPreviousClose),time=bars.at(-1)?.time??Math.floor(Date.now()/1000);
   if(last===null)return {symbol,ok:false,error:'Sin cotización',bars};
   const changePct=previous!==null&&previous!==0?(last/previous-1)*100:null;
-  return {symbol,ok:true,last,previous,changePct,time,bars,source};
+  const volume=bars.length?num(bars.at(-1)?.volume):null;
+  return {symbol,ok:true,last,previous,changePct,time,volume,bars,source};
 }
 async function yahooBatch(url){
   const raw=String(url.searchParams.get('symbols')||''),range=url.searchParams.get('range')||'6mo',interval=url.searchParams.get('interval')||'1d';
