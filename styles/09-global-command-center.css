@@ -63,7 +63,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-appbar{
   height:64px;
   display:grid;
-  grid-template-columns:418px minmax(522px,1fr) 210px 420px;
+  grid-template-columns:404px minmax(536px,1fr) 210px 420px;
   align-items:center;
   gap:12px;
   padding:0 12px 0 18px;
@@ -172,8 +172,8 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-map-loading{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:8px;color:#7390a4;font-size:9px}
 .rt-map-loading span{width:24px;height:24px;border-radius:50%;border:2px solid #17384d;border-top-color:#35baff;animation:rtSpin .8s linear infinite}
 @keyframes rtSpin{to{transform:rotate(360deg)}}
-.rt-graticule path{fill:none;stroke:#1b506d;stroke-width:.45;opacity:.16;vector-effect:non-scaling-stroke}
-.rt-equator{fill:none;stroke:#2a617e;stroke-width:.7;stroke-dasharray:3 7;opacity:.15;vector-effect:non-scaling-stroke}
+.rt-graticule path{fill:none;stroke:#1b506d;stroke-width:.38;opacity:.075;vector-effect:non-scaling-stroke}
+.rt-equator{fill:none;stroke:#2a617e;stroke-width:.6;stroke-dasharray:3 8;opacity:.08;vector-effect:non-scaling-stroke}
 #rtWorldGeoSvg .rt-country{
   stroke:#617786;stroke-width:.34;stroke-opacity:.72;
   fill:#6f828e;fill-opacity:.15;
@@ -419,7 +419,7 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtOceanTexture{
   pointer-events:none;
   fill:#0c4561;
-  opacity:.26;
+  opacity:.13;
   mix-blend-mode:screen
 }
 .rt-detail-geo-svg #rtOceanTexture{opacity:.10}
@@ -463,3 +463,24 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 #rtWorldGeoSvg .rt-country.region-neutral{
   stroke-opacity:.56;
 }
+
+
+/* Golden reference 3.1 — 50m geographic detail */
+#rtHydroDetailLayer{pointer-events:none}
+#rtHydroDetailLayer .rt-hydro-lake{
+  fill:#061722;
+  fill-opacity:.78;
+  stroke:#7ea2b4;
+  stroke-opacity:.30;
+  stroke-width:.34;
+  vector-effect:non-scaling-stroke
+}
+#rtHydroDetailLayer .rt-hydro-river{
+  fill:none;
+  stroke:#68a0b9;
+  stroke-opacity:.22;
+  stroke-width:.34;
+  vector-effect:non-scaling-stroke
+}
+.rt-detail-geo-svg #rtHydroDetailLayer .rt-hydro-lake{fill-opacity:.56;stroke-opacity:.30}
+.rt-detail-geo-svg #rtHydroDetailLayer .rt-hydro-river{stroke-opacity:.25}
