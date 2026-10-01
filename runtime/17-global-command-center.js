@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='3.1.0';
+const VERSION='golden-candidate';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -62,6 +62,22 @@ const COUNTRY_MARKET={
 };
 
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
+const OPPORTUNITY_MARKET_SYMBOL={
+  GGAL:'GGAL.BA',YPFD:'YPFD.BA',PAMP:'PAMP.BA',VIST:'VIST.BA',TGSU2:'TGSU2.BA',
+  AAPL:'AAPL.BA',NVDA:'NVDA.BA',MELI:'MELI.BA',
+  AL30:'AL30.BA',AE38:'AE38.BA',GD30:'GD30.BA'
+};
+const OPPORTUNITY_TYPE={
+  GGAL:'argstock',YPFD:'argstock',PAMP:'argstock',VIST:'argstock',TGSU2:'argstock',
+  AAPL:'cedear',NVDA:'cedear',MELI:'cedear',
+  AL30:'argbond',AE38:'argbond',GD30:'argbond'
+};
+const OPPORTUNITY_LABEL={
+  GGAL:'Grupo Galicia',YPFD:'YPF',PAMP:'Pampa Energía',VIST:'Vista Energy',TGSU2:'Transportadora de Gas del Sur',
+  AAPL:'Apple CEDEAR',NVDA:'NVIDIA CEDEAR',MELI:'MercadoLibre CEDEAR',
+  AL30:'Bonar 2030',AE38:'Bonar 2038',GD30:'Global 2030'
+};
+const OPPORTUNITY_ORDER=['YPFD','AL30','GGAL','PAMP','VIST','TGSU2','AAPL','NVDA','MELI','AE38','GD30'];
 
 const MAP_VIEW={w:1200,h:520,minLat:-60,maxLat:85};
 const REGION_VIEWS={
@@ -557,7 +573,7 @@ function renderSession(date){
 }
 
 async function fetchBatch(force=false){
-  const symbols=[...new Set(ASSETS.map(x=>x.symbol))];
+  const symbols=[...new Set([...ASSETS.map(x=>x.symbol),...Object.values(OPPORTUNITY_MARKET_SYMBOL)])];
   const intradaySymbols=[...new Set(Object.values(REGIONS).map(r=>ASSET_BY_ID[r.focus]?.symbol).filter(Boolean))];
   const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
   try{
@@ -874,7 +890,20 @@ const SECONDARY_TICKER={
   GGAL:'GGAL',VIST:'VIST',TGSU2:'TGSU2'
 };
 function opportunityAssetType(r){
-  return String(r?.item?.requestedType||r?.item?.type||'').toLowerCase();
+  const symbol=String(r?.item?.symbol||'').toUpperCase();
+  return OPPORTUNITY_TYPE[symbol]||String(r?.item?.requestedType||r?.item?.type||'').toLowerCase();
+}
+function opportunityMarket(r){
+  const symbol=String(r?.item?.symbol||'').toUpperCase();
+  const marketSymbol=OPPORTUNITY_MARKET_SYMBOL[symbol];
+  return marketSymbol?state.markets.get(marketSymbol):null;
+}
+function opportunityFallback(symbol){
+  return {
+    item:{symbol,type:OPPORTUNITY_TYPE[symbol]||'argstock',label:OPPORTUNITY_LABEL[symbol]||symbol},
+    status:{kind:'wait',label:'SEGUIMIENTO',oppScore:0},
+    marketOnly:true
+  };
 }
 function oppType(r){
   const t=opportunityAssetType(r);
@@ -911,6 +940,18 @@ const OPPORTUNITY_LOADING=[
   {symbol:'PAMP',type:'argstock'},{symbol:'VIST',type:'argstock'},{symbol:'TGSU2',type:'argstock'}
 ];
 function opportunitySetup(r){
+  if(r?.marketOnly){
+    const bars=opportunityMarket(r)?.bars||[];
+    if(bars.length>20){
+      const closes=bars.slice(-20).map(x=>num(x.close)).filter(Number.isFinite);
+      const first=closes[0],last=closes.at(-1),hi=Math.max(...closes.slice(0,-1)),lo=Math.min(...closes.slice(0,-1));
+      if(Number.isFinite(last)&&Number.isFinite(hi)&&last>hi)return'Ruptura de resistencia';
+      if(Number.isFinite(last)&&Number.isFinite(lo)&&last<lo)return'Pérdida de soporte';
+      if(Number.isFinite(first)&&Number.isFinite(last)&&last>first*1.03)return'Consolidación alcista';
+      if(Number.isFinite(first)&&Number.isFinite(last)&&last<first*.97)return'Presión bajista';
+    }
+    return'Seguimiento técnico';
+  }
   const a=r?.analysis||{},kind=String(r?.status?.kind||''),br=String(a.breakType||'').toLowerCase();
   if(br.includes('choch alcista'))return'Cambio de estructura';
   if(br.includes('bos alcista'))return'Ruptura de resistencia';
@@ -923,6 +964,7 @@ function opportunitySetup(r){
   return kind==='wait'?'Esperar confirmación':'Seguimiento';
 }
 function opportunityComment(r){
+  if(r?.marketOnly)return'Datos de mercado válidos; señal técnica aún sin confirmar.';
   const kind=String(r?.status?.kind||''),trend=opportunityTrend(r)[0];
   if(kind==='buy')return'Confluencia técnica y momentum favorables.';
   if(kind==='near')return'Cerca de zona válida; falta confirmación.';
@@ -946,11 +988,31 @@ function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
   const allowed=new Set(['cedear','argstock','argbond','bond']);
   let results=[...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(opportunityAssetType(r)));
+  const bySymbol=new Map();
+  for(const r of results){
+    const s=String(r.item.symbol||'').toUpperCase();
+    const prev=bySymbol.get(s);
+    const score=num(r?.status?.oppScore??r?.rfScore??r?.score)||0;
+    const prevScore=num(prev?.status?.oppScore??prev?.rfScore??prev?.score)||-Infinity;
+    if(!prev||score>prevScore)bySymbol.set(s,r);
+  }
+  for(const symbol of OPPORTUNITY_ORDER){
+    if(bySymbol.size>=6)break;
+    if(bySymbol.has(symbol))continue;
+    const market=state.markets.get(OPPORTUNITY_MARKET_SYMBOL[symbol]);
+    if(market?.bars?.length>2||Number.isFinite(market?.last))bySymbol.set(symbol,opportunityFallback(symbol));
+  }
+  results=[...bySymbol.values()];
   if(state.filter!=='all')results=results.filter(r=>{
     const t=opportunityAssetType(r);
     return state.filter==='argbond'?(t==='argbond'||t==='bond'):t===state.filter;
   });
-  results=results.sort((a,b)=>(num(b?.status?.oppScore??b?.rfScore??b?.score)||0)-(num(a?.status?.oppScore??a?.rfScore??a?.score)||0)).slice(0,6);
+  results=results.sort((a,b)=>{
+    const sa=num(a?.status?.oppScore??a?.rfScore??a?.score)||0;
+    const sb=num(b?.status?.oppScore??b?.rfScore??b?.score)||0;
+    if(sb!==sa)return sb-sa;
+    return OPPORTUNITY_ORDER.indexOf(String(a?.item?.symbol||'').toUpperCase())-OPPORTUNITY_ORDER.indexOf(String(b?.item?.symbol||'').toUpperCase());
+  }).slice(0,6);
   if(!results.length){
     if(!daily?.lastRun||daily?.running){
       $('rtOppsBody').innerHTML=loadingOpportunityRows();
@@ -959,8 +1021,13 @@ function renderOpportunities(){
     $('rtOppsBody').innerHTML='<tr><td colspan="10" class="rt-opps-empty">Sin candidatos con datos válidos para este filtro.</td></tr>';return;
   }
   $('rtOppsBody').innerHTML=results.map(r=>{
-    const bars=extractBars(r),rv=relVolume(bars),trend=opportunityTrend(r),tm=timing(r),price=num(r.price??r.last??r.panel?.price),score=num(r?.status?.oppScore??r?.rfScore??r?.score);
-    const day=bars.length>1&&bars.at(-2).close?(bars.at(-1).close/bars.at(-2).close-1)*100:NaN;
+    const market=opportunityMarket(r);
+    const marketBars=(market?.bars||[]).map(x=>({close:num(x.close),volume:num(x.volume)})).filter(x=>Number.isFinite(x.close));
+    const bars=marketBars.length>2?marketBars:extractBars(r);
+    const rv=relVolume(bars),trend=opportunityTrend(r),tm=timing(r);
+    const price=Number.isFinite(num(market?.last))?num(market.last):num(r.price??r.last??r.panel?.price);
+    const score=num(r?.status?.oppScore??r?.rfScore??r?.score);
+    const day=Number.isFinite(num(market?.changePct))?num(market.changePct):(bars.length>1&&bars.at(-2).close?(bars.at(-1).close/bars.at(-2).close-1)*100:NaN);
     const setup=opportunitySetup(r);
     const comment=opportunityComment(r);
     const fullComment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||comment).replace(/\s+/g,' ').trim();
