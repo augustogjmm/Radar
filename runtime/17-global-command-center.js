@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.8.0';
+const VERSION='2.9.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -98,6 +98,11 @@ const MARKER_OFFSETS={
   'NUEVA YORK':[10,-8],'LONDRES':[-55,-8],'TOKIO':[9,-7],'SÃO PAULO':[9,15],'ARGENTINA':[9,-8],'SÍDNEY':[9,-7],
   'FRANKFURT':[10,-2],'PARÍS':[-35,16],'TORONTO':[-46,-8],'HONG KONG':[9,14],'SHANGHÁI':[9,-8],'CIUDAD DE MÉXICO':[-72,16]
 };
+const DETAIL_MARKER_OFFSETS={
+  'LONDRES':[-16,-16],
+  'FRANKFURT':[18,5],
+  'PARÍS':[-14,25]
+};
 function marketMarkers(regionOnly=null){
   const entries=regionOnly?[[regionOnly,MARKET_CITIES[regionOnly]||[]]]:Object.entries(MARKET_CITIES);
   return entries.flatMap(([region,cities])=>cities
@@ -106,8 +111,10 @@ function marketMarkers(regionOnly=null){
       const [cx,cy]=mapXY(lon,lat),tone=markerTone(assetId);
       const special=name==='ARGENTINA'?' argentina':'';
       const displayName=regionOnly?(DETAIL_CITY_LABEL[name]||name):name;
-      const [tx,ty]=MARKER_OFFSETS[name]||[9,-7];
-      return `<g class="rt-market-marker ${tone}${special}" data-marker-region="${region}" data-marker-asset="${assetId||''}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="${tx}" y="${ty}">${displayName}</text></g>`;
+      const offsets=regionOnly?DETAIL_MARKER_OFFSETS:MARKER_OFFSETS;
+      const [tx,ty]=offsets[name]||MARKER_OFFSETS[name]||[9,-7];
+      const anchor=tx<0?'end':'start';
+      return `<g class="rt-market-marker ${tone}${special}" data-marker-region="${region}" data-marker-asset="${assetId||''}" data-marker-name="${name}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="${tx}" y="${ty}" text-anchor="${anchor}">${displayName}</text></g>`;
     })).join('');
 }
 async function loadWorldMap(){
@@ -877,6 +884,42 @@ function scoreBars(score){
   const n=clamp(Math.round((num(score)||0)/20),1,5);
   return `<span class="rt-scorebars">${[1,2,3,4,5].map(i=>`<i style="height:${5+i*2+(i<=n?6:0)}px;opacity:${i<=n?1:.25}"></i>`).join('')}</span>`;
 }
+const OPPORTUNITY_LOADING=[
+  {symbol:'YPFD',type:'argstock'},{symbol:'AL30',type:'argbond'},{symbol:'GGAL',type:'argstock'},
+  {symbol:'PAMP',type:'argstock'},{symbol:'VIST',type:'argstock'},{symbol:'TGSU2',type:'argstock'}
+];
+function opportunitySetup(r){
+  const a=r?.analysis||{},kind=String(r?.status?.kind||''),br=String(a.breakType||'').toLowerCase();
+  if(br.includes('choch alcista'))return'Cambio de estructura';
+  if(br.includes('bos alcista'))return'Ruptura de resistencia';
+  if(br.includes('choch bajista')||br.includes('bos bajista'))return'Ruptura bajista';
+  if(kind==='buy')return'Confirmación técnica';
+  if(kind==='near')return'En zona técnica';
+  const ema=String(a.emaState||'').toLowerCase();
+  if(ema.includes('alcista'))return'Consolidación alcista';
+  if(ema.includes('bajista'))return'Presión bajista';
+  return kind==='wait'?'Esperar confirmación':'Seguimiento';
+}
+function opportunityComment(r){
+  const kind=String(r?.status?.kind||''),trend=opportunityTrend(r)[0];
+  if(kind==='buy')return'Confluencia técnica y momentum favorables.';
+  if(kind==='near')return'Cerca de zona válida; falta confirmación.';
+  if(kind==='sell')return'Sesgo bajista; evitar entrada long.';
+  if(kind==='wait')return trend.startsWith('Alcista')?'Tendencia favorable, todavía sin trigger.':'Sin entrada limpia; esperar confirmación.';
+  return'Lectura técnica en seguimiento.';
+}
+function loadingOpportunityRows(){
+  return OPPORTUNITY_LOADING.map(x=>`<tr class="rt-opportunity-loading">
+    <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[x.symbol]||x.symbol)}</b><small>${esc(SECONDARY_TICKER[x.symbol]||x.symbol)}</small></div></td>
+    <td><span class="rt-type rt-type-${x.type}">${x.type==='argbond'?'Bono':'Merval'}</span></td>
+    <td><span class="rt-cell-skeleton w55"></span></td><td><span class="rt-cell-skeleton w38"></span></td>
+    <td><span class="rt-mini-bars-loading"><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
+    <td><span class="rt-spark-loading"></span></td>
+    <td><span class="rt-cell-skeleton w78"></span></td><td><span class="rt-cell-skeleton w56"></span></td>
+    <td><span class="rt-cell-skeleton w48"></span></td><td><span class="rt-cell-skeleton w90"></span></td>
+  </tr>`).join('');
+}
+
 function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
   const allowed=new Set(['cedear','argstock','argbond','bond']);
@@ -887,13 +930,18 @@ function renderOpportunities(){
   });
   results=results.sort((a,b)=>(num(b?.status?.oppScore??b?.rfScore??b?.score)||0)-(num(a?.status?.oppScore??a?.rfScore??a?.score)||0)).slice(0,6);
   if(!results.length){
-    $('rtOppsBody').innerHTML='<tr><td colspan="10" class="rt-opps-empty">No hay oportunidades válidas para mostrar con el filtro actual.</td></tr>';return;
+    if(!daily?.lastRun||daily?.running){
+      $('rtOppsBody').innerHTML=loadingOpportunityRows();
+      return;
+    }
+    $('rtOppsBody').innerHTML='<tr><td colspan="10" class="rt-opps-empty">Sin candidatos con datos válidos para este filtro.</td></tr>';return;
   }
   $('rtOppsBody').innerHTML=results.map(r=>{
     const bars=extractBars(r),rv=relVolume(bars),trend=opportunityTrend(r),tm=timing(r),price=num(r.price??r.last??r.panel?.price),score=num(r?.status?.oppScore??r?.rfScore??r?.score);
     const day=bars.length>1&&bars.at(-2).close?(bars.at(-1).close/bars.at(-2).close-1)*100:NaN;
-    const setup=String(r?.status?.label||r?.plan?.label||r?.setup||'Seguimiento').replace(/_/g,' ');
-    const comment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||'Lectura técnica disponible al abrir el activo.').replace(/\s+/g,' ').trim();
+    const setup=opportunitySetup(r);
+    const comment=opportunityComment(r);
+    const fullComment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||comment).replace(/\s+/g,' ').trim();
     return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.type||'auto')}">
       <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[r.item.symbol]||r.item.symbol)}</b><small>${esc(SECONDARY_TICKER[r.item.symbol]||r.item.symbol)}</small></div></td>
       <td><span class="rt-type rt-type-${esc(String(r.item.type||'').toLowerCase())}">${esc(oppType(r))}</span></td>
@@ -904,7 +952,7 @@ function renderOpportunities(){
       <td>${esc(setup)}</td>
       <td><span class="rt-trend ${trend[1]}"><i>${trend[1]==='bad'?'↓':trend[1]==='warn'?'●':'↑'}</i>${trend[0]}</span></td>
       <td><span class="rt-pill ${tm[1]}">${tm[0]}</span></td>
-      <td>${esc(comment.slice(0,110))}</td>
+      <td title="${esc(fullComment)}">${esc(comment)}</td>
     </tr>`;
   }).join('');
   qa('#rtOppsBody tr[data-rt-symbol]').forEach(row=>row.addEventListener('click',()=>{
