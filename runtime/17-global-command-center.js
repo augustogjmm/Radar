@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='3.0.0';
+const VERSION='3.1.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -858,8 +858,11 @@ const SECONDARY_TICKER={
   YPFD:'YPFD',PAMP:'PAMP',AL30:'AL30D',AE38:'AE38D',GD30:'GD30D',
   GGAL:'GGAL',VIST:'VIST',TGSU2:'TGSU2'
 };
+function opportunityAssetType(r){
+  return String(r?.item?.requestedType||r?.item?.type||'').toLowerCase();
+}
 function oppType(r){
-  const t=String(r?.item?.type||'').toLowerCase();
+  const t=opportunityAssetType(r);
   if(t==='cedear')return'CEDEAR';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Merval';if(t==='crypto')return'Crypto';return t||'Activo';
 }
 function timing(r){
@@ -927,9 +930,9 @@ function loadingOpportunityRows(){
 function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
   const allowed=new Set(['cedear','argstock','argbond','bond']);
-  let results=[...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(String(r.item.type||'').toLowerCase()));
+  let results=[...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(opportunityAssetType(r)));
   if(state.filter!=='all')results=results.filter(r=>{
-    const t=String(r.item.type||'').toLowerCase();
+    const t=opportunityAssetType(r);
     return state.filter==='argbond'?(t==='argbond'||t==='bond'):t===state.filter;
   });
   results=results.sort((a,b)=>(num(b?.status?.oppScore??b?.rfScore??b?.score)||0)-(num(a?.status?.oppScore??a?.rfScore??a?.score)||0)).slice(0,6);
@@ -946,9 +949,9 @@ function renderOpportunities(){
     const setup=opportunitySetup(r);
     const comment=opportunityComment(r);
     const fullComment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||comment).replace(/\s+/g,' ').trim();
-    return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.type||'auto')}">
+    return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.requestedType||r.item.type||'auto')}">
       <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[r.item.symbol]||r.item.symbol)}</b><small>${esc(SECONDARY_TICKER[r.item.symbol]||r.item.symbol)}</small></div></td>
-      <td><span class="rt-type rt-type-${esc(String(r.item.type||'').toLowerCase())}">${esc(oppType(r))}</span></td>
+      <td><span class="rt-type rt-type-${esc(opportunityAssetType(r))}">${esc(oppType(r))}</span></td>
       <td>${Number.isFinite(price)?fmt(price,2):'—'}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
       <td><div class="rt-volume-cell">${volumeChart(bars)}<small>${Number.isFinite(rv)?fmt(rv,1)+'x':'s/d'}</small></div></td>
