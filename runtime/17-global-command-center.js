@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.5.0';
+const VERSION='2.6.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -93,19 +93,27 @@ const DETAIL_CITY_LABEL={
   'TOKIO':'Tokio','HONG KONG':'Hong Kong','SHANGHÁI':'Shanghái','SÃO PAULO':'São Paulo','ARGENTINA':'Argentina',
   'CIUDAD DE MÉXICO':'Ciudad de México','SÍDNEY':'Sídney'
 };
+const MAIN_MARKET_LABELS=new Set(['NUEVA YORK','LONDRES','TOKIO','SÃO PAULO','ARGENTINA','SÍDNEY']);
+const MARKER_OFFSETS={
+  'NUEVA YORK':[10,-8],'LONDRES':[-55,-8],'TOKIO':[9,-7],'SÃO PAULO':[9,15],'ARGENTINA':[9,-8],'SÍDNEY':[9,-7],
+  'FRANKFURT':[10,-2],'PARÍS':[-35,16],'TORONTO':[-46,-8],'HONG KONG':[9,14],'SHANGHÁI':[9,-8],'CIUDAD DE MÉXICO':[-72,16]
+};
 function marketMarkers(regionOnly=null){
   const entries=regionOnly?[[regionOnly,MARKET_CITIES[regionOnly]||[]]]:Object.entries(MARKET_CITIES);
-  return entries.flatMap(([region,cities])=>cities.map(([name,lon,lat,assetId])=>{
-    const [cx,cy]=mapXY(lon,lat),tone=markerTone(assetId);
-    const special=name==='ARGENTINA'?' argentina':'';
-    const displayName=regionOnly?(DETAIL_CITY_LABEL[name]||name):name;
-    return `<g class="rt-market-marker ${tone}${special}" data-marker-region="${region}" data-marker-asset="${assetId||''}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="9" y="-7">${displayName}</text></g>`;
-  })).join('');
+  return entries.flatMap(([region,cities])=>cities
+    .filter(([name])=>regionOnly||MAIN_MARKET_LABELS.has(name))
+    .map(([name,lon,lat,assetId])=>{
+      const [cx,cy]=mapXY(lon,lat),tone=markerTone(assetId);
+      const special=name==='ARGENTINA'?' argentina':'';
+      const displayName=regionOnly?(DETAIL_CITY_LABEL[name]||name):name;
+      const [tx,ty]=MARKER_OFFSETS[name]||[9,-7];
+      return `<g class="rt-market-marker ${tone}${special}" data-marker-region="${region}" data-marker-asset="${assetId||''}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><circle r="4.2"/><circle class="halo" r="9"/><text x="${tx}" y="${ty}">${displayName}</text></g>`;
+    })).join('');
 }
 async function loadWorldMap(){
   if(state.worldMapLoaded)return;
   try{
-    const r=await fetch('/assets/world-markets.svg?v=20261001-gcc16',{cache:'force-cache'});
+    const r=await fetch('/assets/world-markets.svg?v=20261001-gcc18',{cache:'force-cache'});
     if(!r.ok)throw new Error(`Mapa HTTP ${r.status}`);
     const svgText=await r.text();
     const host=$('rtWorldMapHost');
@@ -266,7 +274,7 @@ function setActiveForView(id){
 
 function tickClock(){
   const now=new Date();
-  const t=now.toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit'});
+  const t=now.toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false});
   const dp=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',weekday:'short',day:'2-digit',month:'short',year:'numeric'}).formatToParts(now);
   const dm=Object.fromEntries(dp.map(x=>[x.type,x.value.replace('.','')]));
   const cap=s=>s?String(s).charAt(0).toUpperCase()+String(s).slice(1):'';
