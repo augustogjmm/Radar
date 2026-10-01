@@ -16,7 +16,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length)return NaN;const m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2};
 
 const state={
-  loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),selectedRegion:'europe',filter:'all',worldMapLoaded:false,
+  loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),fixedIncome:new Map(),selectedRegion:'europe',filter:'all',worldMapLoaded:false,
   sessionTimer:null,renderTimer:null
 };
 
@@ -65,7 +65,7 @@ const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 const OPPORTUNITY_MARKET_SYMBOL={
   GGAL:'GGAL.BA',YPFD:'YPFD.BA',PAMP:'PAMP.BA',VIST:'VIST.BA',TGSU2:'TGSU2.BA',
   AAPL:'AAPL',NVDA:'NVDA',MELI:'MELI',SPY:'SPY',QQQ:'QQQ',
-  AL30:'AL30.BA',AE38:'AE38.BA',GD30:'GD30.BA'
+  AL30:'AL30D',AE38:'AE38D',GD30:'GD30D'
 };
 const OPPORTUNITY_TYPE={
   GGAL:'argstock',YPFD:'argstock',PAMP:'argstock',VIST:'argstock',TGSU2:'argstock',
@@ -580,9 +580,11 @@ async function fetchBatch(force=false){
     const stamp=Date.now(),fresh=force?'1':'0';
     const dailyUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d&fresh=${fresh}&_=${stamp}`;
     const intraUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(intradaySymbols.join(','))}&range=5d&interval=15m&fresh=${fresh}&_=${stamp}`;
-    const [dailyRes,intraRes]=await Promise.all([
+    const [dailyRes,intraRes,fixedRes,bondHistRes]=await Promise.all([
       fetch(dailyUrl,{cache:'no-store',signal:ctrl.signal}),
-      fetch(intraUrl,{cache:'no-store',signal:ctrl.signal}).catch(()=>null)
+      fetch(intraUrl,{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
+      fetch('/api/byma/fixed-income?kind=sovereign&currency=ALL&liquid=0',{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
+      fetch('/api/byma/history?symbol=AL30D&days=180&tf=short',{cache:'no-store',signal:ctrl.signal}).catch(()=>null)
     ]);
     if(!dailyRes.ok)throw new Error(`Mercado HTTP ${dailyRes.status}`);
     const j=await dailyRes.json();
@@ -595,6 +597,24 @@ async function fetchBatch(force=false){
       for(const x of (intraday.items||[])){
         const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
         if(bars.length>2)state.intraday.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),bars,source:x.source||intraday.source||'Yahoo Finance'});
+      }
+    }
+    if(fixedRes?.ok){
+      const fixed=await fixedRes.json();
+      for(const x of (fixed.items||[])){
+        const symbol=String(x.symbol||'').toUpperCase();
+        if(!['AL30','AL30D','AE38','AE38D','GD30','GD30D'].includes(symbol))continue;
+        const last=num(x.trade??x.closingPrice),volume=num(x.volumeAmount??x.tradeVolume??x.volume);
+        state.fixedIncome.set(symbol,{ok:Number.isFinite(last),last,changePct:NaN,bars:[],volume,source:fixed.source||'BYMA'});
+      }
+    }
+    if(bondHistRes?.ok){
+      const h=await bondHistRes.json(),t=h.t||[],cl=h.c||[],v=h.v||[];
+      const bars=t.map((time,i)=>({time:num(time),close:num(cl[i]),volume:num(v[i])})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
+      if(bars.length>2){
+        const last=bars.at(-1).close,prev=bars.at(-2).close,changePct=prev?((last/prev)-1)*100:NaN;
+        const prevQuote=state.fixedIncome.get('AL30D')||{};
+        state.fixedIncome.set('AL30D',{...prevQuote,ok:true,last,changePct,bars,source:'BYMA'});
       }
     }
   }finally{clearTimeout(tm)}
@@ -919,6 +939,9 @@ function opportunityAssetType(r){
 }
 function opportunityMarket(r){
   const symbol=String(r?.item?.symbol||'').toUpperCase();
+  if(OPPORTUNITY_TYPE[symbol]==='argbond'){
+    return state.fixedIncome.get(symbol+'D')||state.fixedIncome.get(symbol)||null;
+  }
   const marketSymbol=OPPORTUNITY_MARKET_SYMBOL[symbol];
   return marketSymbol?state.markets.get(marketSymbol):null;
 }
