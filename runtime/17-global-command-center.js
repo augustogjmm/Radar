@@ -64,20 +64,20 @@ const COUNTRY_MARKET={
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 const OPPORTUNITY_MARKET_SYMBOL={
   GGAL:'GGAL.BA',YPFD:'YPFD.BA',PAMP:'PAMP.BA',VIST:'VIST.BA',TGSU2:'TGSU2.BA',
-  AAPL:'AAPL',NVDA:'NVDA',MELI:'MELI',
+  AAPL:'AAPL',NVDA:'NVDA',MELI:'MELI',SPY:'SPY',QQQ:'QQQ',
   AL30:'AL30.BA',AE38:'AE38.BA',GD30:'GD30.BA'
 };
 const OPPORTUNITY_TYPE={
   GGAL:'argstock',YPFD:'argstock',PAMP:'argstock',VIST:'argstock',TGSU2:'argstock',
-  AAPL:'cedear',NVDA:'cedear',MELI:'cedear',
+  AAPL:'cedear',NVDA:'cedear',MELI:'cedear',SPY:'cedear',QQQ:'cedear',
   AL30:'argbond',AE38:'argbond',GD30:'argbond'
 };
 const OPPORTUNITY_LABEL={
   GGAL:'Grupo Galicia',YPFD:'YPF',PAMP:'Pampa Energía',VIST:'Vista Energy',TGSU2:'Transportadora de Gas del Sur',
-  AAPL:'Apple CEDEAR',NVDA:'NVIDIA CEDEAR',MELI:'MercadoLibre CEDEAR',
+  AAPL:'Apple CEDEAR',NVDA:'NVIDIA CEDEAR',MELI:'MercadoLibre CEDEAR',SPY:'S&P 500 CEDEAR',QQQ:'Nasdaq 100 CEDEAR',
   AL30:'Bonar 2030',AE38:'Bonar 2038',GD30:'Global 2030'
 };
-const OPPORTUNITY_ORDER=['YPFD','AL30','GGAL','PAMP','VIST','TGSU2','AAPL','NVDA','MELI','AE38','GD30'];
+const OPPORTUNITY_ORDER=['YPFD','AL30','GGAL','PAMP','VIST','TGSU2','AAPL','NVDA','MELI','SPY','QQQ','AE38','GD30'];
 
 const MAP_VIEW={w:1200,h:520,minLat:-60,maxLat:85};
 const REGION_VIEWS={
