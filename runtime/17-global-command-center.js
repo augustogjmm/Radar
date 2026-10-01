@@ -1147,61 +1147,8 @@ function watchViews(){
 }
 
 
-/* Agreed executive UX: the world map is the primary decision surface.
-   Regional detail opens only on explicit drill-down. */
-function installAgreedExecutiveUX(){
-  document.body.classList.add('rt-agreed-executive');
-
-  const detail=$('rtRegionDetail');
-  if(detail && !$('rtRegionClose')){
-    const close=document.createElement('button');
-    close.id='rtRegionClose';
-    close.className='rt-region-close';
-    close.type='button';
-    close.setAttribute('aria-label','Cerrar detalle regional');
-    close.textContent='×';
-    detail.prepend(close);
-    close.addEventListener('click',()=>document.body.classList.remove('rt-region-expanded'));
-  }
-
-  const openRegion=key=>{
-    if(!key || !REGIONS[key]) return;
-    state.selectedRegion=key;
-    renderMap();
-    renderRegionDetail();
-    document.body.classList.add('rt-region-expanded');
-  };
-
-  document.addEventListener('click',ev=>{
-    const label=ev.target.closest?.('[data-label-region]');
-    if(label){
-      openRegion(label.dataset.labelRegion);
-      return;
-    }
-    const country=ev.target.closest?.('.rt-country[data-region]');
-    if(country) openRegion(country.dataset.region);
-  });
-
-  document.addEventListener('keydown',ev=>{
-    if(ev.key==='Escape') document.body.classList.remove('rt-region-expanded');
-  });
-
-  const mapHead=q('.rt-map-head h2');
-  if(mapHead) mapHead.textContent='Pulso Global de Mercados';
-  const mapSub=q('.rt-map-head p');
-  if(mapSub) mapSub.textContent='Qué está pasando ahora en el mundo y qué mercado está marcando el tono';
-
-  const argTitle=q('#rtArgentinaSignals .rt-section-title h2');
-  if(argTitle) argTitle.textContent='Argentina · Contexto para decidir';
-  const argSub=q('#rtArgentinaSignals .rt-section-title p');
-  if(argSub) argSub.textContent='HOY · SEMANA · MES';
-
-  const signalsTitle=q('#rtMarketSignals .rt-signals-head h2');
-  if(signalsTitle) signalsTitle.textContent='Variables que mueven la rueda';
-}
-
 function boot(){
-  insertShell();mountDashboard();installAgreedExecutiveUX();watchViews();
+  insertShell();mountDashboard();watchViews();
   if(!$('rtGlobalRadar'))return;
   renderAll();
   loadWorldMap();
