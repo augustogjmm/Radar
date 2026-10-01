@@ -516,3 +516,45 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 .rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-down{fill-opacity:.44!important}
 .rt-detail-geo-svg #rtCountryLayer>.rt-country.neutral{fill-opacity:.12!important}
 .rt-detail-geo-svg .rt-market-marker text{font-size:10px;stroke-width:2.6px}
+
+/* Final regional-map fidelity against approved reference */
+.rt-detail-geo-svg #rtCountryLayer>.rt-country{
+  stroke:#8aa0ad!important;
+  stroke-opacity:.72!important;
+  stroke-width:.34!important;
+  mix-blend-mode:color!important
+}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-up{fill-opacity:.30!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-up{fill-opacity:.22!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.mod-down{fill-opacity:.23!important}
+.rt-detail-geo-svg #rtCountryLayer>.rt-country.strong-down{fill-opacity:.31!important}
+.rt-detail-geo-svg #rtTextureLayer{
+  opacity:1!important;
+  mix-blend-mode:soft-light!important
+}
+.rt-detail-geo-svg #rtTerrainOverlay{
+  opacity:1!important;
+  mix-blend-mode:screen!important
+}
+.rt-detail-geo-svg #rtTerrainOverlay .rt-terrain-overlay{
+  fill-opacity:.58!important;
+  stroke-opacity:.34!important
+}
+.rt-detail-geo-svg #rtCityLightsLayer{opacity:1!important}
+.rt-detail-geo-svg #rtCityLightsLayer .rt-city-light{
+  opacity:1!important;
+  filter:url(#rtUrbanGlow)
+}
+.rt-detail-geo-svg .rt-market-marker circle{
+  fill:#f7ffff;
+  stroke:#69e2ff;
+  stroke-width:1.4;
+  filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px rgba(73,205,255,.8))
+}
+.rt-detail-geo-svg .rt-market-marker text{
+  font-size:10px!important;
+  font-weight:800;
+  stroke-width:2.4px!important
+}
+.rt-signal-icon svg{width:18px;height:18px}
+.rt-signal-state{font-size:10px;padding:3px 7px}
