@@ -2554,9 +2554,10 @@ async function scanOne(item,key){
    if(extra.length)why+=' · '+extra.join(' · ')+'.';
  }
  const result={
-   item:{symbol:pack.symbol,type:pack.type,panel:item.panel||null},
+   item:{symbol:pack.symbol,type:pack.type,requestedType:item.type||pack.type,label:item.label||'',panel:item.panel||null},
    key,tfLabel:pack.tfs[key]?.label||key,
    analysis:a,plan,status,macroTrend,marketContext,price:a.c,
+   bars:Array.isArray(pack.data)?pack.data:[],
    provider:pack.provider||'Scanner',providerFallback:pack.providerFallback===true,
    rf,
    why:(pack.providerFallback?`Fuente alternativa: ${pack.provider}. `:'')+why

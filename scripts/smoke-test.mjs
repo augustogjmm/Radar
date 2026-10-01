@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 const base=process.env.RADAR_URL||'http://127.0.0.1:4173';
 await fs.mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true});
-const page=await browser.newPage({viewport:{width:1440,height:1000}});
+const page=await browser.newPage({viewport:{width:1672,height:941}});
 const pageErrors=[];
 page.on('pageerror',e=>pageErrors.push(String(e?.stack||e)));
 
@@ -42,6 +42,15 @@ async function assert(condition,message){
 async function shot(name){
   await page.screenshot({path:`artifacts/${name}.png`,fullPage:true});
 }
+async function navClick(id){
+  const globalShell=await page.evaluate(()=>document.body.classList.contains('rt-global-shell'));
+  if(globalShell){
+    const ok=await page.evaluate(id=>{const el=document.getElementById(id);if(!el)return false;el.click();return true},id);
+    if(!ok)throw new Error('Control de navegación ausente: '+id);
+  }else{
+    await page.click('#'+id);
+  }
+}
 
 try{
   const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
@@ -67,7 +76,19 @@ try{
       wrapLeft:wr?.left||0,
       topHeight:tr?.height||0,
       bodyOverflow:document.documentElement.scrollWidth-window.innerWidth,
-      navCount:document.querySelectorAll('.side-nav-item').length
+      navCount:document.querySelectorAll('.side-nav-item').length,
+      globalShell:document.body.classList.contains('rt-global-shell'),
+      globalCommandCenter:!!document.getElementById('rtGlobalRadar'),
+      globalAppbarHeight:document.getElementById('rtGlobalAppbar')?.getBoundingClientRect().height||0,
+      globalSections:{
+        map:!!document.querySelector('.rt-world-card'),
+        risk:!!document.querySelector('.rt-risk-card'),
+        region:!!document.getElementById('rtRegionDetail'),
+        watch:!!document.querySelector('.rt-watch-card'),
+        argentina:!!document.getElementById('rtArgentinaSignals'),
+        signals:!!document.getElementById('rtMarketSignals'),
+        opportunities:!!document.querySelector('.rt-opps-card')
+      }
     };
   });
   await assert(design.productCss,'Base product stylesheet no cargó');
@@ -75,11 +96,18 @@ try{
   await assert(design.historyCss,'Historial stylesheet no cargó');
   await assert(design.productRoot,'Product reset no se inicializó');
   await assert(design.deployment==='radar-professional-ux-20260930','Deployment marker incorrecto: '+design.deployment);
-  await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
-  await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
-  await assert(design.topHeight>=60&&design.topHeight<=90,'Topbar fuera de diseño: '+design.topHeight);
+  if(design.globalCommandCenter){
+    await assert(design.globalShell,'Global Command Center no activó su shell');
+    await assert(design.sidebarWidth===0,'El sidebar legacy debe quedar oculto en Global Command Center: '+design.sidebarWidth);
+    await assert(design.globalAppbarHeight>=60&&design.globalAppbarHeight<=70,'Appbar global fuera de diseño: '+design.globalAppbarHeight);
+    await assert(Object.values(design.globalSections).every(Boolean),'Global Command Center incompleto: '+JSON.stringify(design.globalSections));
+  }else{
+    await assert(design.sidebarWidth>=220&&design.sidebarWidth<=260,'Sidebar fuera de diseño: '+design.sidebarWidth);
+    await assert(design.wrapLeft>=design.sidebarRight-2,'Contenido superpuesto al sidebar');
+    await assert(design.topHeight>=60&&design.topHeight<=90,'Topbar fuera de diseño: '+design.topHeight);
+    await assert(design.navCount>=8,'Navegación incompleta');
+  }
   await assert(design.bodyOverflow<=4,'Overflow horizontal global: '+design.bodyOverflow);
-  await assert(design.navCount>=8,'Navegación incompleta');
 
   const finalContract=await page.evaluate(()=>{
     const required=[
@@ -115,6 +143,16 @@ try{
         heroTitle:hero?.querySelector('h1')?.textContent?.trim()||''
       },
       analysisAdvanced:!!document.getElementById('productAnalysisAdvanced'),
+      global:{
+        enabled:!!document.getElementById('rtGlobalRadar'),
+        map:!!document.querySelector('.rt-world-card'),
+        region:!!document.getElementById('rtRegionDetail'),
+        watch:!!document.querySelector('.rt-watch-card'),
+        argentina:!!document.getElementById('rtArgentinaSignals'),
+        signals:!!document.getElementById('rtMarketSignals'),
+        opportunities:!!document.querySelector('.rt-opps-card'),
+        tabs:document.querySelectorAll('.rt-nav [data-rt-nav]').length
+      },
       oldWorkspace:!!document.querySelector('script[src*="/workspace/"],link[href*="/workspace/"]')
     }
   });
@@ -122,10 +160,18 @@ try{
   await assert(finalContract.nav.home==='Hoy','Navegación Inicio no quedó como Hoy');
   await assert(finalContract.nav.scanner==='Oportunidades','Navegación Scanner no quedó como Oportunidades');
   await assert(finalContract.nav.fixed==='Renta fija'&&finalContract.nav.watch==='Seguimiento'&&finalContract.nav.portfolio==='Cartera'&&finalContract.nav.signals==='Historial','Navegación final inconsistente: '+JSON.stringify(finalContract.nav));
-  await assert(finalContract.home.hero&&finalContract.home.daily&&finalContract.home.decision,'Inicio perdió portada, Radar de hoy o prioridades');
-  await assert(finalContract.home.market&&finalContract.home.marketHasKpis,'Inicio perdió Mercado en cuatro números');
-  await assert(finalContract.home.advanced&&!finalContract.home.advancedOpen,'Contexto avanzado debe existir y comenzar plegado');
-  await assert(/atención ahora/i.test(finalContract.home.heroTitle),'Portada no está orientada a decisiones: '+finalContract.home.heroTitle);
+  if(finalContract.global.enabled){
+    await assert(finalContract.global.map&&finalContract.global.region&&finalContract.global.watch,'Global Command Center perdió mapa, detalle regional o watchlist');
+    await assert(finalContract.global.argentina&&finalContract.global.signals&&finalContract.global.opportunities,'Global Command Center perdió semáforos u oportunidades');
+    const opportunityRows=await page.evaluate(()=>document.querySelectorAll('#rtOppsBody tr[data-rt-symbol]').length);
+    await assert(opportunityRows===6,'Oportunidades debe renderizar exactamente 6 filas reales: '+opportunityRows);
+    await assert(finalContract.global.tabs>=7,'Navegación superior global incompleta: '+finalContract.global.tabs);
+  }else{
+    await assert(finalContract.home.hero&&finalContract.home.daily&&finalContract.home.decision,'Inicio perdió portada, Radar de hoy o prioridades');
+    await assert(finalContract.home.market&&finalContract.home.marketHasKpis,'Inicio perdió Mercado en cuatro números');
+    await assert(finalContract.home.advanced&&!finalContract.home.advancedOpen,'Contexto avanzado debe existir y comenzar plegado');
+    await assert(/atención ahora/i.test(finalContract.home.heroTitle),'Portada no está orientada a decisiones: '+finalContract.home.heroTitle);
+  }
   await assert(finalContract.analysisAdvanced,'Análisis avanzado no quedó plegable');
   await assert(!finalContract.oldWorkspace,'La raíz sigue cargando el prototipo /workspace');
   await fs.writeFile('artifacts/final-product-contract.json',JSON.stringify(finalContract,null,2));
@@ -189,31 +235,37 @@ try{
   });
   await fs.writeFile('artifacts/sidebar-hit-test.json',JSON.stringify(sidebarHit,null,2));
 
-  await page.click('#scannerViewBtn');
+  await navClick('scannerViewBtn');
   await page.waitForFunction(()=>document.getElementById('scannerView')?.classList.contains('active'));
   await assert(await page.evaluate(()=>!document.getElementById('dashboardView')?.classList.contains('active')),'Dashboard quedó activo debajo del Escáner');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Escáner genera overflow global');
   await shot('02-scanner');
 
-  await page.click('#fixedIncomeBtn');
+  await navClick('fixedIncomeBtn');
   await page.waitForFunction(()=>document.getElementById('rfScannerView')?.classList.contains('active'));
   await assert(await page.evaluate(()=>!document.getElementById('dashboardView')?.classList.contains('active')),'Dashboard quedó activo debajo de Renta fija');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Renta fija genera overflow global');
   await shot('03-fixed-income');
 
-  await page.click('#watchlistViewBtn');
+  await navClick('watchlistViewBtn');
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-watchlist'));
   await shot('04-watchlist');
 
-  await page.fill('#symbol','BTCUSDT');
-  await page.selectOption('#assetType','crypto');
-  await page.click('#analyzeBtn');
+  const globalShellForAnalysis=await page.evaluate(()=>document.body.classList.contains('rt-global-shell'));
+  if(globalShellForAnalysis){
+    await page.fill('#rtGlobalSearch','BTCUSDT');
+    await page.press('#rtGlobalSearch','Enter');
+  }else{
+    await page.fill('#symbol','BTCUSDT');
+    await page.selectOption('#assetType','crypto');
+    await page.click('#analyzeBtn');
+  }
   await page.waitForFunction(()=>!document.getElementById('analysisView')?.classList.contains('hidden')&&(document.getElementById('lastPrice')?.textContent||'')!=='—',{timeout:30000});
   await assert(await page.evaluate(()=>document.getElementById('technicalStatusGrid')?.style.display!=='none'),'Análisis individual no muestra estados multi-timeframe');
   await assert(await page.evaluate(()=>{const d=document.getElementById('productAnalysisAdvanced');return !!d&&!d.open}),'Análisis avanzado debe comenzar plegado');
   await shot('05-analysis');
 
-  await page.click('#portfolioViewBtn');
+  await navClick('portfolioViewBtn');
   await page.waitForFunction(()=>document.getElementById('watchlistView')?.classList.contains('active')&&document.getElementById('watchlistView')?.classList.contains('mode-portfolio'));
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Cartera genera overflow global');
   const portfolioVisual=await page.evaluate(()=>{
@@ -253,13 +305,13 @@ try{
   await fs.writeFile('artifacts/portfolio-layout.json',JSON.stringify(layout,null,2));
   await shot('06-portfolio');
 
-  await page.click('#signalsViewBtn');
+  await navClick('signalsViewBtn');
   await page.waitForFunction(()=>document.getElementById('signalsView')?.classList.contains('active'));
   await assert(await page.evaluate(()=>!document.getElementById('dashboardView')?.classList.contains('active')),'Dashboard quedó activo debajo de Historial');
   await assert(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth<=4),'Historial genera overflow global');
   await shot('07-history');
 
-  await page.click('#homeViewBtn');
+  await navClick('homeViewBtn');
   await page.waitForFunction(()=>document.getElementById('dashboardView')?.classList.contains('active'));
   await assert(await page.evaluate(()=>!document.getElementById('marketContextDetails')?.open),'Contexto completo no vuelve plegado al Inicio');
   await shot('08-home-final');

@@ -12,6 +12,8 @@ const CORE_UNIVERSE=[
   {symbol:'GGAL',type:'argstock',label:'Grupo Galicia'},
   {symbol:'YPFD',type:'argstock',label:'YPF'},
   {symbol:'PAMP',type:'argstock',label:'Pampa Energía'},
+  {symbol:'VIST',type:'argstock',label:'Vista Energy'},
+  {symbol:'TGSU2',type:'argstock',label:'Transportadora de Gas del Sur'},
   {symbol:'AAPL',type:'cedear',label:'Apple CEDEAR'},
   {symbol:'NVDA',type:'cedear',label:'NVIDIA CEDEAR'},
   {symbol:'MELI',type:'cedear',label:'MercadoLibre CEDEAR'},
