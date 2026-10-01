@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.4.0';
+const VERSION='2.5.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -105,7 +105,7 @@ function marketMarkers(regionOnly=null){
 async function loadWorldMap(){
   if(state.worldMapLoaded)return;
   try{
-    const r=await fetch('/assets/world-markets.svg?v=20260930-gcc15',{cache:'force-cache'});
+    const r=await fetch('/assets/world-markets.svg?v=20261001-gcc16',{cache:'force-cache'});
     if(!r.ok)throw new Error(`Mapa HTTP ${r.status}`);
     const svgText=await r.text();
     const host=$('rtWorldMapHost');
@@ -175,6 +175,9 @@ function renderDetailGeo(key){
     p.classList.toggle('rt-detail-dim',!match);
   });
   clone.querySelectorAll('.rt-market-marker').forEach(m=>m.remove());
+  clone.querySelectorAll('.rt-region-aura').forEach(a=>{
+    a.style.display=a.dataset.glowRegion===key?'':'none';
+  });
   clone.querySelector('#rtCountryLayer')?.insertAdjacentHTML('beforeend',marketMarkers(key));
   host.replaceChildren(clone);
 }
@@ -515,6 +518,11 @@ function renderMap(){
   qa('#rtWorldMapHost .rt-market-marker').forEach(m=>{
     m.classList.remove('up','down','neutral');
     m.classList.add(markerTone(m.dataset.markerAsset));
+  });
+  qa('#rtWorldMapHost .rt-region-aura').forEach(a=>{
+    const key=a.dataset.glowRegion,ch=regionChange(key,'day'),tone=toneClass(ch);
+    a.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');
+    a.classList.add(tone);
   });
   const countries=qa('#rtWorldMapHost .rt-country');
   countries.forEach(el=>{
