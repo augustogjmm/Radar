@@ -183,11 +183,11 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 }
 #rtWorldGeoSvg .rt-country.region-africa,
 #rtWorldGeoSvg .rt-country.region-neutral{fill:#82919b;fill-opacity:.16}
-#rtWorldGeoSvg .rt-country.strong-up{fill:#00ef72;fill-opacity:.72;stroke:#9effca;filter:drop-shadow(0 0 5px rgba(0,239,114,.72));mix-blend-mode:screen}
-#rtWorldGeoSvg .rt-country.mod-up{fill:#37c772;fill-opacity:.56;stroke:#86ebb0;filter:drop-shadow(0 0 3px rgba(52,202,116,.34));mix-blend-mode:screen}
+#rtWorldGeoSvg .rt-country.strong-up{fill:#00ef72;fill-opacity:.92;stroke:#9effca;filter:drop-shadow(0 0 6px rgba(0,239,114,.72));mix-blend-mode:color}
+#rtWorldGeoSvg .rt-country.mod-up{fill:#37c772;fill-opacity:.78;stroke:#86ebb0;filter:drop-shadow(0 0 4px rgba(52,202,116,.34));mix-blend-mode:color}
 #rtWorldGeoSvg .rt-country.neutral{fill:#70838f;fill-opacity:.12;stroke:#748a98;stroke-opacity:.68}
-#rtWorldGeoSvg .rt-country.mod-down{fill:#ef533f;fill-opacity:.60;stroke:#ff9d8b;filter:drop-shadow(0 0 3px rgba(239,83,63,.40));mix-blend-mode:screen}
-#rtWorldGeoSvg .rt-country.strong-down{fill:#ff263e;fill-opacity:.74;stroke:#ffadb7;filter:drop-shadow(0 0 5px rgba(255,38,62,.72));mix-blend-mode:screen}
+#rtWorldGeoSvg .rt-country.mod-down{fill:#ef533f;fill-opacity:.80;stroke:#ff9d8b;filter:drop-shadow(0 0 4px rgba(239,83,63,.40));mix-blend-mode:color}
+#rtWorldGeoSvg .rt-country.strong-down{fill:#ff263e;fill-opacity:.94;stroke:#ffadb7;filter:drop-shadow(0 0 6px rgba(255,38,62,.72));mix-blend-mode:color}
 #rtWorldGeoSvg .rt-country[data-code="ARG"]{fill:#1268ff!important;fill-opacity:.50!important;stroke:#47b8ff!important;stroke-width:2!important;filter:drop-shadow(0 0 4px #2aa7ff) drop-shadow(0 0 11px rgba(31,113,255,.62))!important}
 #rtWorldGeoSvg .rt-country:hover{stroke:#fff;stroke-width:1.2;fill-opacity:.78;filter:brightness(1.15) drop-shadow(0 0 4px rgba(90,210,255,.35))}
 .rt-market-marker{pointer-events:none}
@@ -484,3 +484,9 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
 }
 .rt-detail-geo-svg #rtHydroDetailLayer .rt-hydro-lake{fill-opacity:.56;stroke-opacity:.30}
 .rt-detail-geo-svg #rtHydroDetailLayer .rt-hydro-river{stroke-opacity:.25}
+
+/* Reference heat: colorize terrain, keep a separate luminous aura. */
+#rtRegionAuraLayer .rt-region-aura.strong-up,
+#rtRegionAuraLayer .rt-region-aura.strong-down{filter:blur(22px)}
+#rtRegionAuraLayer .rt-region-aura.mod-up,
+#rtRegionAuraLayer .rt-region-aura.mod-down{filter:blur(19px)}
