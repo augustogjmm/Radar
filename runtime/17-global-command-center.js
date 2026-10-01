@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.6.0';
+const VERSION='2.8.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -130,10 +130,13 @@ async function loadWorldMap(){
           }
           defs.insertAdjacentHTML('beforeend',`
             <filter id="rtProceduralTerrain" x="-10%" y="-10%" width="120%" height="120%">
-              <feTurbulence type="fractalNoise" baseFrequency=".012 .028" numOctaves="4" seed="23" result="noise"/>
+              <feTurbulence type="fractalNoise" baseFrequency=".010 .024" numOctaves="5" seed="23" result="noise"/>
               <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
-              <feComponentTransfer in="mono" result="terrain"><feFuncA type="table" tableValues="0 .46"/></feComponentTransfer>
-              <feBlend in="SourceGraphic" in2="terrain" mode="soft-light"/>
+              <feDiffuseLighting in="mono" surfaceScale="3.2" diffuseConstant=".72" lighting-color="#a6bdc8" result="light">
+                <feDistantLight azimuth="225" elevation="48"/>
+              </feDiffuseLighting>
+              <feComposite in="light" in2="SourceGraphic" operator="in" result="shaded"/>
+              <feBlend in="SourceGraphic" in2="shaded" mode="soft-light"/>
             </filter>
             <filter id="rtUrbanGlow" x="-250%" y="-250%" width="500%" height="500%">
               <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
