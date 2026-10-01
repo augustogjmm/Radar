@@ -430,7 +430,7 @@ function mountDashboard(){
   root.innerHTML=`
   <div class="rt-main-grid">
     <section class="rt-card rt-world-card">
-      <div class="rt-map-head"><h2>Mapa de Sentimiento Global</h2><p>Rendimiento regional (últimas 24 hs)</p></div>
+      <div class="rt-map-head"><h2>Mapa de Sentimiento Global</h2><p>Rendimiento regional (últimas 24 hs)</p><span id="rtContextBadge" class="rt-context-badge">🌐 Global</span></div>
       <div class="rt-session-box">
         <div id="rtSessionFlag" class="rt-session-flag">🇺🇸</div>
         <div class="rt-session-copy"><small>Sesión activa</small><b id="rtSessionName">Calculando…</b></div>
@@ -469,7 +469,7 @@ function mountDashboard(){
       </div>
     </section>
     <section id="rtRegionDetail" class="rt-card rt-detail-card">
-      <div class="rt-section-title"><div><h3 id="rtDetailTitle">Detalle de Región: Europa</h3><p id="rtDetailSubtitle">Índices principales y tendencia</p></div><button id="rtRegionOpen" class="rt-link-button">Abrir vista completa →</button></div>
+      <div class="rt-section-title"><div><h3 id="rtDetailTitle"><span id="rtDetailFlag" class="rt-detail-flag">🇪🇺</span> Detalle de Región: Europa</h3><p id="rtDetailSubtitle">Índices principales y tendencia</p></div><button id="rtRegionOpen" class="rt-link-button">Abrir vista completa →</button></div>
       <div class="rt-detail-topgrid">
         <div class="rt-detail-map">
           <div id="rtDetailGeoHost" class="rt-detail-geo-host"></div>
@@ -543,15 +543,16 @@ function mountDashboard(){
         </div>
       </aside>
     </div>
-  </section>`;
+  </section>
+  <div id="rtRefreshOverlay" class="rt-refresh-overlay" aria-live="polite"><div class="rt-refresh-core"><span class="rt-refresh-spinner"></span><b>Actualizando Radar</b><small id="rtRefreshPhase">Mercados, volumen y oportunidades…</small></div></div>`;
   dash.prepend(root);
   bindDashboard();
 }
 
 function bindDashboard(){
-  qa('[data-region]').forEach(el=>el.addEventListener('click',()=>{
-    const key=el.dataset.region;if(!key||!REGIONS[key])return;
-    state.selectedRegion=key;renderRegionDetail();
+  qa('[data-label-region]').forEach(el=>el.addEventListener('click',()=>{
+    const key=el.dataset.labelRegion;if(!key||!REGIONS[key])return;
+    applyContext(key,null);
   }));
   $('rtRegionOpen')?.addEventListener('click',()=>goHome('#rtRegionDetail'));
   $('rtWatchAll')?.addEventListener('click',()=>clickOriginal('watchlistViewBtn'));
