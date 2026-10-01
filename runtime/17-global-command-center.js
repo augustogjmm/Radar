@@ -235,9 +235,16 @@ async function loadWorldMap(){
         tooltip.className='rt-map-tooltip';
         tooltip.hidden=true;
         host.appendChild(tooltip);
+        const clearRegionHover=()=>{
+          qa('[data-label-region]').forEach(el=>el.classList.remove('rt-region-hover-muted'));
+        };
         svg.addEventListener('pointermove',ev=>{
           const country=ev.target.closest?.('.rt-country[data-region]');
-          if(!country){tooltip.hidden=true;return}
+          if(!country){
+            tooltip.hidden=true;
+            clearRegionHover();
+            return;
+          }
           const region=country.dataset.region;
           const id=COUNTRY_MARKET[country.dataset.code];
           const ch=id?periodChange(get(id),'day'):regionChange(region,'day');
@@ -246,8 +253,15 @@ async function loadWorldMap(){
           const box=host.getBoundingClientRect();
           tooltip.style.left=`${clamp(ev.clientX-box.left+12,8,box.width-150)}px`;
           tooltip.style.top=`${clamp(ev.clientY-box.top+12,8,box.height-70)}px`;
+
+          qa('[data-label-region]').forEach(el=>{
+            el.classList.toggle('rt-region-hover-muted',el.dataset.labelRegion===region);
+          });
         });
-        svg.addEventListener('pointerleave',()=>{tooltip.hidden=true});
+        svg.addEventListener('pointerleave',()=>{
+          tooltip.hidden=true;
+          clearRegionHover();
+        });
         svg.addEventListener('click',ev=>{
           const country=ev.target.closest?.('.rt-country[data-region]');
           const key=country?.dataset?.region;
