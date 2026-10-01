@@ -137,7 +137,18 @@ async function loadWorldMap(){
             </filter>
             <filter id="rtUrbanGlow" x="-250%" y="-250%" width="500%" height="500%">
               <feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="rtOceanNoise" x="-5%" y="-5%" width="110%" height="110%">
+              <feTurbulence type="fractalNoise" baseFrequency=".032 .082" numOctaves="2" seed="11" result="n"/>
+              <feColorMatrix in="n" type="saturate" values="0" result="mono"/>
+              <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .04 .11 .18"/></feComponentTransfer>
             </filter>`);
+          const ocean=document.createElementNS('http://www.w3.org/2000/svg','rect');
+          ocean.id='rtOceanTexture';
+          ocean.setAttribute('x','0');ocean.setAttribute('y','0');ocean.setAttribute('width',MAP_VIEW.w);ocean.setAttribute('height',MAP_VIEW.h);
+          ocean.setAttribute('filter','url(#rtOceanNoise)');
+          ocean.setAttribute('class','rt-ocean-texture');
+          layer.parentNode.insertBefore(ocean,layer);
           const texture=layer.cloneNode(true);
           texture.id='rtTextureLayer';
           texture.querySelectorAll('.rt-country').forEach(p=>{
@@ -156,9 +167,14 @@ async function loadWorldMap(){
             [151.2,-33.87],[144.96,-37.8],[-46.63,-23.55],[-43.2,-22.9],[-58.38,-34.6],[-70.65,-33.45],
             [-99.13,19.43],[-77.04,-12.05]
           ];
-          lights.innerHTML=points.map(([lon,lat],i)=>{
-            const [lx,ly]=mapXY(lon,lat),r=i%5===0?1.8:1.25;
-            return `<circle class="rt-city-light" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="${r}"/>`;
+          lights.innerHTML=points.flatMap(([lon,lat],i)=>{
+            return Array.from({length:6},(_,j)=>{
+              const a=i*1.73+j*1.91,spread=j===0?0:(.45+(j%3)*.42);
+              const px=lon+Math.cos(a)*spread,py=lat+Math.sin(a)*spread*.58;
+              const [lx,ly]=mapXY(px,py),r=j===0?(i%5===0?1.8:1.35):(.42+(j%3)*.16);
+              const o=j===0?.82:(.28+(j%4)*.09);
+              return `<circle class="rt-city-light" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="${r.toFixed(2)}" opacity="${o.toFixed(2)}"/>`;
+            });
           }).join('');
           layer.parentNode.insertBefore(lights,layer);
         }
