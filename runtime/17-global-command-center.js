@@ -16,7 +16,9 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length)return NaN;const m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2};
 
 const state={
-  loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),fixedIncome:new Map(),selectedRegion:'europe',filter:'all',worldMapLoaded:false,
+  loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),fixedIncome:new Map(),
+  selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',worldMapLoaded:false,
+  universes:{equities:[],cedears:[],fixed:[]},opportunityLeaders:[],
   sessionTimer:null,renderTimer:null
 };
 
@@ -60,6 +62,21 @@ const COUNTRY_MARKET={
   USA:'sp500',GBR:'ftse',DEU:'dax',FRA:'cac',ESP:'ibex',ITA:'ftsemib',
   JPN:'nikkei',CHN:'shanghai',ARG:'merval',BRA:'bovespa',MEX:'mexico',AUS:'asx'
 };
+
+const REGION_FLAGS={northamerica:'🇺🇸',europe:'🇪🇺',asia:'🌏',latam:'🌎',oceania:'🇦🇺'};
+const COUNTRY_META={
+  ARG:{label:'Argentina',flag:'🇦🇷',region:'latam'},BRA:{label:'Brasil',flag:'🇧🇷',region:'latam'},MEX:{label:'México',flag:'🇲🇽',region:'latam'},
+  USA:{label:'Estados Unidos',flag:'🇺🇸',region:'northamerica'},GBR:{label:'Reino Unido',flag:'🇬🇧',region:'europe'},DEU:{label:'Alemania',flag:'🇩🇪',region:'europe'},
+  FRA:{label:'Francia',flag:'🇫🇷',region:'europe'},ESP:{label:'España',flag:'🇪🇸',region:'europe'},ITA:{label:'Italia',flag:'🇮🇹',region:'europe'},
+  JPN:{label:'Japón',flag:'🇯🇵',region:'asia'},CHN:{label:'China',flag:'🇨🇳',region:'asia'},AUS:{label:'Australia',flag:'🇦🇺',region:'oceania'}
+};
+function contextInfo(){
+  if(state.selectedCountry&&COUNTRY_META[state.selectedCountry]){const c=COUNTRY_META[state.selectedCountry];return{key:state.selectedCountry,label:c.label,flag:c.flag,region:c.region,isArgentina:state.selectedCountry==='ARG'}}
+  if(state.scope==='region'&&REGIONS[state.selectedRegion])return{key:state.selectedRegion,label:REGIONS[state.selectedRegion].label,flag:REGION_FLAGS[state.selectedRegion]||'🌐',region:state.selectedRegion,isArgentina:false};
+  return{key:'global',label:'Global',flag:'🌐',region:state.selectedRegion,isArgentina:false};
+}
+function applyContext(region,country=null){if(region&&REGIONS[region])state.selectedRegion=region;state.selectedCountry=country&&COUNTRY_META[country]?country:null;state.scope=state.selectedCountry?'country':(region?'region':'global');renderAll()}
+function resetContext(){state.selectedCountry=null;state.scope='global';renderAll()}
 
 const ASSET_BY_ID=Object.fromEntries(ASSETS.map(x=>[x.id,x]));
 const OPPORTUNITY_MARKET_SYMBOL={
@@ -264,8 +281,8 @@ async function loadWorldMap(){
         });
         svg.addEventListener('click',ev=>{
           const country=ev.target.closest?.('.rt-country[data-region]');
-          const key=country?.dataset?.region;
-          if(key&&REGIONS[key]){state.selectedRegion=key;renderMap();renderRegionDetail()}
+          const key=country?.dataset?.region,code=country?.dataset?.code||null;
+          if(key&&REGIONS[key])applyContext(key,code);
         });
       }
     }
@@ -366,8 +383,8 @@ function insertShell(){
 }
 
 function bindShell(){
-  q('[data-rt-nav="global"]')?.addEventListener('click',()=>goHome());
-  q('[data-rt-nav="argentina"]')?.addEventListener('click',()=>goHome('#rtArgentinaSignals'));
+  q('[data-rt-nav="global"]')?.addEventListener('click',()=>{resetContext();goHome()});
+  q('[data-rt-nav="argentina"]')?.addEventListener('click',()=>{applyContext('latam','ARG');goHome('#rtArgentinaSignals')});
   q('[data-rt-nav="markets"]')?.addEventListener('click',()=>goHome('#rtMarketSignals'));
   q('[data-rt-nav="sectors"]')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
   q('[data-rt-nav="screeners"]')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
