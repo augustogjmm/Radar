@@ -709,3 +709,19 @@ body.rt-global-shell .bond-view{margin:12px 8px!important;max-width:none!importa
   visibility:hidden!important;
   pointer-events:none!important;
 }
+
+
+/* Single-map fix — remove duplicated raster earth layers behind vector geography. */
+.rt-world-map-host:before,
+.rt-world-map-host:after,
+.rt-detail-map:before,
+.rt-detail-map:after{
+  content:none!important;
+  display:none!important;
+  background-image:none!important;
+}
+
+.rt-world-map-host,
+.rt-detail-map{
+  background:#020b13!important;
+}
