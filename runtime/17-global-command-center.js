@@ -895,9 +895,9 @@ function opportunityTrend(r){
 function opportunityPrice(r,price){
   if(!Number.isFinite(price))return'—';
   const t=opportunityAssetType(r);
-  if(t==='argbond'||t==='bond')return \`USD \${fmt(price,2)}\`;
-  if(t==='cedear')return \`USD \${fmt(price,1)}\`;
-  return \`$ \${fmt(price,price>=1000?0:2)}\`;
+  if(t==='argbond'||t==='bond')return 'USD '+fmt(price,2);
+  if(t==='cedear')return 'USD '+fmt(price,1);
+  return '$ '+fmt(price,price>=1000?0:2);
 }
 const TICKER_ALIAS={
   YPFD:'YPF',PAMP:'PAM',AL30:'AL30',AE38:'AE38',GD30:'GD30',
