@@ -1011,6 +1011,7 @@ function opportunityAssetType(r){
   return OPPORTUNITY_TYPE[symbol]||String(r?.item?.requestedType||r?.item?.type||'').toLowerCase();
 }
 function opportunityMarket(r){
+  if(r?.marketData)return r.marketData;
   const symbol=String(r?.item?.symbol||'').toUpperCase();
   if(OPPORTUNITY_TYPE[symbol]==='argbond'){
     return state.fixedIncome.get(symbol+'D')||state.fixedIncome.get(symbol)||null;
@@ -1085,6 +1086,7 @@ const OPPORTUNITY_LOADING=[
   {symbol:'PAMP',type:'argstock'},{symbol:'VIST',type:'argstock'},{symbol:'TGSU2',type:'argstock'}
 ];
 function opportunitySetup(r){
+  if(r?.setup)return r.setup;
   if(r?.marketOnly){
     const bars=opportunityMarket(r)?.bars||[];
     if(bars.length>20){
@@ -1109,7 +1111,7 @@ function opportunitySetup(r){
   return kind==='wait'?'Esperar confirmación':'Seguimiento';
 }
 function opportunityComment(r){
-  if(r?.marketOnly)return'Datos de mercado válidos; señal técnica aún sin confirmar.';
+  if(r?.marketOnly){const d=opportunityDecision(r);if(d.cls==='yes')return'Volumen alto y señal técnica confirmada.';if(d.cls==='near')return'Volumen alto; falta confirmación de entrada.';if(d.cls==='no')return'Volumen alto, pero estructura técnica desfavorable.';return'Activo líquido en seguimiento técnico.';}
   const kind=String(r?.status?.kind||''),trend=opportunityTrend(r)[0];
   if(kind==='buy')return'Confluencia técnica y momentum favorables.';
   if(kind==='near')return'Cerca de zona válida; falta confirmación.';
@@ -1132,7 +1134,7 @@ function loadingOpportunityRows(){
 function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
   const allowed=new Set(['cedear','argstock','argbond','bond','adr','bill','letra','stock']);
-  let results=[...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(opportunityAssetType(r)));
+  let results=[...(state.opportunityLeaders||[]),...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(opportunityAssetType(r)));
 
   const bySymbol=new Map();
   for(const r of results){
