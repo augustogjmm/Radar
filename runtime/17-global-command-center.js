@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='2.9.0';
+const VERSION='3.0.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -95,7 +95,7 @@ const DETAIL_CITY_LABEL={
 };
 const MAIN_MARKET_LABELS=new Set(['NUEVA YORK','LONDRES','TOKIO','SÃO PAULO','ARGENTINA','SÍDNEY']);
 const MARKER_OFFSETS={
-  'NUEVA YORK':[10,-8],'LONDRES':[-55,-8],'TOKIO':[9,-7],'SÃO PAULO':[9,15],'ARGENTINA':[9,-8],'SÍDNEY':[9,-7],
+  'NUEVA YORK':[16,5],'LONDRES':[-55,-8],'TOKIO':[9,-7],'SÃO PAULO':[-8,16],'ARGENTINA':[-8,-8],'SÍDNEY':[9,-7],
   'FRANKFURT':[10,-2],'PARÍS':[-35,16],'TORONTO':[-46,-8],'HONG KONG':[9,14],'SHANGHÁI':[9,-8],'CIUDAD DE MÉXICO':[-72,16]
 };
 const DETAIL_MARKER_OFFSETS={
@@ -586,6 +586,10 @@ function toneClass(v){
   if(!Number.isFinite(v))return'neutral';
   if(v>=2)return'strong-up';if(v>=.5)return'mod-up';if(v<=-2)return'strong-down';if(v<=-.5)return'mod-down';return'neutral';
 }
+function regionalToneClass(v){
+  if(!Number.isFinite(v))return'neutral';
+  if(v>=1)return'strong-up';if(v>=.05)return'mod-up';if(v<=-1)return'strong-down';if(v<=-.05)return'mod-down';return'neutral';
+}
 function signClass(v){return !Number.isFinite(v)?'rt-flat':v>.03?'rt-up':v<-.03?'rt-down':'rt-flat'}
 
 function renderMap(){
@@ -594,7 +598,7 @@ function renderMap(){
     m.classList.add(markerTone(m.dataset.markerAsset));
   });
   qa('#rtWorldMapHost .rt-region-aura').forEach(a=>{
-    const key=a.dataset.glowRegion,ch=regionChange(key,'day'),tone=toneClass(ch);
+    const key=a.dataset.glowRegion,ch=regionChange(key,'day'),tone=regionalToneClass(ch);
     a.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');
     a.classList.add(tone);
   });
@@ -603,7 +607,7 @@ function renderMap(){
     const key=el.dataset.region;
     const mapped=COUNTRY_MARKET[el.dataset.code];
     const ch=mapped?periodChange(get(mapped),'day'):regionChange(key,'day');
-    const tone=toneClass(ch);
+    const tone=mapped?toneClass(ch):regionalToneClass(ch);
     el.classList.remove('strong-up','mod-up','neutral','mod-down','strong-down');
     el.classList.add(tone);
     el.classList.toggle('selected-region',key===state.selectedRegion);
