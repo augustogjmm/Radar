@@ -492,13 +492,13 @@ function mountDashboard(){
 
   <section class="rt-card rt-opps-card">
     <div class="rt-opps-header">
-      <div class="rt-opps-title"><h2>Oportunidades Argentina</h2><p>Activos con potencial según análisis técnico y contexto de mercado.</p></div>
+      <div class="rt-opps-title"><h2>Oportunidades Argentina</h2><p>Mayor volumen por segmento + evaluación real de oportunidad.</p></div>
       <div style="display:flex;align-items:center;gap:12px">
         <div class="rt-tabs">
           <button class="rt-tab active" data-rt-filter="all">Todos</button>
           <button class="rt-tab" data-rt-filter="cedear">CEDEARs</button>
           <button class="rt-tab" data-rt-filter="argbond">Bonos</button>
-          <button class="rt-tab" data-rt-filter="argstock">Merval</button>
+          <button class="rt-tab" data-rt-filter="argstock">Merval</button><button class="rt-tab" data-rt-filter="adr">ADRs</button><button class="rt-tab" data-rt-filter="bill">Letras</button>
         </div>
         <button id="rtMoreOpps" class="rt-link-button">Ver más oportunidades →</button>
       </div>
@@ -506,7 +506,7 @@ function mountDashboard(){
     <div class="rt-opps-layout">
       <div class="rt-opps-wrap">
         <table class="rt-opps-table">
-          <thead><tr><th>Activo</th><th>Tipo</th><th>Último precio</th><th>Var. 24h</th><th>Volumen</th><th>Gráfico 20d</th><th>Setup técnico</th><th>Tendencia</th><th>Timing</th><th>Comentario</th></tr></thead>
+          <thead><tr><th>Activo</th><th>Tipo</th><th>Último precio</th><th>Var. 24h</th><th>Volumen / ranking</th><th>Gráfico 20d</th><th>Setup técnico</th><th>Tendencia</th><th>Oportunidad</th><th>Comentario</th></tr></thead>
           <tbody id="rtOppsBody"><tr><td colspan="10" class="rt-opps-empty">Analizando oportunidades con datos reales…</td></tr></tbody>
         </table>
       </div>
@@ -978,7 +978,32 @@ function opportunityFallback(symbol){
 }
 function oppType(r){
   const t=opportunityAssetType(r);
-  if(t==='cedear')return'CEDEAR';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Merval';if(t==='crypto')return'Crypto';return t||'Activo';
+  if(t==='cedear')return'CEDEAR';if(t==='adr')return'ADR';if(t==='bill'||t==='letra')return'Letra';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Merval';if(t==='crypto')return'Crypto';return t||'Activo';
+}
+
+function opportunityVolumeValue(r){
+  const market=opportunityMarket(r);
+  const direct=num(market?.volume??r?.volume??r?.item?.panel?.volumeAmount??r?.item?.panel?.tradeVolume??r?.item?.panel?.volume);
+  if(Number.isFinite(direct)&&direct>0)return direct;
+  const marketBars=(market?.bars||[]).map(x=>num(x.volume)).filter(v=>Number.isFinite(v)&&v>0);
+  if(marketBars.length)return marketBars.at(-1);
+  const sourceBars=extractBars(r).map(x=>num(x.volume)).filter(v=>Number.isFinite(v)&&v>0);
+  return sourceBars.length?sourceBars.at(-1):NaN;
+}
+function compactVolume(v){
+  if(!Number.isFinite(v))return's/d';
+  if(v>=1e9)return fmt(v/1e9,1)+'B';
+  if(v>=1e6)return fmt(v/1e6,1)+'M';
+  if(v>=1e3)return fmt(v/1e3,1)+'K';
+  return fmt(v,0);
+}
+function opportunityDecision(r){
+  const kind=String(r?.status?.kind||'').toLowerCase();
+  if(kind==='buy')return{label:'OPORTUNIDAD',cls:'yes'};
+  if(kind==='near')return{label:'POSIBLE',cls:'near'};
+  if(kind==='sell')return{label:'NO',cls:'no'};
+  if(kind==='wait')return{label:'SEGUIMIENTO',cls:'watch'};
+  return{label:'SEGUIMIENTO',cls:'watch'};
 }
 function timing(r){
   const kind=String(r?.status?.kind||'');
@@ -1057,8 +1082,9 @@ function loadingOpportunityRows(){
 
 function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
-  const allowed=new Set(['cedear','argstock','argbond','bond']);
+  const allowed=new Set(['cedear','argstock','argbond','bond','adr','bill','letra','stock']);
   let results=[...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(opportunityAssetType(r)));
+
   const bySymbol=new Map();
   for(const r of results){
     const s=String(r.item.symbol||'').toUpperCase();
@@ -1067,30 +1093,59 @@ function renderOpportunities(){
     const prevScore=num(prev?.status?.oppScore??prev?.rfScore??prev?.score)||-Infinity;
     if(!prev||score>prevScore)bySymbol.set(s,r);
   }
+
   for(const symbol of OPPORTUNITY_ORDER){
-    if(bySymbol.size>=6)break;
     if(bySymbol.has(symbol))continue;
     const market=state.markets.get(OPPORTUNITY_MARKET_SYMBOL[symbol]);
-    if(market?.bars?.length>2||Number.isFinite(market?.last))bySymbol.set(symbol,opportunityFallback(symbol));
+    const fixed=state.fixedIncome.get(symbol+'D')||state.fixedIncome.get(symbol);
+    if(market?.bars?.length>2||Number.isFinite(market?.last)||Number.isFinite(fixed?.last))bySymbol.set(symbol,opportunityFallback(symbol));
   }
+
   results=[...bySymbol.values()];
+
   if(state.filter!=='all')results=results.filter(r=>{
     const t=opportunityAssetType(r);
-    return state.filter==='argbond'?(t==='argbond'||t==='bond'):t===state.filter;
+    if(state.filter==='argbond')return t==='argbond'||t==='bond';
+    if(state.filter==='bill')return t==='bill'||t==='letra';
+    return t===state.filter;
   });
+
+  // Ranking is by liquidity first, but normalized inside each instrument family.
+  // This prevents comparing raw CEDEAR share volume against nominal bond volume as if they were equivalent.
+  const groups=new Map();
+  for(const r of results){
+    const t=opportunityAssetType(r);
+    if(!groups.has(t))groups.set(t,[]);
+    groups.get(t).push(r);
+  }
+  const volumeRank=new Map();
+  for(const [t,rows] of groups){
+    rows.sort((a,b)=>{
+      const av=opportunityVolumeValue(a),bv=opportunityVolumeValue(b);
+      return (Number.isFinite(bv)?bv:-1)-(Number.isFinite(av)?av:-1);
+    });
+    rows.forEach((r,i)=>volumeRank.set(r,{rank:i+1,total:rows.length,score:rows.length<=1?1:1-i/(rows.length-1)}));
+  }
+
   results=results.sort((a,b)=>{
-    const sa=num(a?.status?.oppScore??a?.rfScore??a?.score)||0;
-    const sb=num(b?.status?.oppScore??b?.rfScore??b?.score)||0;
-    if(sb!==sa)return sb-sa;
-    return OPPORTUNITY_ORDER.indexOf(String(a?.item?.symbol||'').toUpperCase())-OPPORTUNITY_ORDER.indexOf(String(b?.item?.symbol||'').toUpperCase());
+    const ar=volumeRank.get(a),br=volumeRank.get(b);
+    const as=ar?.score??0,bs=br?.score??0;
+    if(bs!==as)return bs-as;
+    const ad=opportunityDecision(a),bd=opportunityDecision(b);
+    const priority={yes:4,near:3,watch:2,no:1};
+    if((priority[bd.cls]||0)!==(priority[ad.cls]||0))return(priority[bd.cls]||0)-(priority[ad.cls]||0);
+    const av=opportunityVolumeValue(a),bv=opportunityVolumeValue(b);
+    return (Number.isFinite(bv)?bv:-1)-(Number.isFinite(av)?av:-1);
   }).slice(0,6);
+
   if(!results.length){
     if(!daily?.lastRun||daily?.running){
       $('rtOppsBody').innerHTML=loadingOpportunityRows();
       return;
     }
-    $('rtOppsBody').innerHTML='<tr><td colspan="10" class="rt-opps-empty">Sin candidatos con datos válidos para este filtro.</td></tr>';return;
+    $('rtOppsBody').innerHTML='<tr><td colspan="10" class="rt-opps-empty">Sin activos con volumen y datos válidos para este filtro.</td></tr>';return;
   }
+
   $('rtOppsBody').innerHTML=results.map(r=>{
     const market=opportunityMarket(r);
     const sourceBars=extractBars(r);
@@ -1098,26 +1153,27 @@ function renderOpportunities(){
     const bars=marketBars.length>2?marketBars:sourceBars;
     const marketVolumeCount=marketBars.filter(x=>Number.isFinite(x.volume)&&x.volume>0).length;
     const volumeBars=marketVolumeCount>=5?marketBars:sourceBars;
-    const rv=relVolume(volumeBars),trend=opportunityTrend(r),tm=timing(r);
+    const rv=relVolume(volumeBars),trend=opportunityTrend(r),decision=opportunityDecision(r);
     const price=Number.isFinite(num(market?.last))?num(market.last):num(r.price??r.last??r.panel?.price);
-    const score=num(r?.status?.oppScore??r?.rfScore??r?.score);
     const day=Number.isFinite(num(market?.changePct))?num(market.changePct):(bars.length>1&&bars.at(-2).close?(bars.at(-1).close/bars.at(-2).close-1)*100:NaN);
     const setup=opportunitySetup(r);
     const comment=opportunityComment(r);
     const fullComment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||comment).replace(/\s+/g,' ').trim();
+    const vv=opportunityVolumeValue(r),vr=volumeRank.get(r);
     return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.requestedType||r.item.type||'auto')}">
       <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[r.item.symbol]||r.item.symbol)}</b><small>${esc(SECONDARY_TICKER[r.item.symbol]||r.item.symbol)}</small></div></td>
       <td><span class="rt-type rt-type-${esc(opportunityAssetType(r))}">${esc(oppType(r))}</span></td>
       <td>${opportunityPrice(r,price)}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
-      <td><div class="rt-volume-cell">${volumeChart(volumeBars)}<small>${Number.isFinite(rv)?fmt(rv,1)+'x':'s/d'}</small></div></td>
+      <td><div class="rt-volume-cell">${volumeChart(volumeBars)}<small>#${vr?.rank||'—'} · ${compactVolume(vv)}${Number.isFinite(rv)?' · '+fmt(rv,1)+'x':''}</small></div></td>
       <td>${miniSpark(bars.map(x=>x.close))}</td>
       <td>${esc(setup)}</td>
       <td><span class="rt-trend ${trend[1]}"><i>${trend[1]==='bad'?'↓':trend[1]==='warn'?'●':'↑'}</i>${trend[0]}</span></td>
-      <td><span class="rt-pill ${tm[1]}">${tm[0]}</span></td>
+      <td><span class="rt-opp-decision ${decision.cls}">${decision.label}</span></td>
       <td title="${esc(fullComment)}">${esc(comment)}</td>
     </tr>`;
   }).join('');
+
   qa('#rtOppsBody tr[data-rt-symbol]').forEach(row=>row.addEventListener('click',()=>{
     const input=$('symbol');if(input)input.value=row.dataset.rtSymbol;
     const type=$('assetType');if(type)type.value=row.dataset.rtType||'auto';
