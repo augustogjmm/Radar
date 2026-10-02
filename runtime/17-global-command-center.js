@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-2.0-regional-decision-center';
+const VERSION='golden-2.1-reference-match';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -32,6 +32,13 @@ const ASSETS=[
   {id:'dxy',symbol:'DX-Y.NYB',name:'DXY',region:'global',flag:'$',decimals:2},
   {id:'wti',symbol:'CL=F',name:'WTI',region:'global',flag:'◉',decimals:2},
   {id:'eem',symbol:'EEM',name:'Emergentes',region:'global',flag:'◈',decimals:2},
+  {id:'eurusd',symbol:'EURUSD=X',name:'EUR/USD',region:'europe',flag:'🇪🇺',decimals:4},
+  {id:'bund10',symbol:'^DE10YB',name:'Bund 10Y',detailName:'Bund 10Y (Alemania)',region:'europe',flag:'🇩🇪',decimals:3,unit:'%'},
+  {id:'euTech',symbol:'^SX8P',name:'Tecnología',region:'europe-sector',flag:'▦',decimals:1},
+  {id:'euBanks',symbol:'^SX7P',name:'Bancos',region:'europe-sector',flag:'▥',decimals:1},
+  {id:'euEnergy',symbol:'^SXEP',name:'Energía',region:'europe-sector',flag:'◉',decimals:1},
+  {id:'euHealth',symbol:'^SXDP',name:'Salud',region:'europe-sector',flag:'♥',decimals:1},
+  {id:'euIndustrials',symbol:'^SXNP',name:'Industriales',region:'europe-sector',flag:'⚙',decimals:1},
 
   {id:'dax',symbol:'^GDAXI',name:'DAX',detailName:'DAX (Alemania)',region:'europe',flag:'🇩🇪',decimals:1},
   {id:'ftse',symbol:'^FTSE',name:'FTSE 100',region:'europe',flag:'🇬🇧',decimals:1},
@@ -654,7 +661,9 @@ function rdcDriverMeta(id,ch){
     wti:{polarity:0,note:'Pulso de energía e inflación.'},
     eem:{polarity:1,note:'Flujo hacia mercados emergentes.'},
     bovespa:{polarity:1,note:'Referencia regional para activos latinoamericanos.'},
-    merval:{polarity:1,note:'Pulso directo del mercado argentino.'}
+    merval:{polarity:1,note:'Pulso directo del mercado argentino.'},
+    eurusd:{polarity:1,note:'Fortaleza del euro y lectura de actividad europea.'},
+    bund10:{polarity:-1,note:'Rendimientos soberanos y condiciones financieras europeas.'}
   };
   const d=defs[id]||{polarity:1,note:'Pulso principal del mercado regional.'};
   let cls='warn',label='NEUTRAL';
@@ -665,12 +674,17 @@ function rdcDriverMeta(id,ch){
   }
   return{cls,label,note:d.note};
 }
+function rdcDisplayLast(id,a,m){
+  if(!Number.isFinite(m?.last))return's/d';
+  const value=fmt(m.last,a?.decimals??2);
+  return (a?.unit==='%'||id==='tnx'||id==='bund10')?value+'%':value;
+}
 function rdcMarketRow(id){
   const a=ASSET_BY_ID[id],m=get(id);if(!a||!m)return'';
   const ch=periodChange(m,'day'),impact=rdcDriverMeta(id,ch),bars=(m.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
   return `<div class="rdc-driver-row">
     <span class="rdc-driver-name"><i>${a.flag||'•'}</i><b>${esc(a.detailName||a.name)}</b></span>
-    <span class="rdc-driver-last">${Number.isFinite(m.last)?fmt(m.last,a.decimals):'s/d'}</span>
+    <span class="rdc-driver-last">${rdcDisplayLast(id,a,m)}</span>
     <span class="rdc-driver-change ${signClass(ch)}">${pct(ch)}</span>
     <span class="rdc-impact ${impact.cls}">${impact.label}</span>
     <span class="rdc-driver-note">${esc(impact.note)}</span>
@@ -718,6 +732,11 @@ function rdcChannels(){
     return `<div class="rdc-channel ${cls}"><i></i><span><b>${esc(name)}</b><small>${esc(note)}</small></span><strong>${pct(ch)}</strong></div>`;
   }).join('');
 }
+function rdcEventTime(m){
+  const ts=num(m?.bars?.at(-1)?.time??m?.time);
+  if(!Number.isFinite(ts))return new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
+  return new Date(ts*1000).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
+}
 function rdcEvents(key){
   const ids=[...(REGIONS[key]?.ids||[]).slice(0,2),'vix','tnx','bovespa'];
   const seen=new Set(),events=[];
@@ -725,7 +744,7 @@ function rdcEvents(key){
     if(seen.has(id))continue;seen.add(id);
     const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day');if(!a||!Number.isFinite(ch))continue;
     const verb=ch>.03?'sube':ch<-.03?'cae':'permanece estable';
-    events.push(`<div class="rdc-event"><time>Ahora</time><i class="${signClass(ch)}"></i><span><b>${esc(a.name)} ${verb} ${pct(ch)}</b><small>${esc(rdcDriverMeta(id,ch).note)}</small></span></div>`);
+    events.push(`<div class="rdc-event"><time>${rdcEventTime(m)}</time><i class="${signClass(ch)}"></i><span><b>${esc(a.name)} ${verb} ${pct(ch)}</b><small>${esc(rdcDriverMeta(id,ch).note)}</small></span></div>`);
     if(events.length===4)break;
   }
   return events.join('')||'<div class="rdc-empty">Sin cambios relevantes con datos válidos.</div>';
@@ -733,7 +752,34 @@ function rdcEvents(key){
 function rdcCityClocks(key,date=new Date()){
   return (RDC_CITY_TZ[key]||[]).map(([name,tz])=>{
     const time=date.toLocaleTimeString('es-AR',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false});
-    return `<div class="rdc-city-clock"><i></i><span>${esc(name)}</span><b>${time}</b></div>`;
+    const day=new Intl.DateTimeFormat('es-AR',{timeZone:tz,day:'2-digit',month:'short'}).format(date).replace('.','');
+    return `<div class="rdc-city-clock"><i></i><span>${esc(name)}</span><b>${time}</b><small>${esc(day)}</small></div>`;
+  }).join('');
+}
+function rdcFlagMarkup(key){
+  if(key==='europe')return `<svg viewBox="0 0 54 36" aria-label="Europa"><rect width="54" height="36" rx="4" fill="#003399"/><g fill="#ffcc00" transform="translate(27 18)">${Array.from({length:12},(_,i)=>{const a=(i*30-90)*Math.PI/180,x=Math.cos(a)*10,y=Math.sin(a)*10;return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.35"/>`}).join('')}</g></svg>`;
+  if(key==='northamerica')return sessionFlagSvg('US').replace('rt-flag-svg','rdc-hero-flag-svg');
+  if(key==='latam')return `<div class="rdc-region-glyph">🌎</div>`;
+  if(key==='asia')return `<div class="rdc-region-glyph">🌏</div>`;
+  if(key==='oceania')return sessionFlagSvg('AU').replace('rt-flag-svg','rdc-hero-flag-svg');
+  return `<div class="rdc-region-glyph">🌐</div>`;
+}
+function rdcKpiIcon(kind){
+  const icons={
+    sentiment:'<svg viewBox="0 0 24 24"><path d="M4 19V12M8 19V8M12 19V5M16 19v-9M20 19V3"/></svg>',
+    breadth:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v8h8"/></svg>',
+    momentum:'<svg viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M11 6l6 6-6 6M18 6l4 6-4 6"/></svg>',
+    volatility:'<svg viewBox="0 0 24 24"><path d="M2 13h3l2-7 3 13 3-10 2 7 2-4h5"/></svg>',
+    risk:'<svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.2 8 8 10 4.8-2 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-5"/></svg>'
+  };return icons[kind]||'';
+}
+function rdcSectorTiles(key){
+  const ids=key==='europe'?[
+    ['euTech','Tecnología','▦'],['euBanks','Bancos','▥'],['euEnergy','Energía','◉'],['euHealth','Salud','♥'],['euIndustrials','Industriales','⚙']
+  ]:(REGIONS[key]?.ids||[]).slice(0,5).map(id=>[id,ASSET_BY_ID[id]?.name||id,'◆']);
+  return ids.map(([id,label,icon])=>{
+    const ch=periodChange(get(id),'day');
+    return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><i>${icon}</i><span>${esc(label)}</span></div>`;
   }).join('');
 }
 function renderRegionalCenterMap(key){
@@ -753,50 +799,92 @@ function mountRegionalDecisionCenter(){
   if($('rtRegionalDecisionCenter'))return;
   const el=document.createElement('section');el.id='rtRegionalDecisionCenter';el.className='rdc-shell';el.hidden=true;
   el.innerHTML=`
+    <header class="rdc-topbar">
+      <div class="rdc-brand"><span class="rdc-brand-mark">⌁</span><b>Radar Técnico</b></div>
+      <nav class="rdc-nav">
+        <button data-rdc-action="global">Visión Global</button>
+        <button data-rdc-region="europe">Europa</button>
+        <button data-rdc-region="northamerica">EE.UU.</button>
+        <button data-rdc-region="latam">LatAm</button>
+        <button data-rdc-action="markets">Mercados</button>
+        <button data-rdc-action="sectors">Sectores</button>
+        <button data-rdc-action="news">Noticias</button>
+        <button data-rdc-action="calendar">Calendario</button>
+      </nav>
+      <label class="rdc-search"><span>⌕</span><input id="rtRdcSearch" placeholder="Buscar activo, ticker o sector…"></label>
+      <div class="rdc-live"><i></i>Mercado en tiempo real</div>
+      <div class="rdc-topclock"><b id="rtRdcClock">--:--:--</b><small id="rtRdcDate">—</small></div>
+      <button id="rtRdcClose" class="rdc-x" aria-label="Cerrar">×</button>
+    </header>
+
     <div class="rdc-hero">
-      <div class="rdc-region-id"><span id="rtRdcFlag">🌐</span><div><h1 id="rtRdcTitle">Región</h1><p>Centro de decisión regional</p></div></div>
+      <div class="rdc-skyline" aria-hidden="true">
+        <svg viewBox="0 0 900 82" preserveAspectRatio="none"><defs><linearGradient id="rdcSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123c57" stop-opacity=".55"/><stop offset="1" stop-color="#020d16" stop-opacity=".08"/></linearGradient></defs><rect width="900" height="82" fill="url(#rdcSky)"/><g fill="#071823" opacity=".92"><path d="M0 77h900v5H0zM34 77V43h18v34m7 0V35h12v42m23 0V49h26v28m7 0V24h8v53m5 0V13h6v64m7 0V29h10v48m18 0V45h34v32m7 0V18h7v59m5 0V8h5v69m7 0V26h8v51m20 0V39h27v38m14 0V31h12v46m17 0V19h8v58m19 0V46h24v31m12 0V27h8v50m4 0V7h5v70m6 0V29h8v48m18 0V43h32v34m11 0V34h11v43m14 0V22h7v55m20 0V41h31v36m13 0V26h9v51m7 0V15h7v62m19 0V47h25v30m16 0V35h15v42m15 0V18h7v59m6 0V5h5v72m6 0V25h9v52m17 0V42h36v35"/></g><g fill="#f4b64a" opacity=".36"><rect x="141" y="31" width="2" height="2"/><rect x="204" y="42" width="3" height="2"/><rect x="343" y="50" width="3" height="2"/><rect x="497" y="36" width="3" height="2"/><rect x="666" y="49" width="3" height="2"/><rect x="807" y="39" width="3" height="2"/></g></svg>
+      </div>
+      <div class="rdc-region-id"><span id="rtRdcFlag" class="rdc-hero-flag"></span><div><h1 id="rtRdcTitle">Región</h1><p>Centro de decisión regional <b>›</b></p></div></div>
       <div class="rdc-open-state"><span id="rtRdcOpenBadge">—</span><small>CIERRE EN</small><b id="rtRdcCountdown">—</b></div>
       <div id="rtRdcClocks" class="rdc-clocks"></div>
-      <button id="rtRdcClose" class="rdc-close" type="button">Cerrar ×</button>
     </div>
+
     <div class="rdc-kpis">
-      <article><small>Sentimiento regional</small><strong id="rtRdcSentiment">—</strong><span id="rtRdcSentimentNote">vs. cierre anterior</span></article>
-      <article><small>Amplitud de mercado</small><strong id="rtRdcBreadth">—</strong><span id="rtRdcBreadthNote">mercados de la región</span></article>
-      <article><small>Momentum</small><strong id="rtRdcMomentum">—</strong><span>Tendencia de corto plazo</span></article>
-      <article><small>Volatilidad global</small><strong id="rtRdcVolatility">—</strong><span id="rtRdcVolatilityNote">VIX</span></article>
-      <article class="risk"><small>Riesgo global</small><strong id="rtRdcRisk">—</strong><span>Índice de riesgo contextual</span></article>
+      <article><i class="rdc-kpi-icon">${rdcKpiIcon('sentiment')}</i><div><small>Sentimiento Regional</small><strong id="rtRdcSentiment">—</strong><span id="rtRdcSentimentNote">vs. cierre anterior</span></div><span id="rtRdcSentimentSpark" class="rdc-kpi-spark"></span></article>
+      <article><i class="rdc-kpi-icon">${rdcKpiIcon('breadth')}</i><div><small>Amplitud de Mercado</small><strong id="rtRdcBreadth">—</strong><span id="rtRdcBreadthNote">mercados de la región</span></div><span id="rtRdcBreadthSpark" class="rdc-kpi-spark"></span></article>
+      <article><i class="rdc-kpi-icon">${rdcKpiIcon('momentum')}</i><div><small>Momentum</small><strong id="rtRdcMomentum">—</strong><span>Tendencia de corto plazo</span></div><span id="rtRdcMomentumSpark" class="rdc-kpi-spark"></span></article>
+      <article><i class="rdc-kpi-icon">${rdcKpiIcon('volatility')}</i><div><small>Volatilidad (VIX)</small><strong id="rtRdcVolatility">—</strong><span id="rtRdcVolatilityNote">VIX</span></div><span id="rtRdcVolatilitySpark" class="rdc-kpi-spark"></span></article>
+      <article class="risk"><i class="rdc-kpi-icon shield">${rdcKpiIcon('risk')}</i><div><small>Riesgo Global</small><strong id="rtRdcRisk">—</strong><span>Índice de riesgo regional</span></div><span id="rtRdcRiskSpark" class="rdc-kpi-spark"></span></article>
     </div>
+
     <div class="rdc-main">
       <section class="rdc-panel rdc-drivers">
-        <header><h2>Qué está moviendo <span id="rtRdcDriverRegion">la región</span> hoy</h2><small>Drivers ordenados por relevancia para el contexto</small></header>
+        <header><div><h2>▤ &nbsp;Qué está moviendo <span id="rtRdcDriverRegion">la región</span> hoy</h2><small>Drivers con efecto sobre el contexto regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
         <div class="rdc-driver-head"><span>ACTIVO / EVENTO</span><span>ÚLTIMO</span><span>VAR. %</span><span>IMPACTO</span><span>COMENTARIO</span><span>TENDENCIA</span></div>
         <div id="rtRdcDrivers"></div>
       </section>
+
       <section class="rdc-panel rdc-internals">
-        <header><h2>Internals del mercado <span id="rtRdcInternalRegion"></span></h2><small>Amplitud, índices y mapa regional</small></header>
+        <header><div><h2>▥ &nbsp;Internals del mercado <span id="rtRdcInternalRegion"></span></h2><small>Amplitud, sectores, índices y mapa regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
         <div class="rdc-internal-top">
           <div class="rdc-breadth-card"><b>Amplitud regional</b><div class="rdc-breadth-bar"><i id="rtRdcUpBar"></i><i id="rtRdcFlatBar"></i><i id="rtRdcDownBar"></i></div><div><span><strong id="rtRdcUpPct">—</strong> Alcistas</span><span><strong id="rtRdcFlatPct">—</strong> Sin cambio</span><span><strong id="rtRdcDownPct">—</strong> Bajistas</span></div></div>
-          <div class="rdc-market-tiles" id="rtRdcMarketTiles"></div>
+          <div class="rdc-sector-wrap"><div class="rdc-sector-head"><b id="rtRdcSectorTitle">Sectores (STOXX 600)</b><span>Hoy⌄</span></div><div class="rdc-market-tiles" id="rtRdcMarketTiles"></div></div>
         </div>
         <div class="rdc-internal-bottom">
-          <div class="rdc-index-list"><div class="rdc-index-head"><span>Principales índices</span><span>Último</span><span>Var. %</span><span>Tendencia</span></div><div id="rtRdcIndexRows"></div></div>
-          <div class="rdc-map-card"><div class="rdc-map-title">Mapa de mercado <span>(var. % hoy)</span></div><div id="rtRdcMapHost" class="rdc-map-host"></div></div>
+          <div class="rdc-index-list"><div class="rdc-index-head"><span>Principales índices</span><span>Último</span><span>Var. %</span><span>Tendencia (30D)</span></div><div id="rtRdcIndexRows"></div></div>
+          <div class="rdc-map-card"><div class="rdc-map-title">Mapa de mercado <span>(var. % hoy)</span><b>1D&nbsp;&nbsp;5D&nbsp;&nbsp;1M</b></div><div id="rtRdcMapHost" class="rdc-map-host"></div></div>
         </div>
       </section>
+
       <section class="rdc-panel rdc-arg-impact">
-        <header><h2>🇦🇷 Impacto sobre Argentina</h2><small>Transmisión del contexto internacional al mercado local</small></header>
+        <header><div><h2>🇦🇷 &nbsp;Impacto sobre Argentina</h2><small>Cómo se transmite el contexto internacional al mercado local</small></div><button class="rdc-more" data-rdc-action="argentina">Ver análisis completo →</button></header>
         <div class="rdc-arg-grid"><div id="rtRdcTraffic" class="rdc-impact-cards"></div><div><b class="rdc-subtitle">Canales de transmisión</b><div id="rtRdcChannels" class="rdc-channels"></div></div></div>
       </section>
+
       <section class="rdc-panel rdc-assets">
-        <header><h2>Activos a seguir <span>(relevantes para Argentina)</span></h2><small>Prioridad técnica y movimiento actual</small></header>
-        <div class="rdc-asset-head"><span>ACTIVO</span><span>ÚLTIMO</span><span>VAR. %</span><span>TENDENCIA</span><span>SETUP</span><span>COMENTARIO</span></div>
+        <header><div><h2>▥ &nbsp;Activos a seguir <span>(relevantes para Argentina)</span></h2><small>Prioridad técnica y movimiento actual</small></div><button class="rdc-more" data-rdc-action="sectors">Ver más →</button></header>
+        <div class="rdc-asset-head"><span>ACTIVO</span><span>ÚLTIMO</span><span>VAR. %</span><span>TENDENCIA (30D)</span><span>SETUP</span><span>COMENTARIO</span></div>
         <div id="rtRdcAssets"></div>
       </section>
     </div>
-    <section class="rdc-timeline"><div class="rdc-timeline-title"><b>⚡ Qué cambió</b><small>Lectura del estado actual</small></div><div id="rtRdcEvents" class="rdc-events"></div></section>
+
+    <section class="rdc-timeline"><div class="rdc-timeline-title"><b>⚡ Qué cambió</b><small>Eventos clave de la jornada</small></div><div id="rtRdcEvents" class="rdc-events"></div><button class="rdc-news-btn" data-rdc-action="news">Ver todas las noticias →</button></section>
   `;
   document.body.appendChild(el);
   $('rtRdcClose')?.addEventListener('click',()=>closeRegionalDecisionCenter());
+  el.querySelectorAll('[data-rdc-region]').forEach(btn=>btn.addEventListener('click',()=>{
+    const key=btn.dataset.rdcRegion;if(!REGIONS[key])return;applyContext(key,null);renderRegionalDecisionCenter();
+  }));
+  el.querySelectorAll('[data-rdc-action]').forEach(btn=>btn.addEventListener('click',()=>{
+    const action=btn.dataset.rdcAction;
+    if(action==='global'){closeRegionalDecisionCenter();resetContext();goHome();return}
+    if(action==='argentina'){closeRegionalDecisionCenter();applyContext('latam','ARG');goHome('#rtArgentinaSignals');return}
+    if(action==='markets'){closeRegionalDecisionCenter();goHome('#rtMarketSignals');return}
+    if(action==='sectors'){closeRegionalDecisionCenter();clickOriginal('scannerViewBtn');return}
+    if(action==='news'){closeRegionalDecisionCenter();q('[data-rt-nav="news"]')?.click();return}
+    if(action==='calendar'){closeRegionalDecisionCenter();goHome();return}
+  }));
+  $('rtRdcSearch')?.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return;const value=e.currentTarget.value.trim();if(!value)return;
+    closeRegionalDecisionCenter();const input=$('symbol');if(input)input.value=value;const type=$('assetType');if(type)type.value='auto';$('analyzeBtn')?.click();
+  });
   el.addEventListener('click',e=>{
     const row=e.target.closest?.('.rdc-asset-row');if(!row)return;
     closeRegionalDecisionCenter();
@@ -808,29 +896,42 @@ function mountRegionalDecisionCenter(){
 function renderRegionalDecisionCenter(){
   const shell=$('rtRegionalDecisionCenter');if(!shell||shell.hidden)return;
   const key=state.selectedRegion,region=REGIONS[key]||REGIONS.europe,ctx=contextInfo(),now=new Date(),status=rdcStatus(key,now);
-  $('rtRdcFlag').textContent=ctx.flag||REGION_FLAGS[key]||'🌐';$('rtRdcTitle').textContent=region.label;
+  $('rtRdcFlag').innerHTML=rdcFlagMarkup(key);$('rtRdcTitle').textContent=region.label;
   const badge=$('rtRdcOpenBadge');badge.textContent=status.label;badge.className=status.active?'open':'closed';
   $('rtRdcCountdown').textContent=status.countdown;$('rtRdcClocks').innerHTML=rdcCityClocks(key,now);
+  $('rtRdcClock').textContent=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
+  $('rtRdcDate').textContent=new Intl.DateTimeFormat('es-AR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'America/Argentina/Buenos_Aires'}).format(now).replaceAll('.','');
+  shell.querySelectorAll('[data-rdc-region]').forEach(b=>b.classList.toggle('active',b.dataset.rdcRegion===key));
 
   const sentiment=regionChange(key,'day'),breadth=rdcBreadth(key),mom=rdcMomentum(key),vix=get('vix'),vixCh=periodChange(vix,'day'),risk=riskModel();
   $('rtRdcSentiment').textContent=pct(sentiment);$('rtRdcSentiment').className=signClass(sentiment);
   $('rtRdcBreadth').textContent=`${breadth.upPct}% alcista`;$('rtRdcBreadth').className=breadth.upPct>breadth.downPct?'rt-up':breadth.downPct>breadth.upPct?'rt-down':'rt-flat';
+  $('rtRdcBreadthNote').textContent=`${breadth.up} suben · ${breadth.down} bajan`;
   $('rtRdcMomentum').textContent=mom.label;$('rtRdcMomentum').className=mom.cls;
   $('rtRdcVolatility').textContent=Number.isFinite(vixCh)?(vixCh<-.03?'Baja':vixCh>.03?'Alta':'Estable'):'s/d';$('rtRdcVolatility').className=signClass(-vixCh);
   $('rtRdcVolatilityNote').textContent=`VIX ${Number.isFinite(vix?.last)?fmt(vix.last,1):'—'} · ${pct(vixCh)}`;
   $('rtRdcRisk').textContent=risk.label;$('rtRdcRisk').className=risk.label==='BAJO'?'good':risk.label==='ALTO'?'bad':'warn';
 
+  const regionVals=regionSeries(key),vixVals=(vix?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+  $('rtRdcSentimentSpark').innerHTML=miniSpark(regionVals);
+  $('rtRdcBreadthSpark').innerHTML=miniSpark(regionVals.map((v,i)=>v+i*.02));
+  $('rtRdcMomentumSpark').innerHTML=miniSpark(regionVals);
+  $('rtRdcVolatilitySpark').innerHTML=miniSpark(vixVals);
+  $('rtRdcRiskSpark').innerHTML=miniSpark(vixVals.length?vixVals:regionVals);
+
   $('rtRdcDriverRegion').textContent=region.label;$('rtRdcInternalRegion').textContent=region.label.toLowerCase();
-  const driverIds=[...(region.ids||[]).slice(0,3),'vix','tnx','dxy','wti','eem'];
+  const driverIds=key==='europe'
+    ?['dax','stoxx','eurusd','bund10','vix','wti','tnx']
+    :[...(region.ids||[]).slice(0,3),'vix','tnx','dxy','wti','eem'];
   $('rtRdcDrivers').innerHTML=[...new Set(driverIds)].map(rdcMarketRow).filter(Boolean).slice(0,7).join('')||'<div class="rdc-empty">Sin drivers válidos.</div>';
 
   $('rtRdcUpBar').style.width=breadth.upPct+'%';$('rtRdcFlatBar').style.width=breadth.flatPct+'%';$('rtRdcDownBar').style.width=breadth.downPct+'%';
   $('rtRdcUpPct').textContent=breadth.upPct+'%';$('rtRdcFlatPct').textContent=breadth.flatPct+'%';$('rtRdcDownPct').textContent=breadth.downPct+'%';
-  const ids=(region.ids||[]).slice(0,5);
-  $('rtRdcMarketTiles').innerHTML=ids.map(id=>{const a=ASSET_BY_ID[id],ch=periodChange(get(id),'day');return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><span>${esc(a?.name||id)}</span></div>`}).join('');
+  $('rtRdcSectorTitle').textContent=key==='europe'?'Sectores (STOXX 600)':'Mercados líderes';
+  $('rtRdcMarketTiles').innerHTML=rdcSectorTiles(key);
   $('rtRdcIndexRows').innerHTML=(region.ids||[]).map(id=>{
     const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day'),bars=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
-    return `<div class="rdc-index-row"><b>${a?.flag||''} ${esc(a?.detailName||a?.name||id)}</b><span>${Number.isFinite(m?.last)?fmt(m.last,a?.decimals??1):'s/d'}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(bars)}</span></div>`;
+    return `<div class="rdc-index-row"><b>${a?.flag||''} ${esc(a?.detailName||a?.name||id)}</b><span>${rdcDisplayLast(id,a,m)}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(bars)}</span></div>`;
   }).join('');
   renderRegionalCenterMap(key);
 
