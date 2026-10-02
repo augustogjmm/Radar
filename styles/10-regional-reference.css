@@ -1,0 +1,281 @@
+/* Regional full-view reference pass. Everything is scoped to #rtRegionalDecisionCenter
+   so the validated Global View remains untouched. */
+#rtRegionalDecisionCenter{
+  --rdc-bg:#020b13;--rdc-panel:#061b2a;--rdc-panel2:#03131e;--rdc-edge:#0b6689;
+  --rdc-cyan:#24d9ff;--rdc-green:#28ef92;--rdc-red:#ff596b;--rdc-yellow:#ffd24b;
+  --rdc-soft:#94adba;--rdc-text:#eef8fc;
+  padding:0 22px 10px!important;
+  color:var(--rdc-text)!important;
+  background:
+    radial-gradient(circle at 75% -10%,rgba(20,118,162,.15),transparent 31%),
+    radial-gradient(circle at 8% 35%,rgba(0,76,111,.08),transparent 28%),
+    linear-gradient(180deg,#03111b 0%,#020911 100%)!important;
+  overflow:auto!important;
+  -webkit-font-smoothing:antialiased!important;
+  text-rendering:geometricPrecision!important;
+}
+#rtRegionalDecisionCenter *{box-sizing:border-box}
+#rtRegionalDecisionCenter .rdc-topbar{
+  height:59px!important;margin:0 -22px!important;padding:0 22px!important;
+  grid-template-columns:220px minmax(650px,1fr) 295px 160px 110px 0!important;
+  gap:10px!important;border-bottom:1px solid #0d5874!important;
+  background:linear-gradient(180deg,#03131f 0%,#020b13 100%)!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.38),inset 0 -1px 0 rgba(41,179,224,.04)!important;
+}
+#rtRegionalDecisionCenter .rdc-x{display:none!important}
+#rtRegionalDecisionCenter .rdc-brand{gap:10px!important}
+#rtRegionalDecisionCenter .rdc-brand-mark{width:47px!important;height:47px!important}
+#rtRegionalDecisionCenter .rdc-brand-mark svg{width:44px!important;height:44px!important;filter:drop-shadow(0 0 6px rgba(37,216,255,.42))!important}
+#rtRegionalDecisionCenter .rdc-brand b{font-size:22px!important;font-weight:820!important}
+#rtRegionalDecisionCenter .rdc-nav{height:38px!important;border-color:#0f4660!important;background:#03131f!important}
+#rtRegionalDecisionCenter .rdc-nav button{padding:0 18px!important;font-size:11px!important;color:#a9beca!important;border-right-color:#10364b!important}
+#rtRegionalDecisionCenter .rdc-nav button.active{
+  color:#77ebff!important;background:linear-gradient(180deg,#073a58,#05243a)!important;
+  box-shadow:inset 0 0 0 1px #159fda,0 0 13px rgba(24,185,239,.27)!important;
+}
+#rtRegionalDecisionCenter .rdc-search{height:37px!important;border-color:#1680aa!important;background:#031522!important}
+#rtRegionalDecisionCenter .rdc-search input{font-size:10.5px!important}
+#rtRegionalDecisionCenter .rdc-live{height:35px!important;border-color:#0e4b5f!important;background:#03171f!important}
+#rtRegionalDecisionCenter .rdc-topclock b{font-size:20px!important}
+#rtRegionalDecisionCenter .rdc-topclock small{font-size:8px!important}
+
+/* Hero: match the approved skyline composition and fill all five city cells. */
+#rtRegionalDecisionCenter .rdc-hero{
+  height:89px!important;margin:0!important;padding:7px 14px!important;
+  grid-template-columns:365px 132px minmax(620px,1fr)!important;gap:10px!important;
+  border-bottom:1px solid #164a63!important;
+  background:linear-gradient(90deg,rgba(4,20,32,.985),rgba(4,24,37,.86),rgba(4,18,29,.97))!important;
+}
+#rtRegionalDecisionCenter .rdc-skyline{
+  left:465px!important;right:455px!important;top:0!important;bottom:0!important;opacity:1!important;
+  background-image:
+    linear-gradient(90deg,#041522 0%,rgba(4,21,34,.90) 8%,transparent 23%,transparent 80%,rgba(3,17,27,.82) 95%,#03131e 100%),
+    url("data:image/webp;base64,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")!important;
+  background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;
+  filter:saturate(1.12) contrast(1.06) brightness(.93)!important;
+}
+#rtRegionalDecisionCenter .rdc-skyline svg{display:none!important}
+#rtRegionalDecisionCenter .rdc-skyline::after{display:none!important}
+#rtRegionalDecisionCenter .rdc-region-id{gap:15px!important}
+#rtRegionalDecisionCenter .rdc-hero-flag{
+  width:92px!important;height:62px!important;flex:0 0 92px!important;border-color:#127cc6!important;
+  background:linear-gradient(145deg,#062945,#031529)!important;
+  box-shadow:0 7px 18px rgba(0,0,0,.34),0 0 14px rgba(22,132,213,.12),inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+#rtRegionalDecisionCenter .rdc-hero-flag>svg{width:80px!important;height:54px!important}
+#rtRegionalDecisionCenter .rdc-latam-badge{width:80px!important;height:54px!important;display:block!important}
+#rtRegionalDecisionCenter .rdc-title-line{gap:12px!important}
+#rtRegionalDecisionCenter .rdc-title-line h1{font-size:39px!important;line-height:.96!important;font-weight:880!important;letter-spacing:-.04em!important}
+#rtRegionalDecisionCenter .rdc-title-line #rtRdcOpenBadge{font-size:10px!important;padding:6px 11px!important}
+#rtRegionalDecisionCenter .rdc-region-id p{font-size:15px!important;margin-top:6px!important;color:#bdd0da!important}
+#rtRegionalDecisionCenter .rdc-countdown{height:61px!important;padding:8px 11px!important;border-color:#1b526c!important;background:rgba(4,20,31,.93)!important}
+#rtRegionalDecisionCenter .rdc-countdown small{font-size:8px!important}
+#rtRegionalDecisionCenter .rdc-countdown b{font-size:25px!important}
+#rtRegionalDecisionCenter .rdc-clocks{
+  height:59px!important;grid-template-columns:repeat(5,minmax(88px,1fr))!important;border-color:#123f56!important;background:rgba(4,19,30,.82)!important;
+}
+#rtRegionalDecisionCenter .rdc-city-clock{
+  padding:6px 8px 4px 25px!important;grid-template-rows:11px 20px 11px!important;border-right-color:#12394e!important;
+}
+#rtRegionalDecisionCenter .rdc-city-clock i{left:10px!important;top:21px!important;width:8px!important;height:8px!important;box-shadow:0 0 9px rgba(34,237,139,.72)!important}
+#rtRegionalDecisionCenter .rdc-city-clock span{font-size:8px!important}
+#rtRegionalDecisionCenter .rdc-city-clock b{font-size:15.5px!important}
+#rtRegionalDecisionCenter .rdc-city-clock small{display:block!important;font-size:7px!important;color:#7f98a8!important}
+
+/* KPI hero row. */
+#rtRegionalDecisionCenter .rdc-kpis{height:102px!important;gap:8px!important;margin-top:7px!important}
+#rtRegionalDecisionCenter .rdc-kpi-card{
+  height:102px!important;grid-template-columns:55px minmax(0,1fr) 112px!important;gap:9px!important;padding:10px 12px!important;
+  border:1px solid #08739a!important;border-radius:7px!important;
+  background:
+    radial-gradient(circle at 89% 45%,rgba(21,154,180,.10),transparent 36%),
+    linear-gradient(180deg,#062438 0%,#031723 100%)!important;
+  box-shadow:0 9px 23px rgba(0,0,0,.32),inset 0 1px 0 rgba(218,245,255,.04),inset 0 -1px 0 rgba(0,0,0,.45)!important;
+}
+#rtRegionalDecisionCenter .rdc-kpi-card::after{
+  content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;
+  background:linear-gradient(90deg,transparent,rgba(73,220,255,.30),transparent)!important;
+}
+#rtRegionalDecisionCenter .rdc-kpi-icon{width:47px!important;height:47px!important;color:#29d7ff!important;filter:drop-shadow(0 0 5px rgba(39,215,255,.44))!important}
+#rtRegionalDecisionCenter .rdc-kpi-icon svg{width:43px!important;height:43px!important;stroke-width:1.8!important}
+#rtRegionalDecisionCenter .rdc-kpi-card.risk .rdc-kpi-icon{color:#ffd24d!important;filter:drop-shadow(0 0 5px rgba(255,210,77,.36))!important}
+#rtRegionalDecisionCenter .rdc-kpi-copy small{font-size:12px!important;color:#dce7ec!important;font-weight:730!important}
+#rtRegionalDecisionCenter .rdc-kpi-copy strong{font-size:31px!important;font-weight:900!important;letter-spacing:-.04em!important;text-shadow:0 0 9px currentColor!important}
+#rtRegionalDecisionCenter .rdc-kpi-copy span{font-size:9.5px!important;color:#94aab7!important}
+#rtRegionalDecisionCenter .rdc-kpi-spark .rt-spark{width:108px!important;height:45px!important}
+#rtRegionalDecisionCenter .rdc-kpi-spark .spark-line{stroke-width:1.7!important;filter:drop-shadow(0 0 4px rgba(52,238,158,.28))!important}
+
+/* Main reference layout. */
+#rtRegionalDecisionCenter .rdc-main{
+  grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr)!important;
+  grid-template-rows:392px 205px!important;gap:8px!important;margin-top:7px!important;
+}
+#rtRegionalDecisionCenter .rdc-panel{
+  border:1px solid #086184!important;border-radius:7px!important;
+  background:
+    linear-gradient(180deg,rgba(6,27,42,.995),rgba(3,16,25,.998)),
+    repeating-linear-gradient(0deg,rgba(111,210,241,.012) 0 1px,transparent 1px 3px)!important;
+  box-shadow:0 8px 21px rgba(0,0,0,.31),inset 0 1px 0 rgba(130,224,255,.045)!important;
+}
+#rtRegionalDecisionCenter .rdc-panel>header{
+  height:46px!important;padding:8px 12px!important;border-bottom-color:#0c4f6c!important;
+  background:linear-gradient(180deg,#072337,#041823)!important;
+}
+#rtRegionalDecisionCenter .rdc-panel>header h2{font-size:19px!important;font-weight:830!important;gap:8px!important;color:#f3f9fc!important}
+#rtRegionalDecisionCenter .rdc-panel>header small{font-size:8px!important;color:#829cab!important}
+#rtRegionalDecisionCenter .rdc-more{font-size:10px!important;color:#27cfff!important}
+#rtRegionalDecisionCenter .rdc-heading-icon{width:28px!important;height:28px!important;flex-basis:28px!important}
+#rtRegionalDecisionCenter .rdc-heading-icon svg{width:20px!important;height:20px!important}
+#rtRegionalDecisionCenter .rdc-heading-flag{display:inline-flex!important;align-items:center!important}
+#rtRegionalDecisionCenter .rdc-heading-flag .rt-flag-svg{width:31px!important;height:20px!important}
+#rtRegionalDecisionCenter .rt-flag-svg{display:inline-flex!important;align-items:center!important;justify-content:center!important;vertical-align:middle!important}
+#rtRegionalDecisionCenter .rt-flag-svg svg{display:block!important;width:28px!important;height:18px!important;border-radius:2px!important;box-shadow:0 0 0 1px rgba(255,255,255,.10)!important}
+
+/* Drivers table: readable like the approved image. */
+#rtRegionalDecisionCenter .rdc-driver-head,
+#rtRegionalDecisionCenter .rdc-driver-row{
+  grid-template-columns:minmax(180px,1.12fr) 88px 74px 91px minmax(250px,1.5fr)!important;gap:7px!important;padding:0 12px!important;
+}
+#rtRegionalDecisionCenter .rdc-driver-head{height:27px!important;font-size:8px!important;color:#8ca6b5!important}
+#rtRegionalDecisionCenter .rdc-driver-row{height:45px!important;border-bottom-color:#0b4058!important}
+#rtRegionalDecisionCenter .rdc-driver-name{gap:8px!important}
+#rtRegionalDecisionCenter .rdc-driver-name i{display:flex!important;align-items:center!important;justify-content:center!important;min-width:31px!important;font-style:normal!important}
+#rtRegionalDecisionCenter .rdc-driver-name b{font-size:12px!important;font-weight:800!important}
+#rtRegionalDecisionCenter .rdc-driver-last,#rtRegionalDecisionCenter .rdc-driver-change{font-size:11px!important}
+#rtRegionalDecisionCenter .rdc-impact{min-width:80px!important;font-size:8px!important;padding:4px 7px!important}
+#rtRegionalDecisionCenter .rdc-driver-note{font-size:10px!important;line-height:1.16!important;color:#becbd3!important}
+#rtRegionalDecisionCenter .rdc-commodity-icon{font-size:12px!important;color:#79dcff!important;text-shadow:0 0 6px rgba(66,198,255,.32)!important}
+
+/* Internals: 5 tiles + 6 rows + premium regional map. */
+#rtRegionalDecisionCenter .rdc-internal-grid{
+  height:346px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(270px,1.03fr)!important;
+  grid-template-rows:111px 228px!important;gap:7px!important;padding:8px 9px 9px!important;
+}
+#rtRegionalDecisionCenter .rdc-breadth-card,
+#rtRegionalDecisionCenter .rdc-sector-wrap,
+#rtRegionalDecisionCenter .rdc-index-list,
+#rtRegionalDecisionCenter .rdc-map-card{
+  border-color:#0c5573!important;background:linear-gradient(180deg,#052133,#03151f)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+#rtRegionalDecisionCenter .rdc-breadth-card>b,#rtRegionalDecisionCenter .rdc-sector-head b{font-size:10.5px!important}
+#rtRegionalDecisionCenter .rdc-breadth-bar{height:15px!important;border-color:#183f50!important;box-shadow:inset 0 2px 6px rgba(0,0,0,.48)!important}
+#rtRegionalDecisionCenter .rdc-breadth-card strong{font-size:15px!important}
+#rtRegionalDecisionCenter .rdc-breadth-card>div:last-child span{font-size:8.5px!important}
+#rtRegionalDecisionCenter .rdc-market-tiles{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important}
+#rtRegionalDecisionCenter .rdc-market-tiles>div{
+  height:67px!important;padding:5px 2px!important;border-color:#126d59!important;
+  background:linear-gradient(180deg,#073225,#041b18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+#rtRegionalDecisionCenter .rdc-market-tiles>div.rt-down{border-color:#7a2b3b!important;background:linear-gradient(180deg,#431822,#210c12)!important}
+#rtRegionalDecisionCenter .rdc-market-tiles strong{font-size:10.5px!important}
+#rtRegionalDecisionCenter .rdc-market-tiles i{font-size:18px!important;color:#38ddff!important}
+#rtRegionalDecisionCenter .rdc-market-tiles span{font-size:7px!important}
+#rtRegionalDecisionCenter .rdc-market-tiles small{display:none!important}
+#rtRegionalDecisionCenter .rdc-index-head,
+#rtRegionalDecisionCenter .rdc-index-row{grid-template-columns:minmax(178px,1.35fr) 80px 64px 121px!important;padding:0 8px!important}
+#rtRegionalDecisionCenter .rdc-index-head{height:25px!important;font-size:7px!important}
+#rtRegionalDecisionCenter .rdc-index-row{height:32px!important;font-size:9.5px!important}
+#rtRegionalDecisionCenter .rdc-index-row>b{display:flex!important;align-items:center!important;gap:7px!important;font-size:10px!important}
+#rtRegionalDecisionCenter .rdc-index-row .rt-spark{width:112px!important;height:20px!important}
+#rtRegionalDecisionCenter .rdc-map-title{height:29px!important}
+#rtRegionalDecisionCenter .rdc-map-host{
+  background:
+    radial-gradient(circle at 56% 47%,rgba(23,116,133,.24),transparent 33%),
+    repeating-linear-gradient(0deg,rgba(47,135,165,.035) 0 1px,transparent 1px 22px),
+    repeating-linear-gradient(90deg,rgba(47,135,165,.03) 0 1px,transparent 1px 22px),
+    linear-gradient(180deg,#031824,#020c14)!important;
+}
+#rtRegionalDecisionCenter .rdc-map-svg{filter:saturate(.78) contrast(1.18) brightness(.72)!important}
+#rtRegionalDecisionCenter .rdc-map-svg .rt-country.rt-detail-focus{
+  fill:#0a7c6a!important;fill-opacity:.80!important;stroke:#49bdc7!important;stroke-width:.55!important;
+  filter:drop-shadow(0 0 2px rgba(39,221,193,.18))!important;
+}
+#rtRegionalDecisionCenter .rdc-map-svg .rt-country.rt-detail-dim{fill:#102834!important;fill-opacity:.68!important;stroke:#274a5a!important}
+#rtRegionalDecisionCenter .rdc-map-svg #rtTerrainOverlay{opacity:.62!important;mix-blend-mode:screen!important}
+#rtRegionalDecisionCenter .rdc-map-svg #rtTextureLayer{opacity:.90!important;mix-blend-mode:soft-light!important}
+#rtRegionalDecisionCenter .rdc-map-svg #rtHeatGlowLayer{opacity:.45!important;filter:blur(8px)!important}
+#rtRegionalDecisionCenter .rdc-map-svg .rt-market-marker circle:first-of-type{
+  fill:#fbffff!important;stroke:#74f4ff!important;stroke-width:1.8!important;
+  filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 11px rgba(57,236,255,.92))!important;
+}
+#rtRegionalDecisionCenter .rdc-map-callout{
+  min-width:78px!important;padding:5px 7px!important;border-color:#0d9974!important;
+  background:linear-gradient(180deg,rgba(2,78,56,.98),rgba(1,31,24,.99))!important;
+  box-shadow:0 6px 14px rgba(0,0,0,.42),0 0 10px rgba(34,232,145,.08),inset 0 1px 0 rgba(201,255,227,.06)!important;
+}
+#rtRegionalDecisionCenter .rdc-map-callout span{font-size:8px!important}
+#rtRegionalDecisionCenter .rdc-map-callout b{font-size:13px!important;color:#35f0a1!important}
+
+/* Argentina transmission block: larger glass signal lenses and real flag SVG. */
+#rtRegionalDecisionCenter .rdc-arg-grid{height:159px!important;grid-template-columns:1.08fr 1fr!important}
+#rtRegionalDecisionCenter .rdc-impact-cards{gap:7px!important;padding:8px!important}
+#rtRegionalDecisionCenter .rdc-impact-card{
+  padding:10px 9px!important;border-color:#0e4962!important;
+  background:linear-gradient(180deg,#052133,#03151f)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+#rtRegionalDecisionCenter .rdc-impact-card small{font-size:10px!important;font-weight:750!important}
+#rtRegionalDecisionCenter .rdc-signal-ring{
+  width:40px!important;height:40px!important;margin:8px 0!important;border-width:3px!important;
+  box-shadow:0 0 0 2px #07313c,0 0 13px color-mix(in srgb,var(--signal) 55%,transparent),inset 0 0 8px rgba(255,255,255,.16)!important;
+}
+#rtRegionalDecisionCenter .rdc-impact-card>b{left:61px!important;top:46px!important;font-size:8px!important;padding:4px 7px!important}
+#rtRegionalDecisionCenter .rdc-impact-card>p{font-size:8.8px!important;color:#b7c6ce!important}
+#rtRegionalDecisionCenter .rdc-subtitle{font-size:9.5px!important}
+#rtRegionalDecisionCenter .rdc-channel{height:30px!important}
+#rtRegionalDecisionCenter .rdc-channel span b{font-size:8.8px!important}
+#rtRegionalDecisionCenter .rdc-channel strong{font-size:8.8px!important}
+
+/* Assets-to-follow: real flags and clearer rows. */
+#rtRegionalDecisionCenter .rdc-asset-head,
+#rtRegionalDecisionCenter .rdc-asset-row{grid-template-columns:100px 90px 64px 118px 78px minmax(155px,1fr)!important;gap:6px!important;padding:0 9px!important}
+#rtRegionalDecisionCenter .rdc-asset-head{height:24px!important;font-size:7px!important}
+#rtRegionalDecisionCenter .rdc-asset-row{height:22.5px!important;font-size:8.8px!important}
+#rtRegionalDecisionCenter .rdc-asset-row>b{display:flex!important;align-items:center!important;gap:6px!important;font-size:9px!important}
+#rtRegionalDecisionCenter .rdc-asset-flag{display:flex!important;align-items:center!important}
+#rtRegionalDecisionCenter .rdc-asset-flag .rt-flag-svg svg{width:24px!important;height:15px!important}
+#rtRegionalDecisionCenter .rdc-asset-row .rt-spark{width:106px!important;height:18px!important}
+#rtRegionalDecisionCenter .rdc-setup{min-width:70px!important;font-size:7px!important}
+#rtRegionalDecisionCenter .rdc-comment{font-size:8.2px!important;color:#b1c2ca!important}
+
+/* Bottom event strip. */
+#rtRegionalDecisionCenter .rdc-timeline{
+  height:58px!important;margin-top:7px!important;grid-template-columns:220px 1fr 185px!important;
+  border-color:#086184!important;background:linear-gradient(180deg,#061a28,#03111b)!important;
+}
+#rtRegionalDecisionCenter .rdc-timeline-title{padding:7px 12px!important}
+#rtRegionalDecisionCenter .rdc-timeline-title b{font-size:16px!important}
+#rtRegionalDecisionCenter .rdc-bolt{font-size:30px!important;color:#2bdcff!important;text-shadow:0 0 8px rgba(43,220,255,.28)!important}
+#rtRegionalDecisionCenter .rdc-event{padding:5px 9px!important}
+#rtRegionalDecisionCenter .rdc-event time{font-size:8px!important}
+#rtRegionalDecisionCenter .rdc-event span b{font-size:8.8px!important}
+#rtRegionalDecisionCenter .rdc-event span small{font-size:6.8px!important}
+#rtRegionalDecisionCenter .rdc-news-btn{width:160px!important;height:31px!important;border-color:#1688b9!important;color:#55d8ff!important;background:#041923!important}
+
+/* Functional motion only: no blinking, floating or breathing. */
+#rtRegionalDecisionCenter,
+#rtRegionalDecisionCenter *,
+#rtRegionalDecisionCenter *::before,
+#rtRegionalDecisionCenter *::after{animation:none!important}
+
+/* Fit the same reference composition on the user's shorter browser viewport. */
+@media(max-height:930px){
+  #rtRegionalDecisionCenter .rdc-topbar{height:55px!important}
+  #rtRegionalDecisionCenter .rdc-hero{height:81px!important}
+  #rtRegionalDecisionCenter .rdc-skyline{left:455px!important;right:445px!important}
+  #rtRegionalDecisionCenter .rdc-kpis{height:92px!important;margin-top:6px!important}
+  #rtRegionalDecisionCenter .rdc-kpi-card{height:92px!important;padding:8px 10px!important;grid-template-columns:50px minmax(0,1fr) 102px!important}
+  #rtRegionalDecisionCenter .rdc-kpi-copy strong{font-size:28px!important}
+  #rtRegionalDecisionCenter .rdc-kpi-icon{width:43px!important;height:43px!important}
+  #rtRegionalDecisionCenter .rdc-kpi-icon svg{width:39px!important;height:39px!important}
+  #rtRegionalDecisionCenter .rdc-main{grid-template-rows:366px 191px!important;gap:7px!important;margin-top:6px!important}
+  #rtRegionalDecisionCenter .rdc-panel>header{height:42px!important;padding:6px 10px!important}
+  #rtRegionalDecisionCenter .rdc-driver-head{height:24px!important}
+  #rtRegionalDecisionCenter .rdc-driver-row{height:42px!important}
+  #rtRegionalDecisionCenter .rdc-internal-grid{height:324px!important;grid-template-rows:103px 214px!important;padding:7px 8px 8px!important}
+  #rtRegionalDecisionCenter .rdc-index-row{height:30px!important}
+  #rtRegionalDecisionCenter .rdc-arg-grid{height:149px!important}
+  #rtRegionalDecisionCenter .rdc-asset-row{height:20.8px!important}
+  #rtRegionalDecisionCenter .rdc-timeline{height:54px!important;margin-top:6px!important}
+}
