@@ -142,7 +142,7 @@ try{
       timeline:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-event').length,
       kpiSparks:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-kpi-spark .rt-spark').length,
       trafficLenses:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-signal-ring').length,
-      runningAnimations:[...document.querySelectorAll('#rtRegionalDecisionCenter *')].filter(el=>getComputedStyle(el).animationName!=='none').length,
+      runningAnimations:[...document.querySelectorAll('#rtRegionalDecisionCenter *')].filter(el=>{const a=getComputedStyle(el).animationName;return a&&a!=='none'}).length,
       assets:document.querySelectorAll('#rtRdcAssets .rdc-asset-row').length,
       periodTabs:document.querySelectorAll('#rtRegionalDecisionCenter [data-rdc-period]').length,
       mapCallouts:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-map-callout').length,
@@ -169,9 +169,7 @@ try{
     await assert(regionalCenter.periodTabs===3,'Centro regional no conserva controles 1D/5D/1M: '+regionalCenter.periodTabs);
     await assert(regionalCenter.mapCallouts>=3,'Centro regional sin callouts de mapa: '+regionalCenter.mapCallouts);
     await assert(!/^none$/.test(regionalCenter.bg),'Centro regional quedó sin fondo visual');
-    const visualCapture=await page.screenshot({type:'jpeg',quality:36,clip:{x:0,y:0,width:1672,height:941}});
-    console.log('RDC_VISUAL_BASE64:'+visualCapture.toString('base64'));
-    throw new Error('RDC_VISUAL_CAPTURE');
+    await shot('02-regional-center');
     await page.click('#rtRdcClose');
     await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
   }
