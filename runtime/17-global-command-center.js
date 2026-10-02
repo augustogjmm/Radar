@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-4.0-pixel-geometry';
+const VERSION='golden-4.1-reference-fidelity';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -39,7 +39,7 @@ const ASSETS=[
   {id:'euTech',symbol:'^SX8P',name:'Tecnología',region:'europe-sector',flag:'▦',decimals:1},
   {id:'euBanks',symbol:'^SX7P',name:'Bancos',region:'europe-sector',flag:'▥',decimals:1},
   {id:'euEnergy',symbol:'^SXEP',name:'Energía',region:'europe-sector',flag:'◉',decimals:1},
-  {id:'euLuxury',symbol:'^SXQP',name:'Lujo',region:'europe-sector',flag:'◇',decimals:1},
+  {id:'euHealth',symbol:'^SXDP',name:'Salud',region:'europe-sector',flag:'♥',decimals:1},
   {id:'euIndustrials',symbol:'^SXNP',name:'Industriales',region:'europe-sector',flag:'⚙',decimals:1},
 
   {id:'dax',symbol:'^GDAXI',name:'DAX',detailName:'DAX (Alemania)',region:'europe',flag:'🇩🇪',decimals:1},
@@ -689,8 +689,9 @@ function rdcDisplayLast(id,a,m){
 function rdcMarketRow(id){
   const a=ASSET_BY_ID[id],m=get(id);if(!a)return'';
   const ch=periodChange(m,'day'),impact=rdcDriverMeta(id,ch),bars=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+  const icon={vix:'🇺🇸',tnx:'🇺🇸',brent:'💧',wti:'💧',stoxx:'🇪🇺',eurusd:'🇪🇺'}[id]||a.flag||'•';
   return `<div class="rdc-driver-row">
-    <span class="rdc-driver-name"><i>${a.flag||'•'}</i><b>${esc(a.detailName||a.name)}</b></span>
+    <span class="rdc-driver-name"><i>${icon}</i><b>${esc(a.detailName||a.name)}</b></span>
     <span class="rdc-driver-last">${rdcDisplayLast(id,a,m)}</span>
     <span class="rdc-driver-change ${signClass(ch)}">${pct(ch)}</span>
     <span class="rdc-impact ${impact.cls}">${impact.label}</span>
@@ -805,7 +806,7 @@ function rdcKpiIcon(kind){
 }
 function rdcSectorTiles(key){
   const ids=key==='europe'?[
-    ['euTech','Tecnología','▦'],['euBanks','Bancos','▥'],['euEnergy','Energía','◉'],['euLuxury','Lujo','◇'],['euIndustrials','Industriales','⚙']
+    ['euTech','Tecnología','▦'],['euBanks','Bancos','▥'],['euEnergy','Energía','◉'],['euHealth','Salud','♥'],['euIndustrials','Industriales','⚙']
   ]:(REGIONS[key]?.ids||[]).slice(0,5).map(id=>[id,ASSET_BY_ID[id]?.name||id,'◆']);
   return ids.map(([id,label,icon])=>{
     const ch=periodChange(get(id),state.rdcPeriod||'day');
@@ -885,13 +886,13 @@ function mountRegionalDecisionCenter(){
 
     <div class="rdc-main">
       <section class="rdc-panel rdc-drivers">
-        <header><div><h2>▤ &nbsp;Qué está moviendo <span id="rtRdcDriverRegion">la región</span> hoy</h2><small>Drivers con efecto sobre el contexto regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
+        <header><div><h2><span class="rdc-heading-icon"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M7 8h10M7 12h10M7 16h7"/></svg></span>Qué está moviendo <span id="rtRdcDriverRegion">la región</span> hoy</h2><small>Drivers con efecto sobre el contexto regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
         <div class="rdc-driver-head"><span>ACTIVO / EVENTO</span><span>ÚLTIMO</span><span>VAR. %</span><span>IMPACTO</span><span>COMENTARIO</span></div>
         <div id="rtRdcDrivers"></div>
       </section>
 
       <section class="rdc-panel rdc-internals">
-        <header><div><h2>▥ &nbsp;Internals del mercado <span id="rtRdcInternalRegion"></span></h2><small>Amplitud, sectores, índices y mapa regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
+        <header><div><h2><span class="rdc-heading-icon bars"><svg viewBox="0 0 24 24"><path d="M4 20V13M9 20V8M14 20V4M19 20V10"/></svg></span>Internals del mercado <span id="rtRdcInternalRegion"></span></h2><small>Amplitud, sectores, índices y mapa regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
         <div class="rdc-internal-grid">
           <div class="rdc-breadth-card"><b>Amplitud regional</b><div class="rdc-breadth-bar"><i id="rtRdcUpBar"></i><i id="rtRdcFlatBar"></i><i id="rtRdcDownBar"></i></div><div><span><strong id="rtRdcUpPct">—</strong> Alcistas</span><span><strong id="rtRdcFlatPct">—</strong> Sin cambio</span><span><strong id="rtRdcDownPct">—</strong> Bajistas</span></div></div>
           <div class="rdc-sector-wrap"><div class="rdc-sector-head"><b id="rtRdcSectorTitle">Sectores (STOXX 600)</b><span>Hoy⌄</span></div><div class="rdc-market-tiles" id="rtRdcMarketTiles"></div></div>
@@ -906,13 +907,13 @@ function mountRegionalDecisionCenter(){
       </section>
 
       <section class="rdc-panel rdc-assets">
-        <header><div><h2>▥ &nbsp;Activos a seguir <span>(relevantes para Argentina)</span></h2><small>Prioridad técnica y movimiento actual</small></div><button class="rdc-more" data-rdc-action="sectors">Ver más →</button></header>
+        <header><div><h2><span class="rdc-heading-icon bars"><svg viewBox="0 0 24 24"><path d="M4 20V13M9 20V8M14 20V4M19 20V10"/></svg></span>Activos a seguir <span>(relevantes para Argentina)</span></h2><small>Prioridad técnica y movimiento actual</small></div><button class="rdc-more" data-rdc-action="sectors">Ver más →</button></header>
         <div class="rdc-asset-head"><span>ACTIVO</span><span>ÚLTIMO</span><span>VAR. %</span><span>TENDENCIA (30D)</span><span>SETUP</span><span>COMENTARIO</span></div>
         <div id="rtRdcAssets"></div>
       </section>
     </div>
 
-    <section class="rdc-timeline"><div class="rdc-timeline-title"><b>⚡ Qué cambió</b><small>Eventos clave de la jornada</small></div><div id="rtRdcEvents" class="rdc-events"></div><button class="rdc-news-btn" data-rdc-action="news">Ver todas las noticias →</button></section>
+    <section class="rdc-timeline"><div class="rdc-timeline-title"><b><span class="rdc-bolt">ϟ</span> Qué cambió</b><small>Eventos clave de la jornada</small></div><div id="rtRdcEvents" class="rdc-events"></div><button class="rdc-news-btn" data-rdc-action="news">Ver todas las noticias →</button></section>
   `;
   document.body.appendChild(el);
   $('rtRdcClose')?.addEventListener('click',()=>closeRegionalDecisionCenter());
@@ -991,7 +992,8 @@ function renderRegionalDecisionCenter(){
   $('rtRdcUpPct').textContent=breadth.upPct+'%';$('rtRdcFlatPct').textContent=breadth.flatPct+'%';$('rtRdcDownPct').textContent=breadth.downPct+'%';
   $('rtRdcSectorTitle').textContent=key==='europe'?'Sectores (STOXX 600)':'Mercados líderes';
   $('rtRdcMarketTiles').innerHTML=rdcSectorTiles(key);
-  $('rtRdcIndexRows').innerHTML=(region.ids||[]).map(id=>{
+  const rdcIndexIds=key==='europe'?['dax','ftse','cac','ibex','ftsemib','stoxx']:(region.ids||[]);
+  $('rtRdcIndexRows').innerHTML=rdcIndexIds.map(id=>{
     const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day'),bars=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
     return `<div class="rdc-index-row"><b>${a?.flag||''} ${esc(a?.detailName||a?.name||id)}</b><span>${rdcDisplayLast(id,a,m)}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(bars)}</span></div>`;
   }).join('');
