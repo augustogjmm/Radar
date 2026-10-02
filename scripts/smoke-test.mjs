@@ -26,12 +26,28 @@ const hourly=makeBars(520,100,0.025,3600);
 const bymaPayload=bars=>({s:'ok',t:bars.map(x=>x.time),o:bars.map(x=>x.open),h:bars.map(x=>x.high),l:bars.map(x=>x.low),c:bars.map(x=>x.close),v:bars.map(x=>x.volume)});
 const yahooPayload=bars=>({chart:{result:[{timestamp:bars.map(x=>x.time),meta:{regularMarketPrice:bars.at(-1).close,chartPreviousClose:bars.at(-2).close},indicators:{quote:[{open:bars.map(x=>x.open),high:bars.map(x=>x.high),low:bars.map(x=>x.low),close:bars.map(x=>x.close),volume:bars.map(x=>x.volume)}]}}],error:null}});
 const binancePayload=bars=>bars.map(x=>[x.time*1000,String(x.open),String(x.high),String(x.low),String(x.close),String(x.volume),x.time*1000+3599999,'0',100,'0','0','0']);
+const listItem=(symbol,price,volume,extra={})=>({symbol,trade:price,closingPrice:price,volume,tradeVolume:volume,volumeAmount:price*volume,settlementType:'2',denominationCcy:'ARS',source:'QA fixture',...extra});
+const bymaEquitiesFixture={source:'QA fixture',items:[listItem('GGAL',7200,250000),listItem('YPFD',58200,180000),listItem('PAMP',5100,160000),listItem('VIST',18900,140000),listItem('TGSU2',6400,120000)]};
+const bymaCedearsFixture={source:'QA fixture',items:[listItem('AAPL',42000,350000),listItem('NVDA',39800,330000),listItem('MELI',29800,210000),listItem('MSFT',36000,190000),listItem('AMZN',31000,170000)]};
+const bymaFixedFixture={source:'QA fixture',items:[listItem('AL30',78.4,900000,{type:'bond',category:'Soberano'}),listItem('AE38',73.2,780000,{type:'bond',category:'Soberano'}),listItem('GD30',79.1,760000,{type:'bond',category:'Soberano'}),listItem('S31O6',101.5,650000,{type:'bond',category:'LECAP/BONCAP'})]};
+const yahooBatchPayload=u=>{
+  const bars=u.searchParams.get('interval')==='15m'?hourly:daily;
+  const symbols=(u.searchParams.get('symbols')||'').split(',').filter(Boolean);
+  return {source:'QA fixture',items:symbols.map((symbol,i)=>{
+    const shifted=bars.map((b,j)=>({...b,close:b.close+i*3,open:b.open+i*3,high:b.high+i*3,low:b.low+i*3}));
+    const last=shifted.at(-1).close,prev=shifted.at(-2).close;
+    return {symbol,ok:true,last,changePct:((last/prev)-1)*100,volume:shifted.at(-1).volume,bars:shifted,source:'QA fixture'};
+  })};
 
 await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
   if(u.origin!==new URL(base).origin)return route.continue();
   if(u.pathname==='/api/binance')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(binancePayload(hourly))});
   if(u.pathname==='/api/yahoo')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(yahooPayload(u.searchParams.get('interval')==='1wk'?daily:hourly))});
+  if(u.pathname==='/api/yahoo-batch')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(yahooBatchPayload(u))});
+  if(u.pathname==='/api/byma/equities')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaEquitiesFixture)});
+  if(u.pathname==='/api/byma/cedears')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaCedearsFixture)});
+  if(u.pathname==='/api/byma/fixed-income')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaFixedFixture)});
   if(u.pathname==='/api/byma/scan-history'||u.pathname==='/api/byma/history')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaPayload(daily))});
   return route.continue();
 });
