@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-1.6-live-sessions';
+const VERSION='golden-2.0-regional-decision-center';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -431,6 +431,7 @@ function tickClock(){
   if($('rtClockText'))$('rtClockText').textContent=t;
   if($('rtDateText'))$('rtDateText').textContent=d;
   renderSession(now);
+  if($('rtRegionalDecisionCenter')&&!$('rtRegionalDecisionCenter').hidden)renderRegionalDecisionCenter();
 }
 
 function mountDashboard(){
@@ -574,7 +575,7 @@ function bindDashboard(){
     qa('[data-rt-filter]').forEach(x=>x.classList.toggle('active',x===b));
     renderOpportunities();
   }));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('rtRegionDetail')?.classList.contains('is-expanded'))toggleRegionDetailExpanded(false)});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('rtRegionalDecisionCenter')&&!$('rtRegionalDecisionCenter').hidden)closeRegionalDecisionCenter()});
 }
 
 function sessionFlagSvg(code){
@@ -589,12 +590,261 @@ function sessionFlagSvg(code){
 }
 
 function toggleRegionDetailExpanded(force){
-  const card=$('rtRegionDetail'),btn=$('rtRegionOpen');if(!card)return;
-  const expand=typeof force==='boolean'?force:!card.classList.contains('is-expanded');
-  card.classList.toggle('is-expanded',expand);
-  document.body.classList.toggle('rt-detail-modal-open',expand);
-  if(btn)btn.textContent=expand?'Cerrar vista completa ×':'Abrir vista completa →';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>renderRegionDetail()));
+  const center=$('rtRegionalDecisionCenter');
+  const open=typeof force==='boolean'?force:!(center&&!center.hidden);
+  if(open)openRegionalDecisionCenter();else closeRegionalDecisionCenter();
+}
+
+const RDC_CITY_TZ={
+  northamerica:[['Nueva York','America/New_York'],['Chicago','America/Chicago'],['Toronto','America/Toronto']],
+  europe:[['Londres','Europe/London'],['Frankfurt','Europe/Berlin'],['París','Europe/Paris'],['Madrid','Europe/Madrid'],['Milán','Europe/Rome']],
+  asia:[['Tokio','Asia/Tokyo'],['Hong Kong','Asia/Hong_Kong'],['Shanghái','Asia/Shanghai']],
+  latam:[['Buenos Aires','America/Argentina/Buenos_Aires'],['São Paulo','America/Sao_Paulo'],['México','America/Mexico_City']],
+  oceania:[['Sídney','Australia/Sydney'],['Melbourne','Australia/Melbourne']]
+};
+
+function rdcRegionSessions(key,date=new Date()){
+  const defs={
+    northamerica:[{name:'Nueva York',tz:'America/New_York',open:9*3600+30*60,close:16*3600,asset:'sp500'}],
+    europe:[{name:'Londres',tz:'Europe/London',open:8*3600,close:16*3600+30*60,asset:'stoxx'}],
+    asia:[{name:'Tokio',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60,asset:'nikkei'}],
+    latam:[
+      {name:'Argentina',tz:'America/Argentina/Buenos_Aires',open:11*3600,close:17*3600,asset:'merval'},
+      {name:'Brasil',tz:'America/Sao_Paulo',open:10*3600,close:17*3600+55*60,asset:'bovespa'}
+    ],
+    oceania:[{name:'Sídney',tz:'Australia/Sydney',open:10*3600,close:16*3600,asset:'asx'}]
+  };
+  return (defs[key]||[]).map(x=>{
+    const p=zonedParts(date,x.tz),sec=p.h*3600+p.m*60+p.s;
+    const clock=p.day>=1&&p.day<=5&&sec>=x.open&&sec<x.close;
+    const fresh=sessionMarketFresh(x.asset,date);
+    const active=clock&&(fresh===true||(fresh===null&&state.lastUpdate===0));
+    return {...x,active,left:active?x.close-sec:NaN};
+  });
+}
+function rdcStatus(key,date=new Date()){
+  const active=rdcRegionSessions(key,date).filter(x=>x.active);
+  if(!active.length)return{active:false,label:'CERRADA',countdown:'—',sessions:[]};
+  const left=Math.min(...active.map(x=>x.left).filter(Number.isFinite));
+  return{active:true,label:'ABIERTA',countdown:shortCountdown(left,true),sessions:active};
+}
+function rdcTone(score){
+  if(score>.2)return{label:'Positivo',cls:'good'};
+  if(score<-.2)return{label:'Negativo',cls:'bad'};
+  return{label:'Neutral',cls:'warn'};
+}
+function rdcMomentum(key){
+  const d=regionChange(key,'day'),w=regionChange(key,'week');
+  const x=Number.isFinite(w)?w:d;
+  if(!Number.isFinite(x))return{label:'Sin datos',cls:'flat'};
+  if(x>.35)return{label:'Alcista',cls:'good'};
+  if(x<-.35)return{label:'Bajista',cls:'bad'};
+  return{label:'Lateral',cls:'warn'};
+}
+function rdcBreadth(key){
+  const vals=(REGIONS[key]?.ids||[]).map(id=>periodChange(get(id),'day')).filter(Number.isFinite);
+  const total=vals.length||1,up=vals.filter(v=>v>.03).length,down=vals.filter(v=>v<-.03).length,flat=vals.length-up-down;
+  return{up,down,flat,total,upPct:Math.round(up/total*100),downPct:Math.round(down/total*100),flatPct:Math.round(flat/total*100)};
+}
+function rdcDriverMeta(id,ch){
+  const defs={
+    vix:{polarity:-1,note:'Volatilidad global y apetito por riesgo.'},
+    tnx:{polarity:-1,note:'Condición financiera global y tasa de descuento.'},
+    dxy:{polarity:-1,note:'Fortaleza del dólar frente a activos de riesgo.'},
+    wti:{polarity:0,note:'Pulso de energía e inflación.'},
+    eem:{polarity:1,note:'Flujo hacia mercados emergentes.'},
+    bovespa:{polarity:1,note:'Referencia regional para activos latinoamericanos.'},
+    merval:{polarity:1,note:'Pulso directo del mercado argentino.'}
+  };
+  const d=defs[id]||{polarity:1,note:'Pulso principal del mercado regional.'};
+  let cls='warn',label='NEUTRAL';
+  if(Number.isFinite(ch)&&Math.abs(ch)>.03){
+    const favorable=d.polarity===0?null:(ch>0?1:-1)*d.polarity>0;
+    cls=favorable===null?'warn':favorable?'good':'bad';
+    label=favorable===null?'MIXTO':favorable?'POSITIVO':'PRESIÓN';
+  }
+  return{cls,label,note:d.note};
+}
+function rdcMarketRow(id){
+  const a=ASSET_BY_ID[id],m=get(id);if(!a||!m)return'';
+  const ch=periodChange(m,'day'),impact=rdcDriverMeta(id,ch),bars=(m.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+  return `<div class="rdc-driver-row">
+    <span class="rdc-driver-name"><i>${a.flag||'•'}</i><b>${esc(a.detailName||a.name)}</b></span>
+    <span class="rdc-driver-last">${Number.isFinite(m.last)?fmt(m.last,a.decimals):'s/d'}</span>
+    <span class="rdc-driver-change ${signClass(ch)}">${pct(ch)}</span>
+    <span class="rdc-impact ${impact.cls}">${impact.label}</span>
+    <span class="rdc-driver-note">${esc(impact.note)}</span>
+    <span class="rdc-driver-spark">${miniSpark(bars)}</span>
+  </div>`;
+}
+function rdcOpportunityRows(){
+  const rows=(state.opportunityLeaders||[]).slice().sort((a,b)=>{
+    const ad=opportunityDecision(a),bd=opportunityDecision(b),p={yes:4,near:3,watch:2,no:1};
+    return (p[bd.cls]||0)-(p[ad.cls]||0);
+  }).slice(0,6);
+  if(!rows.length)return'<div class="rdc-empty">Analizando activos argentinos…</div>';
+  return rows.map(r=>{
+    const market=opportunityMarket(r),bars=(market?.bars||extractBars(r)).map(x=>({close:num(x.close),volume:num(x.volume)})).filter(x=>Number.isFinite(x.close));
+    const price=num(market?.last??r?.price),ch=Number.isFinite(num(market?.changePct))?num(market.changePct):(bars.length>1&&bars.at(-2).close?(bars.at(-1).close/bars.at(-2).close-1)*100:NaN);
+    const trend=opportunityTrend(r),decision=opportunityDecision(r),symbol=String(r?.item?.symbol||'').toUpperCase();
+    return `<div class="rdc-asset-row" data-rdc-symbol="${esc(symbol)}" data-rdc-type="${esc(r?.item?.requestedType||r?.item?.type||'auto')}">
+      <b>${esc(TICKER_ALIAS[symbol]||symbol)}</b>
+      <span>${opportunityPrice(r,price)}</span>
+      <span class="${signClass(ch)}">${pct(ch)}</span>
+      <span class="rdc-mini">${miniSpark(bars.map(x=>x.close))}</span>
+      <span class="rdc-setup ${trend[1]||'good'}">${esc(trend[0])}</span>
+      <span class="rdc-comment">${esc(opportunitySetup(r))}</span>
+    </div>`;
+  }).join('');
+}
+function rdcTrafficCards(){
+  return [['Hoy','day'],['Semana','week'],['Mes','month']].map(([label,p])=>{
+    const score=scoreArgentina(p),s=trafficState(score);
+    return `<div class="rdc-impact-card ${s.key}">
+      <small>${label}</small><i class="rdc-light"></i><b>${s.label}</b><p>${esc(trafficNarrative(p,s))}</p>
+    </div>`;
+  }).join('');
+}
+function rdcChannels(){
+  const defs=[
+    ['VIX',get('vix'),-1,'Volatilidad global'],
+    ['US 10Y',get('tnx'),-1,'Tasas de EE.UU.'],
+    ['Brasil',get('bovespa'),1,'Bovespa'],
+    ['Emergentes',get('eem'),1,'EEM']
+  ];
+  return defs.map(([name,item,polarity,note])=>{
+    const ch=periodChange(item,'day'),favorable=Number.isFinite(ch)&&Math.abs(ch)>.03?((ch>0?1:-1)*polarity>0):null;
+    const cls=favorable===null?'flat':favorable?'good':'bad';
+    return `<div class="rdc-channel ${cls}"><i></i><span><b>${esc(name)}</b><small>${esc(note)}</small></span><strong>${pct(ch)}</strong></div>`;
+  }).join('');
+}
+function rdcEvents(key){
+  const ids=[...(REGIONS[key]?.ids||[]).slice(0,2),'vix','tnx','bovespa'];
+  const seen=new Set(),events=[];
+  for(const id of ids){
+    if(seen.has(id))continue;seen.add(id);
+    const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day');if(!a||!Number.isFinite(ch))continue;
+    const verb=ch>.03?'sube':ch<-.03?'cae':'permanece estable';
+    events.push(`<div class="rdc-event"><time>Ahora</time><i class="${signClass(ch)}"></i><span><b>${esc(a.name)} ${verb} ${pct(ch)}</b><small>${esc(rdcDriverMeta(id,ch).note)}</small></span></div>`);
+    if(events.length===4)break;
+  }
+  return events.join('')||'<div class="rdc-empty">Sin cambios relevantes con datos válidos.</div>';
+}
+function rdcCityClocks(key,date=new Date()){
+  return (RDC_CITY_TZ[key]||[]).map(([name,tz])=>{
+    const time=date.toLocaleTimeString('es-AR',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false});
+    return `<div class="rdc-city-clock"><i></i><span>${esc(name)}</span><b>${time}</b></div>`;
+  }).join('');
+}
+function renderRegionalCenterMap(key){
+  const source=q('#rtWorldMapHost svg'),host=$('rtRdcMapHost');if(!source||!host)return;
+  const clone=source.cloneNode(true);clone.removeAttribute('id');clone.classList.add('rdc-map-svg');
+  clone.setAttribute('viewBox',(REGION_VIEWS[key]||REGION_VIEWS.europe).join(' '));
+  clone.setAttribute('preserveAspectRatio','xMidYMid slice');
+  clone.querySelectorAll('.rt-country').forEach(p=>{
+    const match=p.dataset.region===key;
+    p.classList.toggle('rt-detail-focus',match);p.classList.toggle('rt-detail-dim',!match);
+  });
+  clone.querySelectorAll('.rt-market-marker').forEach(m=>m.remove());
+  clone.querySelector('#rtCountryLayer')?.insertAdjacentHTML('beforeend',marketMarkers(key));
+  host.replaceChildren(clone);
+}
+function mountRegionalDecisionCenter(){
+  if($('rtRegionalDecisionCenter'))return;
+  const el=document.createElement('section');el.id='rtRegionalDecisionCenter';el.className='rdc-shell';el.hidden=true;
+  el.innerHTML=`
+    <div class="rdc-hero">
+      <div class="rdc-region-id"><span id="rtRdcFlag">🌐</span><div><h1 id="rtRdcTitle">Región</h1><p>Centro de decisión regional</p></div></div>
+      <div class="rdc-open-state"><span id="rtRdcOpenBadge">—</span><small>CIERRE EN</small><b id="rtRdcCountdown">—</b></div>
+      <div id="rtRdcClocks" class="rdc-clocks"></div>
+      <button id="rtRdcClose" class="rdc-close" type="button">Cerrar ×</button>
+    </div>
+    <div class="rdc-kpis">
+      <article><small>Sentimiento regional</small><strong id="rtRdcSentiment">—</strong><span id="rtRdcSentimentNote">vs. cierre anterior</span></article>
+      <article><small>Amplitud de mercado</small><strong id="rtRdcBreadth">—</strong><span id="rtRdcBreadthNote">mercados de la región</span></article>
+      <article><small>Momentum</small><strong id="rtRdcMomentum">—</strong><span>Tendencia de corto plazo</span></article>
+      <article><small>Volatilidad global</small><strong id="rtRdcVolatility">—</strong><span id="rtRdcVolatilityNote">VIX</span></article>
+      <article class="risk"><small>Riesgo global</small><strong id="rtRdcRisk">—</strong><span>Índice de riesgo contextual</span></article>
+    </div>
+    <div class="rdc-main">
+      <section class="rdc-panel rdc-drivers">
+        <header><h2>Qué está moviendo <span id="rtRdcDriverRegion">la región</span> hoy</h2><small>Drivers ordenados por relevancia para el contexto</small></header>
+        <div class="rdc-driver-head"><span>ACTIVO / EVENTO</span><span>ÚLTIMO</span><span>VAR. %</span><span>IMPACTO</span><span>COMENTARIO</span><span>TENDENCIA</span></div>
+        <div id="rtRdcDrivers"></div>
+      </section>
+      <section class="rdc-panel rdc-internals">
+        <header><h2>Internals del mercado <span id="rtRdcInternalRegion"></span></h2><small>Amplitud, índices y mapa regional</small></header>
+        <div class="rdc-internal-top">
+          <div class="rdc-breadth-card"><b>Amplitud regional</b><div class="rdc-breadth-bar"><i id="rtRdcUpBar"></i><i id="rtRdcFlatBar"></i><i id="rtRdcDownBar"></i></div><div><span><strong id="rtRdcUpPct">—</strong> Alcistas</span><span><strong id="rtRdcFlatPct">—</strong> Sin cambio</span><span><strong id="rtRdcDownPct">—</strong> Bajistas</span></div></div>
+          <div class="rdc-market-tiles" id="rtRdcMarketTiles"></div>
+        </div>
+        <div class="rdc-internal-bottom">
+          <div class="rdc-index-list"><div class="rdc-index-head"><span>Principales índices</span><span>Último</span><span>Var. %</span><span>Tendencia</span></div><div id="rtRdcIndexRows"></div></div>
+          <div class="rdc-map-card"><div class="rdc-map-title">Mapa de mercado <span>(var. % hoy)</span></div><div id="rtRdcMapHost" class="rdc-map-host"></div></div>
+        </div>
+      </section>
+      <section class="rdc-panel rdc-arg-impact">
+        <header><h2>🇦🇷 Impacto sobre Argentina</h2><small>Transmisión del contexto internacional al mercado local</small></header>
+        <div class="rdc-arg-grid"><div id="rtRdcTraffic" class="rdc-impact-cards"></div><div><b class="rdc-subtitle">Canales de transmisión</b><div id="rtRdcChannels" class="rdc-channels"></div></div></div>
+      </section>
+      <section class="rdc-panel rdc-assets">
+        <header><h2>Activos a seguir <span>(relevantes para Argentina)</span></h2><small>Prioridad técnica y movimiento actual</small></header>
+        <div class="rdc-asset-head"><span>ACTIVO</span><span>ÚLTIMO</span><span>VAR. %</span><span>TENDENCIA</span><span>SETUP</span><span>COMENTARIO</span></div>
+        <div id="rtRdcAssets"></div>
+      </section>
+    </div>
+    <section class="rdc-timeline"><div class="rdc-timeline-title"><b>⚡ Qué cambió</b><small>Lectura del estado actual</small></div><div id="rtRdcEvents" class="rdc-events"></div></section>
+  `;
+  document.body.appendChild(el);
+  $('rtRdcClose')?.addEventListener('click',()=>closeRegionalDecisionCenter());
+  el.addEventListener('click',e=>{
+    const row=e.target.closest?.('.rdc-asset-row');if(!row)return;
+    closeRegionalDecisionCenter();
+    const input=$('symbol');if(input)input.value=row.dataset.rdcSymbol||'';
+    const type=$('assetType');if(type)type.value=row.dataset.rdcType||'auto';
+    $('analyzeBtn')?.click();
+  });
+}
+function renderRegionalDecisionCenter(){
+  const shell=$('rtRegionalDecisionCenter');if(!shell||shell.hidden)return;
+  const key=state.selectedRegion,region=REGIONS[key]||REGIONS.europe,ctx=contextInfo(),now=new Date(),status=rdcStatus(key,now);
+  $('rtRdcFlag').textContent=ctx.flag||REGION_FLAGS[key]||'🌐';$('rtRdcTitle').textContent=region.label;
+  const badge=$('rtRdcOpenBadge');badge.textContent=status.label;badge.className=status.active?'open':'closed';
+  $('rtRdcCountdown').textContent=status.countdown;$('rtRdcClocks').innerHTML=rdcCityClocks(key,now);
+
+  const sentiment=regionChange(key,'day'),breadth=rdcBreadth(key),mom=rdcMomentum(key),vix=get('vix'),vixCh=periodChange(vix,'day'),risk=riskModel();
+  $('rtRdcSentiment').textContent=pct(sentiment);$('rtRdcSentiment').className=signClass(sentiment);
+  $('rtRdcBreadth').textContent=`${breadth.upPct}% alcista`;$('rtRdcBreadth').className=breadth.upPct>breadth.downPct?'rt-up':breadth.downPct>breadth.upPct?'rt-down':'rt-flat';
+  $('rtRdcMomentum').textContent=mom.label;$('rtRdcMomentum').className=mom.cls;
+  $('rtRdcVolatility').textContent=Number.isFinite(vixCh)?(vixCh<-.03?'Baja':vixCh>.03?'Alta':'Estable'):'s/d';$('rtRdcVolatility').className=signClass(-vixCh);
+  $('rtRdcVolatilityNote').textContent=`VIX ${Number.isFinite(vix?.last)?fmt(vix.last,1):'—'} · ${pct(vixCh)}`;
+  $('rtRdcRisk').textContent=risk.label;$('rtRdcRisk').className=risk.label==='BAJO'?'good':risk.label==='ALTO'?'bad':'warn';
+
+  $('rtRdcDriverRegion').textContent=region.label;$('rtRdcInternalRegion').textContent=region.label.toLowerCase();
+  const driverIds=[...(region.ids||[]).slice(0,3),'vix','tnx','dxy','wti','eem'];
+  $('rtRdcDrivers').innerHTML=[...new Set(driverIds)].map(rdcMarketRow).filter(Boolean).slice(0,7).join('')||'<div class="rdc-empty">Sin drivers válidos.</div>';
+
+  $('rtRdcUpBar').style.width=breadth.upPct+'%';$('rtRdcFlatBar').style.width=breadth.flatPct+'%';$('rtRdcDownBar').style.width=breadth.downPct+'%';
+  $('rtRdcUpPct').textContent=breadth.upPct+'%';$('rtRdcFlatPct').textContent=breadth.flatPct+'%';$('rtRdcDownPct').textContent=breadth.downPct+'%';
+  const ids=(region.ids||[]).slice(0,5);
+  $('rtRdcMarketTiles').innerHTML=ids.map(id=>{const a=ASSET_BY_ID[id],ch=periodChange(get(id),'day');return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><span>${esc(a?.name||id)}</span></div>`}).join('');
+  $('rtRdcIndexRows').innerHTML=(region.ids||[]).map(id=>{
+    const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day'),bars=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+    return `<div class="rdc-index-row"><b>${a?.flag||''} ${esc(a?.detailName||a?.name||id)}</b><span>${Number.isFinite(m?.last)?fmt(m.last,a?.decimals??1):'s/d'}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(bars)}</span></div>`;
+  }).join('');
+  renderRegionalCenterMap(key);
+
+  $('rtRdcTraffic').innerHTML=rdcTrafficCards();$('rtRdcChannels').innerHTML=rdcChannels();$('rtRdcAssets').innerHTML=rdcOpportunityRows();$('rtRdcEvents').innerHTML=rdcEvents(key);
+}
+function openRegionalDecisionCenter(){
+  mountRegionalDecisionCenter();
+  const shell=$('rtRegionalDecisionCenter');if(!shell)return;
+  shell.hidden=false;document.body.classList.add('rt-rdc-open');
+  renderRegionalDecisionCenter();
+}
+function closeRegionalDecisionCenter(){
+  const shell=$('rtRegionalDecisionCenter');if(shell)shell.hidden=true;
+  document.body.classList.remove('rt-rdc-open');
 }
 
 function zonedParts(date,timeZone){
@@ -1329,6 +1579,7 @@ function renderOpportunities(){
 function renderAll(){
   if(!$('rtGlobalRadar'))return;
   renderMap();renderWatch();renderRisk();renderRegionDetail();renderTraffic();renderSignals();renderOpportunities();
+  if($('rtRegionalDecisionCenter')&&!$('rtRegionalDecisionCenter').hidden)renderRegionalDecisionCenter();
 }
 
 async function refresh(force=false){
