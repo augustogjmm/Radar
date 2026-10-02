@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-3.1-static-reference';
+const VERSION='golden-3.2-reference-complete';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -17,7 +17,7 @@ const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length
 
 const state={
   loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),fixedIncome:new Map(),
-  selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',worldMapLoaded:false,
+  selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',rdcPeriod:'day',worldMapLoaded:false,
   universes:{equities:[],cedears:[],fixed:[]},opportunityLeaders:[],
   sessionTimer:null,renderTimer:null
 };
@@ -642,6 +642,9 @@ function rdcTone(score){
   if(score<-.2)return{label:'Negativo',cls:'bad'};
   return{label:'Neutral',cls:'warn'};
 }
+function rdcPeriodLabel(){
+  return state.rdcPeriod==='month'?'1M':state.rdcPeriod==='week'?'5D':'1D';
+}
 function rdcMomentum(key){
   const d=regionChange(key,'day'),w=regionChange(key,'week');
   const x=Number.isFinite(w)?w:d;
@@ -730,13 +733,18 @@ function rdcOpportunityRows(){
   }).join('');
 }
 function rdcTrafficCards(){
+  const concise=(p,s)=>{
+    if(p==='day')return s.key==='positive'?'Mayor apetito por riesgo.':s.key==='negative'?'Menor apetito por riesgo.':'Señales globales mixtas.';
+    if(p==='week')return s.key==='positive'?'Continúa el flujo favorable.':s.key==='negative'?'Continúa la presión externa.':'La semana mantiene tono mixto.';
+    return s.key==='positive'?'Mejora el contexto de fondo.':s.key==='negative'?'Persiste presión global.':'Persiste volatilidad global.';
+  };
   return [['Hoy','day'],['Semana','week'],['Mes','month']].map(([label,p])=>{
     const score=scoreArgentina(p),s=trafficState(score);
     return `<div class="rdc-impact-card ${s.key}">
       <small>${label}</small>
       <i class="rdc-signal-ring" aria-hidden="true"><span></span></i>
       <b>${s.label}</b>
-      <p>${esc(trafficNarrative(p,s))}</p>
+      <p>${esc(concise(p,s))}</p>
     </div>`;
   }).join('');
 }
@@ -767,7 +775,10 @@ function rdcEvents(key){
     events.push(`<div class="rdc-event"><time>${rdcEventTime(m)}</time><i class="${signClass(ch)}"></i><span><b>${esc(a.name)} ${verb} ${pct(ch)}</b><small>${esc(rdcDriverMeta(id,ch).note)}</small></span></div>`);
     if(events.length===4)break;
   }
-  return events.join('')||'<div class="rdc-empty">Sin cambios relevantes con datos válidos.</div>';
+  while(events.length<4){
+    events.push(`<div class="rdc-event rdc-event-muted"><time>—</time><i></i><span><b>Sin nuevo cambio relevante</b><small>Esperando actualización válida del mercado.</small></span></div>`);
+  }
+  return events.join('');
 }
 function rdcCityClocks(key,date=new Date()){
   return (RDC_CITY_TZ[key]||[]).map(([name,tz])=>{
@@ -798,7 +809,7 @@ function rdcSectorTiles(key){
     ['euTech','Tecnología','▦'],['euBanks','Bancos','▥'],['euEnergy','Energía','◉'],['euLuxury','Lujo','◇'],['euIndustrials','Industriales','⚙']
   ]:(REGIONS[key]?.ids||[]).slice(0,5).map(id=>[id,ASSET_BY_ID[id]?.name||id,'◆']);
   return ids.map(([id,label,icon])=>{
-    const ch=periodChange(get(id),'day');
+    const ch=periodChange(get(id),state.rdcPeriod||'day');
     return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><i>${icon}</i><span>${esc(label)}</span><small>${Number.isFinite(ch)?'Hoy':'sin dato'}</small></div>`;
   }).join('');
 }
@@ -828,7 +839,7 @@ function renderRegionalCenterMap(key){
   host.replaceChildren(clone);
   const layer=document.createElement('div');layer.className='rdc-map-callouts';
   layer.innerHTML=rdcMapCalloutData(key).map(([label,id,x,y])=>{
-    const ch=periodChange(get(id),'day'),cls=signClass(ch);
+    const ch=periodChange(get(id),state.rdcPeriod||'day'),cls=signClass(ch);
     return `<div class="rdc-map-callout ${cls}" style="left:${x}%;top:${y}%"><span>${esc(label)}</span><b>${pct(ch)}</b></div>`;
   }).join('');
   host.appendChild(layer);
@@ -887,7 +898,7 @@ function mountRegionalDecisionCenter(){
         </div>
         <div class="rdc-internal-bottom">
           <div class="rdc-index-list"><div class="rdc-index-head"><span>Principales índices</span><span>Último</span><span>Var. %</span><span>Tendencia (30D)</span></div><div id="rtRdcIndexRows"></div></div>
-          <div class="rdc-map-card"><div class="rdc-map-title">Mapa de mercado <span>(var. % hoy)</span><b>1D&nbsp;&nbsp;5D&nbsp;&nbsp;1M</b></div><div id="rtRdcMapHost" class="rdc-map-host"></div></div>
+          <div class="rdc-map-card"><div class="rdc-map-title"><span><strong>Mapa de mercado</strong> <em id="rtRdcMapPeriodLabel">(var. % 1D)</em></span><div class="rdc-period-tabs"><button data-rdc-period="day" class="active">1D</button><button data-rdc-period="week">5D</button><button data-rdc-period="month">1M</button></div></div><div id="rtRdcMapHost" class="rdc-map-host"></div></div>
         </div>
       </section>
 
@@ -909,6 +920,10 @@ function mountRegionalDecisionCenter(){
   $('rtRdcClose')?.addEventListener('click',()=>closeRegionalDecisionCenter());
   el.querySelectorAll('[data-rdc-region]').forEach(btn=>btn.addEventListener('click',()=>{
     const key=btn.dataset.rdcRegion;if(!REGIONS[key])return;applyContext(key,null);renderRegionalDecisionCenter();
+  }));
+  el.querySelectorAll('[data-rdc-period]').forEach(btn=>btn.addEventListener('click',()=>{
+    state.rdcPeriod=btn.dataset.rdcPeriod||'day';
+    renderRegionalDecisionCenter();
   }));
   el.querySelectorAll('[data-rdc-action]').forEach(btn=>btn.addEventListener('click',()=>{
     const action=btn.dataset.rdcAction;
@@ -940,6 +955,8 @@ function renderRegionalDecisionCenter(){
   $('rtRdcClock').textContent=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
   $('rtRdcDate').textContent=new Intl.DateTimeFormat('es-AR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'America/Argentina/Buenos_Aires'}).format(now).replaceAll('.','');
   shell.querySelectorAll('[data-rdc-region]').forEach(b=>b.classList.toggle('active',b.dataset.rdcRegion===key));
+  shell.querySelectorAll('[data-rdc-period]').forEach(b=>b.classList.toggle('active',b.dataset.rdcPeriod===(state.rdcPeriod||'day')));
+  if($('rtRdcMapPeriodLabel'))$('rtRdcMapPeriodLabel').textContent=`(var. % ${rdcPeriodLabel()})`;
 
   const sentiment=regionChange(key,'day'),breadth=rdcBreadth(key),mom=rdcMomentum(key),vix=get('vix'),vstoxx=get('vstoxx');
   const volItem=key==='europe'&&Number.isFinite(vstoxx?.last)?vstoxx:vix,volId=volItem===vstoxx?'VSTOXX':'VIX',volCh=periodChange(volItem,'day'),risk=riskModel();
