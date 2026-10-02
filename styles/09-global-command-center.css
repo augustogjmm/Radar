@@ -1198,3 +1198,99 @@ body.rt-global-shell #rtGlobalRadar{
 .rt-opps-table tbody tr:has(.rt-opp-decision.near),
 .rt-opps-table tbody tr:has(.rt-opp-decision.watch){background:linear-gradient(90deg,rgba(136,104,24,.10),transparent 45%)!important}
 .rt-opps-table tbody tr:has(.rt-opp-decision.no){background:linear-gradient(90deg,rgba(144,32,47,.11),transparent 45%)!important}
+
+/* ===== SESSION + DETAIL FIX 1.5 ===== */
+/* Vector flags: do not depend on OS emoji rendering. */
+.rt-session-flag{
+  width:auto!important;min-width:36px;height:34px!important;
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:0!important;border:0!important;background:transparent!important;overflow:visible!important
+}
+.rt-flag-svg{
+  width:28px;height:18px;display:inline-flex;flex:0 0 28px;border-radius:2px;overflow:hidden;
+  border:1px solid rgba(207,231,244,.52);box-shadow:0 2px 7px rgba(0,0,0,.42),0 0 7px rgba(68,194,255,.10)
+}
+.rt-flag-svg svg{display:block;width:100%;height:100%}
+.rt-session-flag .rt-flag-svg+.rt-flag-svg{margin-left:-7px}
+.rt-flag-generic{align-items:center;justify-content:center;background:#0c2a3c;font-size:16px}
+
+/* Active sessions: New York and BYMA can coexist. */
+.rt-session-box{width:304px!important}
+.rt-session-box.multi-active .rt-session-copy b{font-size:14.5px!important;max-width:132px;white-space:normal;line-height:1.08}
+.rt-session-box.multi-active .rt-session-count{min-width:83px!important}
+.rt-session-box.multi-active .rt-session-count b{font-size:16px!important}
+.rt-session-copy small{font-size:10.5px!important}
+.rt-session-count small{font-size:8.5px!important}
+
+/* Previous sessions: readable close result instead of tiny next-open countdowns. */
+.rt-next-sessions{
+  width:174px!important;height:86px!important;right:-92px!important;
+  padding:7px 9px!important
+}
+.rt-next-sessions>b{font-size:10.5px!important;margin-bottom:5px!important;color:#c6d7e2!important}
+#rtNextSessionRows{gap:3px!important}
+#rtNextSessionRows>span{
+  grid-template-columns:20px minmax(0,1fr) 48px!important;
+  gap:5px!important;font-size:10px!important;min-height:17px!important
+}
+#rtNextSessionRows>span>i{display:flex!important;align-items:center!important;font-style:normal!important}
+#rtNextSessionRows .rt-flag-svg{width:18px;height:12px;flex-basis:18px;border-radius:1px}
+#rtNextSessionRows b{font-size:10.5px!important;color:#e1ebf1!important;font-weight:700!important;white-space:nowrap}
+#rtNextSessionRows small{font-size:10px!important;font-weight:850!important;text-align:right!important;font-variant-numeric:tabular-nums}
+#rtNextSessionRows small.rt-up{color:#42eb98!important}
+#rtNextSessionRows small.rt-down{color:#ff6273!important}
+#rtNextSessionRows small.rt-flat{color:#a9bdc9!important}
+
+/* Full regional view is a real workspace, not a no-op anchor. */
+body.rt-detail-modal-open{overflow:hidden!important}
+body.rt-detail-modal-open:after{
+  content:"";position:fixed;inset:0;z-index:1890;background:rgba(1,7,12,.82);backdrop-filter:blur(5px)
+}
+.rt-detail-card.is-expanded{
+  position:fixed!important;z-index:2000!important;
+  inset:72px 18px 18px 18px!important;
+  width:auto!important;height:auto!important;margin:0!important;
+  display:flex!important;flex-direction:column!important;
+  border:1px solid #2a6b8d!important;border-radius:9px!important;
+  background:linear-gradient(180deg,#071b29,#03101a)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 38px rgba(31,162,226,.13),inset 0 1px 0 rgba(255,255,255,.035)!important
+}
+.rt-detail-card.is-expanded .rt-section-title{
+  flex:0 0 54px!important;height:54px!important;padding:12px 16px 8px!important;
+  border-bottom:1px solid #1c455c
+}
+.rt-detail-card.is-expanded .rt-section-title h3{font-size:23px!important}
+.rt-detail-card.is-expanded .rt-section-title p{display:block!important;font-size:11px!important;color:#8fa8b8!important}
+.rt-detail-card.is-expanded #rtRegionOpen{
+  border:1px solid #2a79a6!important;border-radius:5px!important;
+  background:#0a3550!important;color:#dff6ff!important;padding:7px 11px!important;font-size:11px!important
+}
+.rt-detail-card.is-expanded .rt-detail-topgrid{
+  flex:1 1 auto!important;height:auto!important;min-height:0!important;
+  grid-template-columns:minmax(0,1.45fr) minmax(360px,.55fr)!important;
+  margin:12px 14px 10px!important;border-color:#24536d!important
+}
+.rt-detail-card.is-expanded .rt-detail-map{min-height:0!important}
+.rt-detail-card.is-expanded .rt-detail-list{padding:0 14px!important;overflow:auto!important}
+.rt-detail-card.is-expanded .rt-market-line{height:46px!important;grid-template-columns:minmax(150px,1fr) 110px 72px!important}
+.rt-detail-card.is-expanded .rt-market-line b{font-size:14px!important}
+.rt-detail-card.is-expanded .rt-market-line .price,
+.rt-detail-card.is-expanded .rt-market-line .chg{font-size:13px!important}
+.rt-detail-card.is-expanded .rt-detail-chart{
+  flex:0 0 220px!important;height:220px!important;min-height:220px!important;
+  margin:0 14px 14px!important;padding:0 12px 7px!important
+}
+.rt-detail-card.is-expanded .rt-detail-chart-head{height:34px!important;font-size:11px!important}
+.rt-detail-card.is-expanded .rt-detail-chart-head b{font-size:13px!important}
+.rt-detail-card.is-expanded .rt-detail-chart svg{height:158px!important;padding-left:28px!important}
+.rt-detail-card.is-expanded .rt-detail-yaxis{top:42px!important;bottom:24px!important}
+.rt-detail-card.is-expanded .rt-detail-yaxis span,
+.rt-detail-card.is-expanded .rt-detail-axis{font-size:9px!important}
+.rt-detail-card.is-expanded .rt-detail-axis{padding-left:30px!important}
+
+@media(max-width:1500px){
+  .rt-session-box{width:286px!important}
+  .rt-next-sessions{width:166px!important;right:-88px!important}
+  .rt-detail-card.is-expanded{inset:66px 10px 10px 10px!important}
+  .rt-detail-card.is-expanded .rt-detail-topgrid{grid-template-columns:minmax(0,1.3fr) minmax(315px,.7fr)!important}
+}
