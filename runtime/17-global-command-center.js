@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-1.5-session-detail-fix';
+const VERSION='golden-1.6-live-sessions';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -584,6 +584,7 @@ function sessionFlagSvg(code){
   if(code==='GB')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#012169"/><path d="M0 0 28 18M28 0 0 18" stroke="#fff" stroke-width="4"/><path d="M0 0 28 18M28 0 0 18" stroke="#c8102e" stroke-width="2"/><path d="M14 0v18M0 9h28" stroke="#fff" stroke-width="6"/><path d="M14 0v18M0 9h28" stroke="#c8102e" stroke-width="3"/></svg></span>`;
   if(code==='JP')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#fff"/><circle cx="14" cy="9" r="4.3" fill="#bc002d"/></svg></span>`;
   if(code==='AU')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#012169"/><rect width="12" height="8" fill="#012169"/><path d="M0 0 12 8M12 0 0 8" stroke="#fff" stroke-width="2.4"/><path d="M6 0v8M0 4h12" stroke="#fff" stroke-width="3"/><path d="M6 0v8M0 4h12" stroke="#c8102e" stroke-width="1.5"/><g fill="#fff"><circle cx="20" cy="5" r="1"/><circle cx="23" cy="10" r="1"/><circle cx="18" cy="13" r="1"/><circle cx="25" cy="15" r=".8"/></g></svg></span>`;
+  if(code==='BR')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#009b3a"/><path d="M14 2.2 25 9 14 15.8 3 9Z" fill="#ffdf00"/><circle cx="14" cy="9" r="4.1" fill="#002776"/><path d="M10.5 8.3c2.2-.8 4.9-.5 7 .8" fill="none" stroke="#fff" stroke-width=".7"/></svg></span>`;
   return `<span class="rt-flag-svg rt-flag-generic">🌐</span>`;
 }
 
@@ -614,42 +615,80 @@ function nextOpenDelta(now,session){
   }
   return (86400-sec)+(days-1)*86400+session.open;
 }
+function sessionMarketFresh(assetId,date){
+  const a=ASSET_BY_ID[assetId];if(!a)return null;
+  const intra=state.intraday.get(a.symbol),daily=state.markets.get(a.symbol);
+  const times=[
+    num(intra?.bars?.at(-1)?.time),
+    num(intra?.time),
+    num(daily?.time)
+  ].filter(Number.isFinite);
+  if(!times.length)return null;
+  const latest=Math.max(...times),now=Math.floor(date.getTime()/1000),age=now-latest;
+  // 15m quotes can be delayed; 55m still distinguishes a live market from a holiday/stale close.
+  return age>=-300&&age<=55*60;
+}
+function shortCountdown(seconds,withSeconds=false){
+  const left=Math.max(0,seconds),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
+  return withSeconds?[hh,mm,ss].map(x=>String(x).padStart(2,'0')).join(':'):`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
 function renderSession(date){
   if(!$('rtSessionName'))return;
   const sessions=[
     {name:'Nueva York',short:'NY',code:'US',tz:'America/New_York',open:9*3600+30*60,close:16*3600,asset:'sp500'},
-    {name:'Buenos Aires',short:'ARG',code:'AR',tz:'America/Argentina/Buenos_Aires',open:11*3600,close:17*3600,asset:'merval'},
-    {name:'Londres',short:'LON',code:'GB',tz:'Europe/London',open:8*3600,close:16*3600+30*60,asset:'ftse'},
+    {name:'Argentina',short:'ARG',code:'AR',tz:'America/Argentina/Buenos_Aires',open:11*3600,close:17*3600,asset:'merval'},
+    {name:'Brasil',short:'BR',code:'BR',tz:'America/Sao_Paulo',open:10*3600,close:17*3600+55*60,asset:'bovespa'},
+    {name:'Londres',short:'LON',code:'GB',tz:'Europe/London',open:8*3600,close:16*3600+30*60,asset:'stoxx'},
     {name:'Tokio',short:'TOK',code:'JP',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60,asset:'nikkei'},
     {name:'Sídney',short:'SYD',code:'AU',tz:'Australia/Sydney',open:10*3600,close:16*3600,asset:'asx'}
   ];
   const live=sessions.map(x=>{
-    const p=zonedParts(date,x.tz),sec=p.h*3600+p.m*60+p.s;
-    const active=p.day>=1&&p.day<=5&&sec>=x.open&&sec<x.close;
-    return{...x,sec,active,left:active?x.close-sec:NaN,change:periodChange(get(x.asset),'day')};
+    const p=zonedParts(date,x.tz),sec=p.h*3600+p.m*60+p.s,weekday=p.day>=1&&p.day<=5;
+    const clockActive=weekday&&sec>=x.open&&sec<x.close;
+    const fresh=sessionMarketFresh(x.asset,date);
+    // Before the first refresh we can only use the clock. Once market data exists,
+    // freshness prevents weekends/holidays/stale markets from being shown as open.
+    const active=clockActive&&(fresh===true||(fresh===null&&state.lastUpdate===0));
+    return{...x,sec,clockActive,fresh,active,left:active?x.close-sec:NaN,change:periodChange(get(x.asset),'day')};
   });
-  const active=live.filter(x=>x.active);
+  const active=live.filter(x=>x.active).sort((a,b)=>a.left-b.left);
   qa('.rt-market-marker').forEach(m=>m.classList.remove('active-session'));
   active.forEach(x=>qa(`.rt-market-marker[data-marker-asset="${x.asset}"]`).forEach(m=>m.classList.add('active-session')));
+
   const box=q('.rt-session-box');
   box?.classList.toggle('multi-active',active.length>1);
+  box?.classList.toggle('triple-active',active.length>=3);
+
   if(active.length){
     $('rtSessionName').textContent=active.map(x=>x.name).join(' · ');
-    $('rtSessionFlag').innerHTML=active.map(x=>sessionFlagSvg(x.code)).join('');
-    const left=Math.max(0,Math.min(...active.map(x=>x.left).filter(Number.isFinite))),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
-    $('rtSessionCountdown').textContent=[hh,mm,ss].map(x=>String(x).padStart(2,'0')).join(':');
+    $('rtSessionFlag').innerHTML=active.map(x=>`<span class="rt-active-flag" title="${esc(x.name)} · cierra en ${shortCountdown(x.left,true)}">${sessionFlagSvg(x.code)}</span>`).join('');
+    const countdown=$('rtSessionCountdown');
+    if(active.length===1){
+      countdown.innerHTML=shortCountdown(active[0].left,true);
+      countdown.classList.remove('multi');
+    }else{
+      countdown.classList.add('multi');
+      countdown.innerHTML=active.map(x=>`<span><em>${esc(x.short)}</em>${shortCountdown(x.left,false)}</span>`).join('');
+    }
+    const countLabel=q('.rt-session-count small');if(countLabel)countLabel.textContent=active.length===1?'Cierra en':'Cierran en';
   }else{
-    $('rtSessionName').textContent='Entre sesiones';$('rtSessionFlag').innerHTML=sessionFlagSvg('');$('rtSessionCountdown').textContent='—';
+    $('rtSessionName').textContent='Entre sesiones';
+    $('rtSessionFlag').innerHTML=sessionFlagSvg('');
+    $('rtSessionCountdown').classList.remove('multi');
+    $('rtSessionCountdown').textContent='—';
+    const countLabel=q('.rt-session-count small');if(countLabel)countLabel.textContent='Próxima apertura';
   }
+
   if($('rtNextSessionRows')){
-    const closed=live.filter(x=>!x.active).sort((a,b)=>['Londres','Tokio','Sídney','Nueva York','Buenos Aires'].indexOf(a.name)-['Londres','Tokio','Sídney','Nueva York','Buenos Aires'].indexOf(b.name)).slice(0,3);
+    const closed=live.filter(x=>!x.active)
+      .sort((a,b)=>nextOpenDelta(date,a)-nextOpenDelta(date,b))
+      .slice(0,3);
     $('rtNextSessionRows').innerHTML=closed.map(x=>{
       const cls=Number.isFinite(x.change)?x.change>.03?'rt-up':x.change<-.03?'rt-down':'rt-flat':'rt-flat';
-      return `<span class="rt-session-close-row"><i>${sessionFlagSvg(x.code)}</i><b>${x.name}</b><small class="${cls}">${pct(x.change)}</small></span>`;
+      return `<span class="rt-session-close-row"><i>${sessionFlagSvg(x.code)}</i><b>${esc(x.name)}</b><small class="${cls}">${pct(x.change)}</small></span>`;
     }).join('');
   }
 }
-
 async function fetchHistoryBars(symbol,signal){
   try{
     const r=await fetch(`/api/byma/history?symbol=${encodeURIComponent(symbol)}&days=180&tf=short&_=${Date.now()}`,{cache:'no-store',signal});
@@ -688,7 +727,7 @@ async function buildLocalOpportunityLeaders(signal){
 async function fetchBatch(force=false){
   const adrSymbols=['YPF','GGAL','VIST','PAM'];
   const symbols=[...new Set([...ASSETS.map(x=>x.symbol),...Object.values(OPPORTUNITY_MARKET_SYMBOL),...adrSymbols])];
-  const intradaySymbols=[...new Set(Object.values(REGIONS).map(r=>ASSET_BY_ID[r.focus]?.symbol).filter(Boolean))];
+  const intradaySymbols=[...new Set([...Object.values(REGIONS).map(r=>ASSET_BY_ID[r.focus]?.symbol),ASSET_BY_ID.bovespa?.symbol].filter(Boolean))];
   const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),45000);
   try{
     const stamp=Date.now(),fresh=force?'1':'0';
