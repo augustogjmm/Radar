@@ -1531,3 +1531,108 @@ body.rt-rdc-open{overflow:hidden!important}
   .rdc-index-head,.rdc-index-row{grid-template-columns:minmax(140px,1.2fr) 68px 55px 92px!important}
   .rdc-asset-head,.rdc-asset-row{grid-template-columns:72px 78px 53px 92px 65px minmax(105px,1fr)!important}
 }
+
+/* ===== STATIC APPROVED REFERENCE 3.1 ===== */
+/* The approved reference is stable. No continuous blinking, floating, pulsing or sweeping. */
+.rdc-shell *, .rdc-shell *::before, .rdc-shell *::after{
+  animation:none!important;
+}
+.rdc-shell{scroll-behavior:auto!important}
+.rdc-live i,.rdc-city-clock i,.rdc-open-state>span.open{
+  opacity:1!important;filter:none!important
+}
+
+/* Bring the material language back to the approved clean terminal: crisp glass, restrained glow. */
+.rdc-panel,.rdc-kpi-card,.rdc-timeline{
+  background:linear-gradient(180deg,#061b29 0%,#03121c 100%)!important;
+  border:1px solid #15516f!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.30),inset 0 1px 0 rgba(206,240,255,.025)!important
+}
+.rdc-panel:before,.rdc-kpi-card:before{opacity:.34!important}
+.rdc-kpi-card:after,.rdc-panel:after{opacity:.45!important}
+.rdc-kpi-icon{filter:drop-shadow(0 0 5px rgba(30,211,255,.42))!important}
+.rdc-kpi-copy strong{text-shadow:0 0 8px rgba(55,236,153,.16)!important}
+.rdc-kpi-card.risk .rdc-kpi-copy strong{text-shadow:0 0 8px rgba(255,210,70,.14)!important}
+.rdc-kpi-spark .rt-spark .spark-line,.rdc-driver-spark .spark-line,.rdc-index-row .spark-line,.rdc-asset-row .spark-line{
+  stroke-dasharray:none!important;
+  filter:none!important
+}
+
+/* Exact screenshot-like single traffic light lens. */
+.rdc-impact-card{
+  padding:10px 9px!important;
+  background:linear-gradient(180deg,#061c2a,#04131d)!important;
+  border-color:#164b65!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important
+}
+.rdc-impact-card:before{opacity:.25!important}
+.rdc-signal-bezel,.rdc-signal-glass{display:none!important}
+.rdc-signal-ring{
+  --signal:#a3b2bb;
+  position:relative;display:block;width:36px;height:36px;margin:9px 0 8px;border-radius:50%;
+  border:3px solid color-mix(in srgb,var(--signal) 78%,#fff 22%);
+  background:
+    radial-gradient(circle at 36% 31%,rgba(255,255,255,.28),transparent 23%),
+    radial-gradient(circle,var(--signal) 0 38%,color-mix(in srgb,var(--signal) 62%,#061017 38%) 64%,#041019 67%);
+  box-shadow:
+    0 0 0 2px #0b2833,
+    0 0 8px color-mix(in srgb,var(--signal) 62%,transparent),
+    inset 0 0 8px rgba(255,255,255,.13)
+}
+.rdc-impact-card.positive .rdc-signal-ring{--signal:#25e98d}
+.rdc-impact-card.neutral .rdc-signal-ring{--signal:#ffd250}
+.rdc-impact-card.negative .rdc-signal-ring{--signal:#ff586a}
+.rdc-signal-ring span{position:absolute;inset:7px;border-radius:50%;border:1px solid rgba(255,255,255,.16)}
+.rdc-impact-card>b{
+  left:57px!important;top:47px!important;
+  font-size:7.5px!important;padding:3px 7px!important
+}
+.rdc-impact-card>p{margin-top:3px!important;color:#a9bcc7!important}
+.rdc-impact-card>small{font-size:10px!important;color:#e0eaf0!important}
+
+/* Transmission bullets exactly like the agreed reference. */
+.rdc-channels{padding-top:1px!important}
+.rdc-channel{
+  grid-template-columns:19px minmax(0,1fr) 54px!important;
+  height:30px!important;border-top:0!important;gap:7px!important
+}
+.rdc-channel>i{
+  width:17px!important;height:17px!important;display:grid!important;place-items:center!important;
+  border-radius:50%!important;font-style:normal!important;font-size:9px!important;font-weight:900!important;
+  color:#051710!important;background:#28e992!important;
+  box-shadow:0 0 8px rgba(40,233,146,.35)!important
+}
+.rdc-channel.bad>i{background:#ff596b!important;color:#25070b!important;box-shadow:none!important}
+.rdc-channel.flat>i{background:#7f98a6!important;color:#061018!important;box-shadow:none!important}
+.rdc-channel span b{font-size:8.8px!important;font-weight:650!important;color:#cad9e1!important}
+.rdc-channel span small{display:none!important}
+.rdc-channel strong{font-size:8.7px!important;font-weight:850!important}
+
+/* Sector row is the exact five agreed categories. */
+.rdc-market-tiles>div{transform:none!important}
+.rdc-market-tiles>div small{display:none!important}
+.rdc-market-tiles>div i{filter:none!important}
+.rdc-market-tiles>div.rt-up{background:linear-gradient(180deg,rgba(6,72,48,.84),rgba(4,30,23,.94))!important}
+.rdc-market-tiles>div.rt-down{background:linear-gradient(180deg,rgba(74,22,30,.87),rgba(35,11,16,.95))!important}
+
+/* Target map is luminous but static. */
+.rdc-map-svg{filter:saturate(1.18) contrast(1.12) brightness(.93)!important}
+.rdc-map-svg #rtHeatGlowLayer{opacity:.55!important;filter:blur(7px)!important}
+.rdc-map-callout{transform:translate(-50%,-50%)!important;filter:none!important}
+.rdc-map-callout.rt-up{box-shadow:0 6px 15px rgba(0,0,0,.38),0 0 8px rgba(35,225,137,.08),inset 0 1px 0 rgba(190,255,220,.06)!important}
+.rdc-map-callout:after{opacity:.7!important}
+
+/* Fixed approved asset table presentation. */
+.rdc-asset-row>b{display:flex!important;align-items:center!important;gap:5px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.rdc-asset-flag{font-style:normal;font-size:10px;flex:0 0 auto}
+.rdc-asset-row .rdc-comment{font-size:8px!important}
+.rdc-setup.good{border:1px solid #178a59!important;background:#0b4931!important;color:#61eca5!important}
+.rdc-setup.warn{border:1px solid #526873!important;background:#26343d!important;color:#bdcbd3!important}
+.rdc-setup.bad{border:1px solid #933747!important;background:#4b151f!important;color:#ff8995!important}
+
+/* No pseudo sweep across the event strip. */
+.rdc-timeline:after{display:none!important}
+
+/* Keep only functional data changes; transitions are short and non-flashing. */
+.rdc-shell .rdc-breadth-bar i{transition:width .28s ease!important}
+.rdc-shell button,.rdc-shell .rdc-asset-row{transition:background-color .14s ease,border-color .14s ease,color .14s ease!important}
