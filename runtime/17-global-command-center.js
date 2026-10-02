@@ -188,12 +188,12 @@ async function loadWorldMap(){
               <feComponentTransfer in="mono"><feFuncA type="table" tableValues="0 .04 .11 .18"/></feComponentTransfer>
             </filter>`);
           if(!defs.querySelector('#rtToneStrongUp')){
-            defs.insertAdjacentHTML('beforeend',\`
+            defs.insertAdjacentHTML('beforeend',`
               <linearGradient id="rtToneStrongUp" x1="0" y1="0" x2="0.92" y2="1"><stop offset="0%" stop-color="#6dffc0"/><stop offset="27%" stop-color="#16dc78"/><stop offset="68%" stop-color="#079954"/><stop offset="100%" stop-color="#043923"/></linearGradient>
               <linearGradient id="rtToneModUp" x1="0" y1="0" x2="0.9" y2="1"><stop offset="0%" stop-color="#83eab1"/><stop offset="34%" stop-color="#3fc97c"/><stop offset="100%" stop-color="#155b3b"/></linearGradient>
               <linearGradient id="rtToneNeutral" x1="0" y1="0" x2="0.9" y2="1"><stop offset="0%" stop-color="#7f98a7"/><stop offset="42%" stop-color="#486575"/><stop offset="100%" stop-color="#203746"/></linearGradient>
               <linearGradient id="rtToneModDown" x1="0" y1="0" x2="0.9" y2="1"><stop offset="0%" stop-color="#ff9b83"/><stop offset="35%" stop-color="#ef5944"/><stop offset="100%" stop-color="#792423"/></linearGradient>
-              <linearGradient id="rtToneStrongDown" x1="0" y1="0" x2="0.9" y2="1"><stop offset="0%" stop-color="#ff8f9d"/><stop offset="31%" stop-color="#ef334a"/><stop offset="72%" stop-color="#a8152d"/><stop offset="100%" stop-color="#500b1a"/></linearGradient>\`);
+              <linearGradient id="rtToneStrongDown" x1="0" y1="0" x2="0.9" y2="1"><stop offset="0%" stop-color="#ff8f9d"/><stop offset="31%" stop-color="#ef334a"/><stop offset="72%" stop-color="#a8152d"/><stop offset="100%" stop-color="#500b1a"/></linearGradient>`);
           }
           const ocean=document.createElementNS('http://www.w3.org/2000/svg','rect');
           ocean.id='rtOceanTexture';
