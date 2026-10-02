@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-3.0-approved-screen-lock';
+const VERSION='golden-3.1-static-reference';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -39,7 +39,7 @@ const ASSETS=[
   {id:'euTech',symbol:'^SX8P',name:'Tecnología',region:'europe-sector',flag:'▦',decimals:1},
   {id:'euBanks',symbol:'^SX7P',name:'Bancos',region:'europe-sector',flag:'▥',decimals:1},
   {id:'euEnergy',symbol:'^SXEP',name:'Energía',region:'europe-sector',flag:'◉',decimals:1},
-  {id:'euHealth',symbol:'^SXDP',name:'Salud',region:'europe-sector',flag:'♥',decimals:1},
+  {id:'euLuxury',symbol:'^SXQP',name:'Lujo',region:'europe-sector',flag:'◇',decimals:1},
   {id:'euIndustrials',symbol:'^SXNP',name:'Industriales',region:'europe-sector',flag:'⚙',decimals:1},
 
   {id:'dax',symbol:'^GDAXI',name:'DAX',detailName:'DAX (Alemania)',region:'europe',flag:'🇩🇪',decimals:1},
@@ -696,22 +696,36 @@ function rdcMarketRow(id){
   </div>`;
 }
 function rdcOpportunityRows(){
-  const rows=(state.opportunityLeaders||[]).slice().sort((a,b)=>{
-    const ad=opportunityDecision(a),bd=opportunityDecision(b),p={yes:4,near:3,watch:2,no:1};
-    return (p[bd.cls]||0)-(p[ad.cls]||0);
-  }).slice(0,6);
-  if(!rows.length)return'<div class="rdc-empty">Analizando activos argentinos…</div>';
-  return rows.map(r=>{
-    const market=opportunityMarket(r),bars=(market?.bars||extractBars(r)).map(x=>({close:num(x.close),volume:num(x.volume)})).filter(x=>Number.isFinite(x.close));
-    const price=num(market?.last??r?.price),ch=Number.isFinite(num(market?.changePct))?num(market.changePct):(bars.length>1&&bars.at(-2).close?(bars.at(-1).close/bars.at(-2).close-1)*100:NaN);
-    const trend=opportunityTrend(r),decision=opportunityDecision(r),symbol=String(r?.item?.symbol||'').toUpperCase();
-    return `<div class="rdc-asset-row" data-rdc-symbol="${esc(symbol)}" data-rdc-type="${esc(r?.item?.requestedType||r?.item?.type||'auto')}">
-      <b>${esc(TICKER_ALIAS[symbol]||symbol)}</b>
-      <span>${opportunityPrice(r,price)}</span>
+  const specs=[
+    {symbol:'GGAL',label:'GGAL (ADR)',market:'GGAL',type:'adr',flag:'🇦🇷'},
+    {symbol:'YPFD',label:'YPF (ADR)',market:'YPF',type:'adr',flag:'🇦🇷'},
+    {symbol:'PAMP',label:'PAMP (ADR)',market:'PAM',type:'adr',flag:'🇦🇷'},
+    {symbol:'AE38',label:'AE38 (Bono 2038)',fixed:'AE38D',type:'argbond',flag:'🇦🇷'},
+    {symbol:'AL30',label:'AL30 (Bono 2030)',fixed:'AL30D',type:'argbond',flag:'🇦🇷'},
+    {symbol:'SPY',label:'SPY (CEDEAR)',market:'SPY',type:'cedear',flag:'🇺🇸'}
+  ];
+  const leaderBySymbol=new Map((state.opportunityLeaders||[]).map(r=>[String(r?.item?.symbol||'').toUpperCase(),r]));
+  return specs.map(spec=>{
+    const leader=leaderBySymbol.get(spec.symbol);
+    const market=spec.fixed?state.fixedIncome.get(spec.fixed):state.markets.get(spec.market);
+    const bars=(market?.bars||leader?.marketData?.bars||[]).map(x=>({close:num(x.close),volume:num(x.volume)})).filter(x=>Number.isFinite(x.close));
+    const price=num(market?.last??market?.trade??market?.closingPrice??leader?.marketData?.last);
+    const ch=Number.isFinite(num(market?.changePct))?num(market.changePct):(bars.length>1&&bars.at(-2).close?((bars.at(-1).close/bars.at(-2).close)-1)*100:NaN);
+    let trend='Neutral',trendCls='warn';
+    if(bars.length>5){
+      const first=bars[Math.max(0,bars.length-20)]?.close,last=bars.at(-1)?.close;
+      const perf=first&&last?((last/first)-1)*100:0;
+      if(perf>1){trend='Alcista';trendCls='good'}else if(perf<-1){trend='Bajista';trendCls='bad'}
+    }else if(Number.isFinite(ch)){if(ch>.25){trend='Alcista';trendCls='good'}else if(ch<-.25){trend='Bajista';trendCls='bad'}}
+    const setup=leader?opportunitySetup(leader):(trend==='Alcista'?'Seguimiento alcista':trend==='Bajista'?'Presión bajista':'Zona de definición');
+    const priceText=!Number.isFinite(price)?'s/d':spec.type==='adr'?'US$ '+fmt(price,2):spec.type==='cedear'?'ARS '+fmt(price,price>=1000?0:2):'US$ '+fmt(price,2);
+    return `<div class="rdc-asset-row" data-rdc-symbol="${spec.symbol}" data-rdc-type="${spec.type}">
+      <b><i class="rdc-asset-flag">${spec.flag}</i>${esc(spec.label)}</b>
+      <span>${priceText}</span>
       <span class="${signClass(ch)}">${pct(ch)}</span>
       <span class="rdc-mini">${miniSpark(bars.map(x=>x.close))}</span>
-      <span class="rdc-setup ${trend[1]||'good'}">${esc(trend[0])}</span>
-      <span class="rdc-comment">${esc(opportunitySetup(r))}</span>
+      <span class="rdc-setup ${trendCls}">${trend.toUpperCase()}</span>
+      <span class="rdc-comment">${esc(setup)}</span>
     </div>`;
   }).join('');
 }
@@ -720,24 +734,23 @@ function rdcTrafficCards(){
     const score=scoreArgentina(p),s=trafficState(score);
     return `<div class="rdc-impact-card ${s.key}">
       <small>${label}</small>
-      <div class="rdc-signal-bezel" aria-hidden="true"><span class="rdc-signal-glass"></span></div>
+      <i class="rdc-signal-ring" aria-hidden="true"><span></span></i>
       <b>${s.label}</b>
       <p>${esc(trafficNarrative(p,s))}</p>
     </div>`;
   }).join('');
 }
 function rdcChannels(){
-  const defs=[
-    ['VIX',get('vix'),-1,'Volatilidad global'],
-    ['US 10Y',get('tnx'),-1,'Tasas de EE.UU.'],
-    ['Brasil',get('bovespa'),1,'Bovespa'],
-    ['Emergentes',get('eem'),1,'EEM']
+  const vixCh=periodChange(get('vix'),'day'),tnxCh=periodChange(get('tnx'),'day'),brCh=periodChange(get('bovespa'),'day');
+  const adrIds=['GGAL','YPF','PAM'],adrChanges=adrIds.map(sym=>periodChange(state.markets.get(sym),'day')).filter(Number.isFinite);
+  const adrAvg=adrChanges.length?adrChanges.reduce((a,b)=>a+b,0)/adrChanges.length:NaN;
+  const rows=[
+    [vixCh<-.03?'good':vixCh>.03?'bad':'flat',`VIX ${vixCh<-.03?'cede y mejora':'se mantiene'} el sentimiento global`,pct(vixCh)],
+    [tnxCh<-.03?'good':tnxCh>.03?'bad':'flat',`Tasas de EE.UU. ${tnxCh<-.03?'aflojan':'sin alivio claro'}`,pct(tnxCh)],
+    [brCh>.03?'good':brCh<-.03?'bad':'flat',`Brasil ${brCh>.03?'acompaña con suba':'marca un tono mixto'}`,pct(brCh)],
+    [adrAvg>.03?'good':adrAvg<-.03?'bad':'flat',`ADR argentinos con sesgo ${adrAvg>.03?'positivo':adrAvg<-.03?'negativo':'neutral'}`,pct(adrAvg)]
   ];
-  return defs.map(([name,item,polarity,note])=>{
-    const ch=periodChange(item,'day'),favorable=Number.isFinite(ch)&&Math.abs(ch)>.03?((ch>0?1:-1)*polarity>0):null;
-    const cls=favorable===null?'flat':favorable?'good':'bad';
-    return `<div class="rdc-channel ${cls}"><i></i><span><b>${esc(name)}</b><small>${esc(note)}</small></span><strong>${pct(ch)}</strong></div>`;
-  }).join('');
+  return rows.map(([cls,text,value])=>`<div class="rdc-channel ${cls}"><i>✓</i><span><b>${esc(text)}</b></span><strong>${value}</strong></div>`).join('');
 }
 function rdcEventTime(m){
   const ts=num(m?.bars?.at(-1)?.time??m?.time);
@@ -782,7 +795,7 @@ function rdcKpiIcon(kind){
 }
 function rdcSectorTiles(key){
   const ids=key==='europe'?[
-    ['euTech','Tecnología','▦'],['euBanks','Bancos','▥'],['euEnergy','Energía','◉'],['euHealth','Salud','♥'],['euIndustrials','Industriales','⚙']
+    ['euTech','Tecnología','▦'],['euBanks','Bancos','▥'],['euEnergy','Energía','◉'],['euLuxury','Lujo','◇'],['euIndustrials','Industriales','⚙']
   ]:(REGIONS[key]?.ids||[]).slice(0,5).map(id=>[id,ASSET_BY_ID[id]?.name||id,'◆']);
   return ids.map(([id,label,icon])=>{
     const ch=periodChange(get(id),'day');
@@ -950,12 +963,12 @@ function renderRegionalDecisionCenter(){
 
   $('rtRdcDriverRegion').textContent=region.label;$('rtRdcInternalRegion').textContent=region.label.toLowerCase();
   const driverIds=key==='europe'
-    ?['dax','stoxx','eurusd','bund10','vstoxx','brent','tnx']
+    ?['dax','stoxx','eurusd','bund10','vix','brent','tnx']
     :[...(region.ids||[]).slice(0,3),'vix','tnx','dxy','wti','eem'];
   $('rtRdcDrivers').innerHTML=[...new Set(driverIds)].map(rdcMarketRow).filter(Boolean).slice(0,7).join('')||'<div class="rdc-empty">Sin drivers válidos.</div>';
   const missingDrivers=7-qa('#rtRdcDrivers .rdc-driver-row').length;
   if(key==='europe'&&missingDrivers>0){
-    const fallback=['dax','stoxx','eurusd','bund10','vstoxx','brent','tnx'];
+    const fallback=['dax','stoxx','eurusd','bund10','vix','brent','tnx'];
     $('rtRdcDrivers').innerHTML=fallback.map(rdcMarketRow).join('');
   }
 
@@ -970,13 +983,12 @@ function renderRegionalDecisionCenter(){
   renderRegionalCenterMap(key);
 
   $('rtRdcTraffic').innerHTML=rdcTrafficCards();$('rtRdcChannels').innerHTML=rdcChannels();$('rtRdcAssets').innerHTML=rdcOpportunityRows();$('rtRdcEvents').innerHTML=rdcEvents(key);
-  shell.classList.remove('rdc-data-pulse');void shell.offsetWidth;shell.classList.add('rdc-data-pulse');
+
 }
 function openRegionalDecisionCenter(){
   mountRegionalDecisionCenter();
   const shell=$('rtRegionalDecisionCenter');if(!shell)return;
   shell.hidden=false;document.body.classList.add('rt-rdc-open');
-  shell.classList.remove('rdc-enter');void shell.offsetWidth;shell.classList.add('rdc-enter');
   renderRegionalDecisionCenter();
 }
 function closeRegionalDecisionCenter(){
