@@ -1934,3 +1934,19 @@ body.rt-rdc-open{overflow:hidden!important}
 .rdc-asset-head{font-size:8.3px!important}.rdc-asset-row{font-size:10px!important;border-bottom-color:#0b425a!important}.rdc-asset-row>b{font-size:10.5px!important}.rdc-assets .rdc-comment{font-size:9.5px!important}.rdc-setup{font-size:8px!important;min-width:78px;text-align:center}
 .rdc-timeline-title b{display:flex!important;align-items:center!important;gap:10px!important;font-size:18px!important}.rdc-bolt{font-size:34px!important;line-height:.8!important;color:#2bdcff!important;text-shadow:0 0 10px rgba(43,220,255,.32)}.rdc-event time{font-size:9px!important}.rdc-event span b{font-size:10px!important}.rdc-event span small{font-size:8px!important}
 .rdc-shell,.rdc-shell *,.rdc-shell *::before,.rdc-shell *::after{animation:none!important}
+
+/* ===== REFERENCE FIT 4.2A ===== */
+.rdc-main{grid-template-rows:389px 207px!important;gap:7px!important}
+.rdc-internal-grid{height:343px!important;grid-template-rows:110px 226px!important}
+.rdc-arg-grid{height:161px!important}
+.rdc-asset-head{height:24px!important}
+.rdc-asset-row{height:22.5px!important}
+.rdc-timeline{height:58px!important;margin-top:7px!important}
+.rdc-timeline-title{padding:7px 12px!important}
+.rdc-event{padding:5px 9px!important}
+.rdc-brand-mark{width:49px!important;height:49px!important}
+.rdc-brand-mark svg{width:46px!important;height:46px!important}
+.rdc-brand b{font-size:23px!important}
+.rdc-nav button{font-size:11.5px!important}
+.rdc-search input{font-size:11px!important}
+.rdc-topclock b{font-size:21px!important}
