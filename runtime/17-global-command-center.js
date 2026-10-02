@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='reference-5.0-objective-lock';
+const VERSION='reference-5.1-functional-lock';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -17,7 +17,7 @@ const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length
 
 const state={
   loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),fixedIncome:new Map(),
-  selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',worldMapLoaded:false,
+  selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',readingPeriod:'day',worldMapLoaded:false,
   universes:{equities:[],cedears:[],fixed:[]},opportunityLeaders:[],
   sessionTimer:null,renderTimer:null
 };
@@ -418,7 +418,7 @@ function goHome(anchor){
   if(anchor)setTimeout(()=>$(anchor.slice(1))?.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 function setActiveForView(id){
-  const key=id==='homeViewBtn'?'global':id==='scannerViewBtn'?'screeners':id==='signalsViewBtn'?'reports':null;
+  const key=id==='homeViewBtn'?'global':id==='scannerViewBtn'?'screener':id==='signalsViewBtn'?'opportunities':null;
   qa('.rt-nav button').forEach(b=>b.classList.toggle('active',key&&b.dataset.rtNav===key));
 }
 
@@ -487,7 +487,7 @@ function mountDashboard(){
         <section id="rtArgentinaSignals" class="rt-card rt-reading-card">
           <div class="rt-reading-head">
             <h2>Lectura para Argentina</h2>
-            <div class="rt-reading-tabs"><button class="active">Hoy</button><button>Semana</button><button>Mes</button></div>
+            <div class="rt-reading-tabs"><button class="active" data-reading-period="day">Hoy</button><button data-reading-period="week">Semana</button><button data-reading-period="month">Mes</button></div>
           </div>
           <div class="rt-reading-gauge">
             <div class="rt-gauge-arc"></div>
@@ -553,6 +553,11 @@ function bindDashboard(){
   $('rtMoreOpps')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
   $('rtRefresh')?.addEventListener('click',()=>refresh(true));
   $('rtMapReset')?.addEventListener('click',()=>resetContext());
+  qa('[data-reading-period]').forEach(b=>b.addEventListener('click',()=>{
+    state.readingPeriod=b.dataset.readingPeriod||'day';
+    qa('[data-reading-period]').forEach(x=>x.classList.toggle('active',x===b));
+    renderArgentinaReading();
+  }));
   qa('[data-rt-filter]').forEach(b=>b.addEventListener('click',()=>{
     state.filter=b.dataset.rtFilter||'all';
     qa('[data-rt-filter]').forEach(x=>x.classList.toggle('active',x===b));
@@ -565,6 +570,25 @@ function zonedParts(date,timeZone){
   const o=Object.fromEntries(parts.map(x=>[x.type,x.value]));
   const dayIndex={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[o.weekday];
   return{day:dayIndex,h:Number(o.hour)%24,m:Number(o.minute),s:Number(o.second)};
+}
+function zonedCalendarParts(date,timeZone){
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+  return Object.fromEntries(p.map(x=>[x.type,x.value]));
+}
+function localWallTimeToUtc(year,month,day,hour,minute,timeZone){
+  const wanted=Date.UTC(Number(year),Number(month)-1,Number(day),hour,minute,0);
+  let guess=wanted;
+  for(let i=0;i<3;i++){
+    const p=zonedCalendarParts(new Date(guess),timeZone);
+    const actual=Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),Number(p.hour),Number(p.minute),0);
+    guess+=wanted-actual;
+  }
+  return new Date(guess);
+}
+function sessionWindowArg(date,session){
+  const p=zonedCalendarParts(date,session.tz),fmtArg=d=>d.toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false});
+  const oh=Math.floor(session.open/3600),om=Math.floor((session.open%3600)/60),ch=Math.floor(session.close/3600),cm=Math.floor((session.close%3600)/60);
+  return [fmtArg(localWallTimeToUtc(p.year,p.month,p.day,oh,om,session.tz)),fmtArg(localWallTimeToUtc(p.year,p.month,p.day,ch,cm,session.tz))];
 }
 function nextOpenDelta(now,session){
   const p=zonedParts(now,session.tz),sec=p.h*3600+p.m*60+p.s;
@@ -610,7 +634,7 @@ function renderSession(date){
   if(active){
     const duration=Math.max(1,active.close-active.open),elapsed=Math.max(0,active.sec-active.open);
     if($('rtSessionProgress'))$('rtSessionProgress').style.width=`${clamp(elapsed/duration*100,0,100)}%`;
-    if($('rtSessionWindow'))$('rtSessionWindow').textContent=`${String(Math.floor(active.open/3600)).padStart(2,'0')}:${String(Math.floor((active.open%3600)/60)).padStart(2,'0')} – ${String(Math.floor(active.close/3600)).padStart(2,'0')}:${String(Math.floor((active.close%3600)/60)).padStart(2,'0')} (local)`;
+    if($('rtSessionWindow')){const [ao,ac]=sessionWindowArg(date,active);$('rtSessionWindow').textContent=`${ao} – ${ac} (ARG)`}
     if($('rtSessionStatus'))$('rtSessionStatus').textContent='En curso';
   }else{
     if($('rtSessionProgress'))$('rtSessionProgress').style.width='0%';
@@ -646,8 +670,8 @@ function renderMarketSessions(date){
     const active=weekday&&sec>=x.open&&sec<x.close,upcoming=weekday&&sec<x.open;
     const status=active?'En curso':upcoming?'Próxima':'Cerrada',ch=x.asset?periodChange(get(x.asset),'day'):regionChange(x.region,'day');
     const cls=Number.isFinite(ch)?ch>.03?'positive':ch<-.03?'negative':'neutral':'neutral';
-    const hh=s=>String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0');
-    return `<article class="rt-session-tile ${active?'active':''}"><div class="rt-session-tile-top"><i>${x.flag}</i><b>${x.label}</b><span class="${cls}"></span></div><small class="${active?'live':''}">${status}</small><div><em>${hh(x.open)} – ${hh(x.close)}</em><strong class="${signClass(ch)}">${pct(ch)}</strong></div></article>`;
+    const [argOpen,argClose]=sessionWindowArg(date,x);
+    return `<article class="rt-session-tile ${active?'active':''}"><div class="rt-session-tile-top"><i>${x.flag}</i><b>${x.label}</b><span class="${cls}"></span></div><small class="${active?'live':''}">${status}</small><div><em>${argOpen} – ${argClose}</em><strong class="${signClass(ch)}">${pct(ch)}</strong></div></article>`;
   }).join('');
 }
 function sideMarketRow(assetId,labelOverride=null){
@@ -687,19 +711,19 @@ function renderAlertsPanel(){
 }
 function renderArgentinaReading(){
   if(!$('rtArgentinaScore'))return;
-  const score=clamp(scoreArgentina('day'),-1,1),s=trafficState(score),angle=-78+(score+1)*78;
+  const period=state.readingPeriod||'day',score=clamp(scoreArgentina(period),-1,1),s=trafficState(score),angle=-78+(score+1)*78;
   $('rtArgentinaScore').textContent=fmt(score,1);
   $('rtArgentinaLabel').textContent=s.key==='positive'?'POSITIVO':s.key==='negative'?'NEGATIVO - CAUTELA':'NEUTRAL - CAUTELA';
   $('rtArgentinaLabel').className=s.key;
   if($('rtArgentinaNeedle'))$('rtArgentinaNeedle').style.transform=`rotate(${angle}deg)`;
-  const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rd=Number.isFinite(rv)&&Number.isFinite(rp)?rv-rp:NaN;
+  const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rd=period==='day'&&Number.isFinite(rv)&&Number.isFinite(rp)?rv-rp:localRiskChange(period);
   const metrics=[
-    ['tnx','Tasa EE.UU. 10Y',x=>`${fmt(x.last,2)}% · ${pct(periodChange(x,'day'))}`],
-    ['vix','VIX',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,'day'))}`],
-    ['wti','Petróleo WTI',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,'day'))}`],
-    ['dxy','DXY',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,'day'))}`]
+    ['tnx','Tasa EE.UU. 10Y',x=>`${fmt(x.last,2)}% · ${pct(periodChange(x,period))}`],
+    ['vix','VIX',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,period))}`],
+    ['wti','Petróleo WTI',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,period))}`],
+    ['dxy','DXY',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,period))}`]
   ];
-  const bullets=metrics.map(([id,label,fn])=>{const x=get(id);if(!Number.isFinite(x?.last))return'';const ch=periodChange(x,'day'),tone=!Number.isFinite(ch)?'warn':id==='vix'||id==='tnx'||id==='dxy'?(ch>0?'bad':'good'):(ch>0?'warn':'good');return `<div><i class="${tone}"></i><span><b>${label}:</b> ${fn(x)}</span></div>`}).filter(Boolean);
+  const bullets=metrics.map(([id,label,fn])=>{const x=get(id);if(!Number.isFinite(x?.last))return'';const ch=periodChange(x,period),tone=!Number.isFinite(ch)?'warn':id==='vix'||id==='tnx'||id==='dxy'?(ch>0?'bad':'good'):(ch>0?'warn':'good');return `<div><i class="${tone}"></i><span><b>${label}:</b> ${fn(x)}</span></div>`}).filter(Boolean);
   if(Number.isFinite(rv))bullets.push(`<div><i class="${Number.isFinite(rd)?rd>0?'bad':rd<0?'good':'warn':'warn'}"></i><span><b>Riesgo país:</b> ${fmt(rv,0)} pb${Number.isFinite(rd)?` · ${rd>=0?'+':''}${fmt(rd,0)} pb`:''}</span></div>`);
   $('rtArgentinaBullets').innerHTML=bullets.slice(0,4).join('');
 }
@@ -1062,29 +1086,28 @@ function signalRow(icon,name,value,change,polarity,note,override=null){
   </div>`;
 }
 function renderSignals(){
-  const ctx=contextInfo(),tnx=get('tnx'),vix=get('vix'),wti=get('wti'),dxy=get('dxy'),eem=get('eem');
-  const oil=periodChange(wti,'day'),yieldCh=periodChange(tnx,'day'),vixCh=periodChange(vix,'day'),dxyCh=periodChange(dxy,'day'),eemCh=periodChange(eem,'day');
-  const head=q('#rtMarketSignals .rt-signals-head h2'),note=q('#rtMarketSignals .rt-signals-head small');
-  if(head)head.textContent=ctx.isArgentina?'Semáforos de Mercado · Argentina':state.scope==='region'?`Semáforos · ${ctx.label}`:'Semáforos de Mercado';
-  if(note)note.textContent=ctx.isArgentina?'Variables que impactan directamente en activos argentinos':state.scope==='region'?'Variables globales + mercado seleccionado':'Cruce de variables globales y su impacto en Argentina';
-  const rows=[];
+  const ctx=contextInfo(),tnx=get('tnx'),vix=get('vix'),wti=get('wti'),gold=get('gold'),soy=get('soy'),dxy=get('dxy'),eem=get('eem');
+  const oil=periodChange(wti,'day'),yieldCh=periodChange(tnx,'day'),vixCh=periodChange(vix,'day'),goldCh=periodChange(gold,'day'),soyCh=periodChange(soy,'day'),dxyCh=periodChange(dxy,'day'),eemCh=periodChange(eem,'day');
+  const head=q('#rtMarketSignals .rt-signals-head h2');
+  if(head)head.textContent=state.scope==='region'?`Semáforos · ${ctx.label}`:'Semáforos globales (impacto en Argentina)';
+  const rows=[],risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rch=Number.isFinite(rv)&&Number.isFinite(rp)&&rp?(rv/rp-1)*100:NaN;
   if(ctx.isArgentina){
-    const m=get('merval'),mch=periodChange(m,'day');rows.push(signalRow('globe','MERVAL',Number.isFinite(m?.last)?fmt(m.last,0):'s/d',mch,'downbad','Pulso accionario local'));
-    const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rch=Number.isFinite(rv)&&Number.isFinite(rp)&&rp?(rv/rp-1)*100:NaN;rows.push(signalRow('risk','Riesgo País',Number.isFinite(rv)?fmt(rv,0):'s/d',rch,'upbad','Costo financiero argentino'));
-    rows.push(signalRow('dollar','Dólar / DXY',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Dólar fuerte presiona emergentes'));
-    rows.push(signalRow('rates','Bonos EE.UU. 10Y',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Tasa global de descuento'));
-    rows.push(signalRow('vix','VIX',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Aversión global al riesgo'));
-    rows.push(signalRow('oil','Petróleo WTI',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'downbad','Impacto en energía argentina'));
-  }else{
+    const m=get('merval'),mch=periodChange(m,'day');
+    rows.push(signalRow('globe','MERVAL',Number.isFinite(m?.last)?fmt(m.last,0):'s/d',mch,'downbad','Pulso accionario local'));
+    rows.push(signalRow('risk','Riesgo País',Number.isFinite(rv)?fmt(rv,0):'s/d',rch,'upbad','Costo de financiamiento'));
+  }else if(state.scope==='region'){
     const focus=REGIONS[state.selectedRegion]?.focus||'sp500',asset=ASSET_BY_ID[focus],fm=get(focus),fch=periodChange(fm,'day');
-    if(state.scope==='region'&&asset)rows.push(signalRow('globe',asset.name,Number.isFinite(fm?.last)?fmt(fm.last,asset.decimals):'s/d',fch,'downbad',`Pulso principal de ${ctx.label}`));
-    rows.push(signalRow('rates','Bonos de EE.UU. (Tasas)',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Condición financiera global'));
-    rows.push(signalRow('vix','VIX (volatilidad)',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Aversión al riesgo'));
-    rows.push(signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'upbad','Inflación / energía'));
-    rows.push(signalRow('dollar','Dólar / DXY',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Condición monetaria global'));
-    rows.push(signalRow('risk','Emergentes / EEM',Number.isFinite(eem?.last)?fmt(eem.last,2):'s/d',eemCh,'downbad','Apetito por riesgo emergente'));
+    if(asset)rows.push(signalRow('globe',asset.name,Number.isFinite(fm?.last)?fmt(fm.last,asset.decimals):'s/d',fch,'downbad',`Pulso principal de ${ctx.label}`));
   }
-  $('rtSignalList').innerHTML=rows.filter(Boolean).slice(0,6).join('');
+  rows.push(signalRow('rates','Bonos EE.UU. (Tasa 10Y)',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Presión sobre USD/ARS'));
+  rows.push(signalRow('vix','VIX',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Mayor aversión al riesgo'));
+  rows.push(signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'upbad','Inflación / Energéticas'));
+  rows.push(signalRow('globe','Oro',Number.isFinite(gold?.last)?fmt(gold.last,1):'s/d',goldCh,'downbad','Demanda de cobertura'));
+  rows.push(signalRow('dollar','DXY (Dólar global)',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Presión cambiaria'));
+  rows.push(signalRow('globe','Commodities agrícolas',Number.isFinite(soy?.last)?fmt(soy.last,1):'s/d',soyCh,'downbad','Clave para Argentina',{kind:'warn',label:'Mixto'}));
+  rows.push(signalRow('risk','Bonos Emergentes (EEM)',Number.isFinite(eem?.last)?fmt(eem.last,2):'s/d',eemCh,'downbad','Flujo a emergentes'));
+  if(Number.isFinite(rv))rows.push(signalRow('risk','Riesgo País Argentina',fmt(rv,0),rch,'upbad','Costo de financiamiento'));
+  $('rtSignalList').innerHTML=rows.filter(Boolean).slice(0,8).join('');
 }
 function extractBars(r){
   const candidates=[r?.bars,r?.data,r?.dataset,r?.datasets?.short,r?.datasets?.medium,r?.result?.bars];
@@ -1156,7 +1179,7 @@ function opportunityFallback(symbol){
 }
 function oppType(r){
   const t=opportunityAssetType(r);
-  if(t==='cedear')return'CEDEAR';if(t==='adr')return'ADR';if(t==='bill'||t==='letra')return'Letra';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Merval';if(t==='crypto')return'Crypto';return t||'Activo';
+  if(t==='cedear')return'CEDEAR';if(t==='adr')return'ADR';if(t==='bill'||t==='letra')return'Letra';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Acción';if(t==='crypto')return'Crypto';return t||'Activo';
 }
 
 function opportunityVolumeValue(r){
@@ -1249,7 +1272,7 @@ function opportunityComment(r){
 }
 function loadingOpportunityRows(){
   return OPPORTUNITY_LOADING.map(x=>`<tr class="rt-opportunity-loading">
-    <td><b class="ticker">${esc(TICKER_ALIAS[x.symbol]||x.symbol)}</b></td>
+    <td><b class="ticker">${esc(x.symbol)}</b></td>
     <td><span class="rt-cell-skeleton w78"></span></td>
     <td><span class="rt-type rt-type-${x.type}">${x.type==='argbond'?'Bono':'Acción'}</span></td>
     <td><span class="rt-cell-skeleton w55"></span></td>
@@ -1317,7 +1340,7 @@ function renderOpportunities(){
     if((priority[bd.cls]||0)!==(priority[ad.cls]||0))return(priority[bd.cls]||0)-(priority[ad.cls]||0);
     const av=opportunityVolumeValue(a),bv=opportunityVolumeValue(b);
     return (Number.isFinite(bv)?bv:-1)-(Number.isFinite(av)?av:-1);
-  }).slice(0,6);
+  }).slice(0,5);
 
   if(!results.length){
     if(!daily?.lastRun||daily?.running){
@@ -1343,7 +1366,7 @@ function renderOpportunities(){
     const vv=opportunityVolumeValue(r),vr=volumeRank.get(r);
     const symbol=String(r.item.symbol||'').toUpperCase(),assetName=OPPORTUNITY_LABEL[symbol]||r.item.label||symbol;
     return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.requestedType||r.item.type||'auto')}">
-      <td><b class="ticker">${esc(TICKER_ALIAS[symbol]||symbol)}</b></td>
+      <td><b class="ticker">${esc(symbol)}</b></td>
       <td class="rt-asset-name">${esc(assetName)}</td>
       <td><span class="rt-type rt-type-${esc(opportunityAssetType(r))}">${esc(oppType(r))}</span></td>
       <td>${opportunityPrice(r,price)}</td>
