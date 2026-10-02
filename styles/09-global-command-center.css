@@ -1950,3 +1950,14 @@ body.rt-rdc-open{overflow:hidden!important}
 .rdc-nav button{font-size:11.5px!important}
 .rdc-search input{font-size:11px!important}
 .rdc-topclock b{font-size:21px!important}
+
+/* ===== REFERENCE FIT 4.2B ===== */
+.rdc-kpi-icon{filter:drop-shadow(0 0 5px rgba(37,218,255,.46))!important}
+.rdc-kpi-card.risk .rdc-kpi-icon{filter:drop-shadow(0 0 5px rgba(255,211,73,.42))!important}
+.rdc-kpi-spark .spark-line{filter:drop-shadow(0 0 4px rgba(46,238,158,.30))!important}
+.rdc-kpi-card.risk .spark-line{filter:drop-shadow(0 0 4px rgba(255,213,74,.28))!important}
+.rdc-map-host:before{opacity:.55!important;background:repeating-linear-gradient(0deg,rgba(51,143,176,.035) 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,rgba(51,143,176,.03) 0 1px,transparent 1px 22px)!important}
+.rdc-map-svg .rt-market-marker circle:first-of-type{fill:#f8ffff!important;stroke:#6ef6ff!important;stroke-width:1.8!important;filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 12px rgba(53,238,255,.94)) drop-shadow(0 0 22px rgba(41,236,153,.35))!important}
+.rdc-map-svg .rt-country.rt-detail-focus{stroke:#2db4c6!important;stroke-width:.55!important;filter:drop-shadow(0 0 2px rgba(42,226,202,.16))!important}
+.rdc-map-callout{border-color:#0da078!important;background:linear-gradient(180deg,rgba(1,67,48,.98),rgba(1,28,23,.99))!important}
+.rdc-map-callout:after{background:linear-gradient(180deg,#35f0a1,transparent)!important}
