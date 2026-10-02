@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-4.1-reference-fidelity';
+const VERSION='golden-5.1-regional-reference';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -595,6 +595,12 @@ function sessionFlagSvg(code){
   if(code==='JP')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#fff"/><circle cx="14" cy="9" r="4.3" fill="#bc002d"/></svg></span>`;
   if(code==='AU')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#012169"/><rect width="12" height="8" fill="#012169"/><path d="M0 0 12 8M12 0 0 8" stroke="#fff" stroke-width="2.4"/><path d="M6 0v8M0 4h12" stroke="#fff" stroke-width="3"/><path d="M6 0v8M0 4h12" stroke="#c8102e" stroke-width="1.5"/><g fill="#fff"><circle cx="20" cy="5" r="1"/><circle cx="23" cy="10" r="1"/><circle cx="18" cy="13" r="1"/><circle cx="25" cy="15" r=".8"/></g></svg></span>`;
   if(code==='BR')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#009b3a"/><path d="M14 2.2 25 9 14 15.8 3 9Z" fill="#ffdf00"/><circle cx="14" cy="9" r="4.1" fill="#002776"/><path d="M10.5 8.3c2.2-.8 4.9-.5 7 .8" fill="none" stroke="#fff" stroke-width=".7"/></svg></span>`;
+  if(code==='MX')return `<span class="rt-flag-svg"><svg ${common}><rect width="9.34" height="18" fill="#006847"/><rect x="9.34" width="9.33" height="18" fill="#fff"/><rect x="18.67" width="9.33" height="18" fill="#ce1126"/><circle cx="14" cy="9" r="1.6" fill="#8a6d3b"/></svg></span>`;
+  if(code==='DE')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="6" fill="#000"/><rect y="6" width="28" height="6" fill="#dd0000"/><rect y="12" width="28" height="6" fill="#ffce00"/></svg></span>`;
+  if(code==='FR')return `<span class="rt-flag-svg"><svg ${common}><rect width="9.34" height="18" fill="#0055a4"/><rect x="9.34" width="9.33" height="18" fill="#fff"/><rect x="18.67" width="9.33" height="18" fill="#ef4135"/></svg></span>`;
+  if(code==='ES')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#aa151b"/><rect y="4.5" width="28" height="9" fill="#f1bf00"/></svg></span>`;
+  if(code==='IT')return `<span class="rt-flag-svg"><svg ${common}><rect width="9.34" height="18" fill="#009246"/><rect x="9.34" width="9.33" height="18" fill="#fff"/><rect x="18.67" width="9.33" height="18" fill="#ce2b37"/></svg></span>`;
+  if(code==='EU')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#003399"/><g fill="#ffcc00" transform="translate(14 9)">${Array.from({length:12},(_,i)=>{const a=(i*30-90)*Math.PI/180;return `<circle cx="${(Math.cos(a)*5.2).toFixed(2)}" cy="${(Math.sin(a)*5.2).toFixed(2)}" r=".72"/>`}).join('')}</g></svg></span>`;
   return `<span class="rt-flag-svg rt-flag-generic">🌐</span>`;
 }
 
@@ -608,7 +614,7 @@ const RDC_CITY_TZ={
   northamerica:[['Nueva York','America/New_York'],['Chicago','America/Chicago'],['Toronto','America/Toronto']],
   europe:[['Londres','Europe/London'],['Frankfurt','Europe/Berlin'],['París','Europe/Paris'],['Madrid','Europe/Madrid'],['Milán','Europe/Rome']],
   asia:[['Tokio','Asia/Tokyo'],['Hong Kong','Asia/Hong_Kong'],['Shanghái','Asia/Shanghai']],
-  latam:[['Buenos Aires','America/Argentina/Buenos_Aires'],['São Paulo','America/Sao_Paulo'],['México','America/Mexico_City']],
+  latam:[['Buenos Aires','America/Argentina/Buenos_Aires'],['São Paulo','America/Sao_Paulo'],['México','America/Mexico_City'],['Santiago','America/Santiago'],['Bogotá','America/Bogota']],
   oceania:[['Sídney','Australia/Sydney'],['Melbourne','Australia/Melbourne']]
 };
 
@@ -689,7 +695,7 @@ function rdcDisplayLast(id,a,m){
 function rdcMarketRow(id){
   const a=ASSET_BY_ID[id],m=get(id);if(!a)return'';
   const ch=periodChange(m,'day'),impact=rdcDriverMeta(id,ch),bars=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
-  const icon={vix:'🇺🇸',tnx:'🇺🇸',brent:'💧',wti:'💧',stoxx:'🇪🇺',eurusd:'🇪🇺'}[id]||a.flag||'•';
+  const icon=(id==='brent'||id==='wti')?'<span class="rdc-commodity-icon">●</span>':rdcAssetFlag(id);
   return `<div class="rdc-driver-row">
     <span class="rdc-driver-name"><i>${icon}</i><b>${esc(a.detailName||a.name)}</b></span>
     <span class="rdc-driver-last">${rdcDisplayLast(id,a,m)}</span>
@@ -700,12 +706,12 @@ function rdcMarketRow(id){
 }
 function rdcOpportunityRows(){
   const specs=[
-    {symbol:'GGAL',label:'GGAL (ADR)',market:'GGAL',type:'adr',flag:'🇦🇷'},
-    {symbol:'YPFD',label:'YPF (ADR)',market:'YPF',type:'adr',flag:'🇦🇷'},
-    {symbol:'PAMP',label:'PAMP (ADR)',market:'PAM',type:'adr',flag:'🇦🇷'},
-    {symbol:'AE38',label:'AE38 (Bono 2038)',fixed:'AE38D',type:'argbond',flag:'🇦🇷'},
-    {symbol:'AL30',label:'AL30 (Bono 2030)',fixed:'AL30D',type:'argbond',flag:'🇦🇷'},
-    {symbol:'SPY',label:'SPY (CEDEAR)',market:'SPY',type:'cedear',flag:'🇺🇸'}
+    {symbol:'GGAL',label:'GGAL (ADR)',market:'GGAL',type:'adr',flagCode:'AR'},
+    {symbol:'YPFD',label:'YPF (ADR)',market:'YPF',type:'adr',flagCode:'AR'},
+    {symbol:'PAMP',label:'PAMP (ADR)',market:'PAM',type:'adr',flagCode:'AR'},
+    {symbol:'AE38',label:'AE38 (Bono 2038)',fixed:'AE38D',type:'argbond',flagCode:'AR'},
+    {symbol:'AL30',label:'AL30 (Bono 2030)',fixed:'AL30D',type:'argbond',flagCode:'AR'},
+    {symbol:'SPY',label:'SPY (CEDEAR)',market:'SPY',type:'cedear',flagCode:'US'}
   ];
   const leaderBySymbol=new Map((state.opportunityLeaders||[]).map(r=>[String(r?.item?.symbol||'').toUpperCase(),r]));
   return specs.map(spec=>{
@@ -723,7 +729,7 @@ function rdcOpportunityRows(){
     const setup=leader?opportunitySetup(leader):(trend==='Alcista'?'Seguimiento alcista':trend==='Bajista'?'Presión bajista':'Zona de definición');
     const priceText=!Number.isFinite(price)?'s/d':spec.type==='adr'?'US$ '+fmt(price,2):spec.type==='cedear'?'ARS '+fmt(price,price>=1000?0:2):'US$ '+fmt(price,2);
     return `<div class="rdc-asset-row" data-rdc-symbol="${spec.symbol}" data-rdc-type="${spec.type}">
-      <b><i class="rdc-asset-flag">${spec.flag}</i>${esc(spec.label)}</b>
+      <b><i class="rdc-asset-flag">${sessionFlagSvg(spec.flagCode)}</i>${esc(spec.label)}</b>
       <span>${priceText}</span>
       <span class="${signClass(ch)}">${pct(ch)}</span>
       <span class="rdc-mini">${miniSpark(bars.map(x=>x.close))}</span>
@@ -790,7 +796,7 @@ function rdcCityClocks(key,date=new Date()){
 function rdcFlagMarkup(key){
   if(key==='europe')return `<svg viewBox="0 0 54 36" aria-label="Europa"><rect width="54" height="36" rx="4" fill="#003399"/><g fill="#ffcc00" transform="translate(27 18)">${Array.from({length:12},(_,i)=>{const a=(i*30-90)*Math.PI/180,x=Math.cos(a)*10,y=Math.sin(a)*10;return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.35"/>`}).join('')}</g></svg>`;
   if(key==='northamerica')return sessionFlagSvg('US').replace('rt-flag-svg','rdc-hero-flag-svg');
-  if(key==='latam')return `<div class="rdc-region-glyph">🌎</div>`;
+  if(key==='latam')return `<svg class="rdc-latam-badge" viewBox="0 0 64 44" aria-label="LatAm"><defs><radialGradient id="rdcLatamOcean" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#1e9bd1"/><stop offset=".62" stop-color="#0876a4"/><stop offset="1" stop-color="#064866"/></radialGradient><linearGradient id="rdcLatamLand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6af4bd"/><stop offset="1" stop-color="#19a86f"/></linearGradient></defs><rect x="1" y="1" width="62" height="42" rx="7" fill="#031b2b" stroke="#1585bc"/><circle cx="31" cy="22" r="17" fill="url(#rdcLatamOcean)" stroke="#50ddff" stroke-opacity=".42"/><path d="M24 7c5 1 9 3 12 6l-1 4 4 3-2 4-3 1-1 6-3 7-4-3 1-6-3-5-5-1-2-5 3-3-1-4 5-4Z" fill="url(#rdcLatamLand)" stroke="#b8ffe1" stroke-width=".7" stroke-opacity=".55"/></svg>`;
   if(key==='asia')return `<div class="rdc-region-glyph">🌏</div>`;
   if(key==='oceania')return sessionFlagSvg('AU').replace('rt-flag-svg','rdc-hero-flag-svg');
   return `<div class="rdc-region-glyph">🌐</div>`;
@@ -807,11 +813,21 @@ function rdcKpiIcon(kind){
 function rdcSectorTiles(key){
   const ids=key==='europe'?[
     ['euTech','Tecnología','▦'],['euBanks','Bancos','▥'],['euEnergy','Energía','◉'],['euHealth','Salud','♥'],['euIndustrials','Industriales','⚙']
+  ]:key==='latam'?[
+    ['merval','Argentina','▥'],['bovespa','Brasil','◆'],['mexico','México','◇'],['eem','Emergentes','◈'],['wti','Energía','◉']
   ]:(REGIONS[key]?.ids||[]).slice(0,5).map(id=>[id,ASSET_BY_ID[id]?.name||id,'◆']);
   return ids.map(([id,label,icon])=>{
     const ch=periodChange(get(id),state.rdcPeriod||'day');
     return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><i>${icon}</i><span>${esc(label)}</span><small>${Number.isFinite(ch)?'Hoy':'sin dato'}</small></div>`;
   }).join('');
+}
+function rdcAssetFlag(id){
+  const code={
+    merval:'AR',bovespa:'BR',mexico:'MX',
+    sp500:'US',nasdaq:'US',dow:'US',vix:'US',tnx:'US',
+    dax:'DE',bund10:'DE',ftse:'GB',cac:'FR',ibex:'ES',ftsemib:'IT',stoxx:'EU',eurusd:'EU'
+  }[id];
+  return code?sessionFlagSvg(code):`<span class="rt-flag-svg rt-flag-generic">◆</span>`;
 }
 function rdcMapCalloutData(key){
   const defs={
@@ -902,7 +918,7 @@ function mountRegionalDecisionCenter(){
       </section>
 
       <section class="rdc-panel rdc-arg-impact">
-        <header><div><h2>🇦🇷 &nbsp;Impacto sobre Argentina</h2><small>Cómo se transmite el contexto internacional al mercado local</small></div><button class="rdc-more" data-rdc-action="argentina">Ver análisis completo →</button></header>
+        <header><div><h2><span class="rdc-heading-flag">${sessionFlagSvg('AR')}</span>Impacto sobre Argentina</h2><small>Cómo se transmite el contexto internacional al mercado local</small></div><button class="rdc-more" data-rdc-action="argentina">Ver análisis completo →</button></header>
         <div class="rdc-arg-grid"><div id="rtRdcTraffic" class="rdc-impact-cards"></div><div><b class="rdc-subtitle">Canales de transmisión</b><div id="rtRdcChannels" class="rdc-channels"></div></div></div>
       </section>
 
@@ -992,10 +1008,10 @@ function renderRegionalDecisionCenter(){
   $('rtRdcUpPct').textContent=breadth.upPct+'%';$('rtRdcFlatPct').textContent=breadth.flatPct+'%';$('rtRdcDownPct').textContent=breadth.downPct+'%';
   $('rtRdcSectorTitle').textContent=key==='europe'?'Sectores (STOXX 600)':'Mercados líderes';
   $('rtRdcMarketTiles').innerHTML=rdcSectorTiles(key);
-  const rdcIndexIds=key==='europe'?['dax','ftse','cac','ibex','ftsemib','stoxx']:(region.ids||[]);
+  const rdcIndexIds=key==='europe'?['dax','ftse','cac','ibex','ftsemib','stoxx']:key==='latam'?['merval','bovespa','mexico','eem','sp500','nasdaq']:(region.ids||[]);
   $('rtRdcIndexRows').innerHTML=rdcIndexIds.map(id=>{
     const a=ASSET_BY_ID[id],m=get(id),ch=periodChange(m,'day'),bars=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
-    return `<div class="rdc-index-row"><b>${a?.flag||''} ${esc(a?.detailName||a?.name||id)}</b><span>${rdcDisplayLast(id,a,m)}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(bars)}</span></div>`;
+    return `<div class="rdc-index-row"><b>${rdcAssetFlag(id)}<span>${esc(a?.detailName||a?.name||id)}</span></b><span>${rdcDisplayLast(id,a,m)}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(bars)}</span></div>`;
   }).join('');
   renderRegionalCenterMap(key);
 
