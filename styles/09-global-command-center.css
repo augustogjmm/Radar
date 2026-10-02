@@ -1365,3 +1365,47 @@ body.rt-global-shell .wrap{padding:7px 12px 12px!important}
 .rt-alerts-card{height:245px!important}
 .rt-reference-sidebar .rt-card{box-shadow:0 10px 24px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.025)!important}
 .rt-reading-tabs button{cursor:pointer}
+
+
+/* ===== REFERENCE 5.2 · VISUAL + DATA FIDELITY ===== */
+/* Match the approved identity: green radar body with a red sweep. */
+.rt-logo{color:#2ee79a!important}
+.rt-logo svg{filter:drop-shadow(0 0 6px rgba(46,231,154,.34))!important}
+.rt-logo svg .sweep{stroke:#ff5367!important;stroke-width:1.9!important;opacity:.96!important}
+.rt-logo svg .dot{fill:#34ef9f!important}
+.rt-logo svg circle:nth-child(1){stroke:#31e798!important}
+
+/* Pull the live map closer to the reference: darker terrain, luminous heat,
+   visible relief, and less flat fully-saturated country fills. */
+.rt-world-map-host>svg{
+  filter:saturate(1.04) contrast(1.11) brightness(.92)!important;
+}
+#rtWorldGeoSvg .rt-country{fill-opacity:.72!important}
+#rtWorldGeoSvg .rt-country.strong-up{fill-opacity:.82!important}
+#rtWorldGeoSvg .rt-country.mod-up{fill-opacity:.70!important}
+#rtWorldGeoSvg .rt-country.neutral{fill-opacity:.34!important}
+#rtWorldGeoSvg .rt-country.mod-down{fill-opacity:.72!important}
+#rtWorldGeoSvg .rt-country.strong-down{fill-opacity:.83!important}
+#rtTextureLayer{opacity:.57!important}
+#rtTextureLayer .rt-land-texture{fill-opacity:.40!important}
+#rtTerrainOverlay{opacity:.29!important}
+#rtCityLightsLayer{opacity:.72!important}
+#rtHeatGlowLayer{opacity:.40!important;filter:blur(9px)!important}
+#rtRegionAuraLayer{opacity:.43!important}
+.rt-world-map-host:after{
+  background:
+    radial-gradient(ellipse at 50% 52%,transparent 37%,rgba(0,0,0,.09) 63%,rgba(0,0,0,.52) 100%)!important;
+}
+
+/* Keep the gauge text clear of the needle pivot. */
+.rt-reading-gauge strong{bottom:31px!important;text-shadow:0 1px 0 #000,0 0 10px rgba(255,255,255,.08)}
+.rt-reading-gauge b{bottom:12px!important;z-index:5!important;text-shadow:0 1px 0 #000}
+.rt-reading-gauge>i{bottom:7px!important;height:64px!important;z-index:4!important}
+
+/* Reference-like signal density and readable state dots. */
+.rt-signal-state i{box-shadow:0 0 8px currentColor!important}
+.rt-signal-row:hover{background:linear-gradient(90deg,rgba(25,78,105,.13),transparent)!important}
+
+/* Avoid visual noise from impossible daily percentages if a provider ever
+   changes denomination again; JS now keeps change and quote on one source. */
+.rt-opps-table td.rt-up,.rt-opps-table td.rt-down{font-weight:800}
