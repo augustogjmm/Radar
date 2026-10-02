@@ -148,13 +148,13 @@ try{
     }));
     await assert(regionalCenter.visible,'Centro regional no abrió');
     await assert(regionalCenter.kpis===5,'Centro regional perdió KPIs: '+regionalCenter.kpis);
-    await assert(regionalCenter.drivers>=5,'Centro regional sin drivers suficientes: '+regionalCenter.drivers);
+    await assert(regionalCenter.drivers>=7,'Centro regional no conserva los 7 drivers acordados: '+regionalCenter.drivers);
     await assert(regionalCenter.indices>=1,'Centro regional sin índices');
     await assert(regionalCenter.traffic===3,'Centro regional perdió semáforos Argentina');
     await assert(regionalCenter.map,'Centro regional no cargó mapa');
     await assert(regionalCenter.topbar,'Centro regional perdió barra superior');
     await assert(regionalCenter.clocks>=3,'Centro regional sin relojes por plaza: '+regionalCenter.clocks);
-    await assert(regionalCenter.sectors>=3,'Centro regional sin sectores/mercados internos: '+regionalCenter.sectors);
+    await assert(regionalCenter.sectors>=5,'Centro regional no conserva los 5 sectores acordados: '+regionalCenter.sectors);
     await assert(regionalCenter.timeline>=1,'Centro regional sin eventos de jornada');
     await assert(regionalCenter.kpiSparks>=4,'Centro regional sin sparklines KPI: '+regionalCenter.kpiSparks);
     await assert(regionalCenter.kpiCards===5,'Centro regional debe tener 5 KPI: '+regionalCenter.kpiCards);
