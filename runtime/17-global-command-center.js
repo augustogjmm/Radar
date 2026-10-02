@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='reference-5.2-data-fidelity';
+const VERSION='golden-1.4-functional-restore';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -17,7 +17,7 @@ const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length
 
 const state={
   loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),fixedIncome:new Map(),
-  selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',readingPeriod:'day',worldMapLoaded:false,
+  selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',worldMapLoaded:false,
   universes:{equities:[],cedears:[],fixed:[]},opportunityLeaders:[],
   sessionTimer:null,renderTimer:null
 };
@@ -32,9 +32,6 @@ const ASSETS=[
   {id:'dxy',symbol:'DX-Y.NYB',name:'DXY',region:'global',flag:'$',decimals:2},
   {id:'wti',symbol:'CL=F',name:'WTI',region:'global',flag:'◉',decimals:2},
   {id:'eem',symbol:'EEM',name:'Emergentes',region:'global',flag:'◈',decimals:2},
-  {id:'gold',symbol:'GC=F',name:'Oro',region:'global',flag:'●',decimals:1},
-  {id:'soy',symbol:'ZS=F',name:'Soja',region:'global',flag:'●',decimals:1},
-  {id:'copper',symbol:'HG=F',name:'Cobre',region:'global',flag:'●',decimals:2},
 
   {id:'dax',symbol:'^GDAXI',name:'DAX',detailName:'DAX (Alemania)',region:'europe',flag:'🇩🇪',decimals:1},
   {id:'ftse',symbol:'^FTSE',name:'FTSE 100',region:'europe',flag:'🇬🇧',decimals:1},
@@ -300,8 +297,8 @@ async function loadWorldMap(){
     }
     state.worldMapLoaded=true;
     renderMap();
+    renderRegionDetail();
     renderSession(new Date());
-    renderReferencePanels();
   }catch(e){
     console.warn('World map',e);
     const host=$('rtWorldMapHost');
@@ -357,19 +354,20 @@ function insertShell(){
           <circle class="dot" cx="24" cy="24" r="2.2"/>
         </svg>
       </div>
-      <div class="rt-brand-copy"><b>RADAR TÉCNICO</b><small>MERCADOS EN CONTEXTO</small></div>
+      <div class="rt-brand-copy"><b>Radar Técnico</b><small>MERCADOS GLOBALES. SEÑALES REALES. MEJORES DECISIONES.</small></div>
     </div>
     <nav class="rt-nav" aria-label="Navegación principal">
       <button data-rt-nav="global" class="active">Vista Global</button>
-      <button data-rt-nav="markets">Mercados</button>
-      <button data-rt-nav="opportunities">Oportunidades</button>
-      <button data-rt-nav="screener">Screener</button>
       <button data-rt-nav="argentina">Argentina</button>
-      <button data-rt-nav="education">Educación</button>
+      <button data-rt-nav="markets">Mercados</button>
+      <button data-rt-nav="sectors">Sectores</button>
+      <button data-rt-nav="screeners">Screeners</button>
+      <button data-rt-nav="news">Noticias</button>
+      <button data-rt-nav="reports">Reportes</button>
     </nav>
     <label class="rt-header-search">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
-      <input id="rtGlobalSearch" placeholder="Buscar activo (AAPL, GGAL, BTC…)" autocomplete="off">
+      <input id="rtGlobalSearch" placeholder="Buscar activo, índice o ticker…" autocomplete="off">
     </label>
     <div class="rt-livebox">
       <span class="rt-head-icon" title="Alertas" aria-label="Alertas">
@@ -397,11 +395,12 @@ function insertShell(){
 
 function bindShell(){
   q('[data-rt-nav="global"]')?.addEventListener('click',()=>{resetContext();goHome()});
-  q('[data-rt-nav="markets"]')?.addEventListener('click',()=>goHome('#rtMarketSignals'));
-  q('[data-rt-nav="opportunities"]')?.addEventListener('click',()=>goHome('#rtOpportunities'));
-  q('[data-rt-nav="screener"]')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
   q('[data-rt-nav="argentina"]')?.addEventListener('click',()=>{applyContext('latam','ARG');goHome('#rtArgentinaSignals')});
-  q('[data-rt-nav="education"]')?.addEventListener('click',()=>{$('helpBtn')?.click();$('helpViewBtn')?.click()});
+  q('[data-rt-nav="markets"]')?.addEventListener('click',()=>goHome('#rtMarketSignals'));
+  q('[data-rt-nav="sectors"]')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
+  q('[data-rt-nav="screeners"]')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
+  q('[data-rt-nav="news"]')?.addEventListener('click',()=>goHome('#rtRegionDetail'));
+  q('[data-rt-nav="reports"]')?.addEventListener('click',()=>clickOriginal('signalsViewBtn'));
   $('rtGlobalSearch')?.addEventListener('keydown',e=>{
     if(e.key!=='Enter')return;
     const value=e.currentTarget.value.trim();if(!value)return;
@@ -418,7 +417,7 @@ function goHome(anchor){
   if(anchor)setTimeout(()=>$(anchor.slice(1))?.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 function setActiveForView(id){
-  const key=id==='homeViewBtn'?'global':id==='scannerViewBtn'?'screener':id==='signalsViewBtn'?'opportunities':null;
+  const key=id==='homeViewBtn'?'global':id==='scannerViewBtn'?'screeners':id==='signalsViewBtn'?'reports':null;
   qa('.rt-nav button').forEach(b=>b.classList.toggle('active',key&&b.dataset.rtNav===key));
 }
 
@@ -440,104 +439,122 @@ function mountDashboard(){
   const root=document.createElement('section');
   root.id='rtGlobalRadar';
   root.innerHTML=`
-  <div class="rt-reference-shell">
-    <main class="rt-reference-main">
-      <section class="rt-card rt-world-card">
-        <div class="rt-map-head"><h2>Mapa de Sentimiento Global</h2><p>Rendimiento regional · últimas 24 hs</p><span id="rtContextBadge" class="rt-context-badge">🌐 Global</span></div>
-        <div class="rt-session-box">
-          <div class="rt-session-label">SESIÓN ACTUAL</div>
-          <div class="rt-session-current">
-            <div id="rtSessionFlag" class="rt-session-flag">🌐</div>
-            <div class="rt-session-copy"><small id="rtSessionStatus">En curso</small><b id="rtSessionName">Calculando…</b></div>
-          </div>
-          <div class="rt-session-progress"><i id="rtSessionProgress"></i></div>
-          <div class="rt-session-window" id="rtSessionWindow">—</div>
-          <div class="rt-session-next-label">Próxima sesión</div>
-          <div id="rtNextSessions" class="rt-next-sessions"><div id="rtNextSessionRows"></div></div>
-          <div class="rt-session-count"><small>Cierra en</small><b id="rtSessionCountdown">--:--:--</b></div>
-        </div>
-        <div class="rt-world-wrap">
-          <div id="rtWorldMapHost" class="rt-world-map rt-world-map-host" aria-label="Mapa mundial interactivo">
-            <div class="rt-map-loading"><span></span><b>Cargando cartografía de mercado…</b></div>
-          </div>
-          <button id="rtMapReset" class="rt-map-reset" hidden>← Volver al mundo</button>
-          <div class="rt-map-label rt-label-na" data-label-region="northamerica"><b>América del Norte</b><strong>—</strong><small>S&P 500 · NASDAQ</small></div>
-          <div class="rt-map-label rt-label-eu" data-label-region="europe"><b>Europa</b><strong>—</strong><small>DAX · FTSE · CAC</small></div>
-          <div class="rt-map-label rt-label-asia" data-label-region="asia"><b>Asia</b><strong>—</strong><small>NIKKEI · HANG SENG</small></div>
-          <div class="rt-map-label rt-label-latam" data-label-region="latam"><b>América Latina</b><strong>—</strong><small>BOVESPA · MERVAL</small></div>
-          <div class="rt-map-label rt-label-oceania" data-label-region="oceania"><b>Oceanía</b><strong>—</strong><small>ASX 200</small></div>
-        </div>
-      </section>
-
-      <section class="rt-card rt-sessions-card">
-        <div class="rt-sessions-head"><b>Sesiones del mercado</b><span>(hora ARG)</span></div>
-        <div id="rtSessionStrip" class="rt-session-strip"></div>
-      </section>
-
-      <div class="rt-reference-lower">
-        <section id="rtMarketSignals" class="rt-card rt-signals-card">
-          <div class="rt-signals-head">
-            <div><h2>Semáforos globales <span>(impacto en Argentina)</span></h2><small>Variables reales que condicionan la rueda local</small></div>
-            <button id="rtRefresh" class="rt-link-button">Actualizar</button>
-          </div>
-          <div class="rt-signal-columns"><span>Indicador</span><span>Valor</span><span>Señal</span><span>Impacto en Argentina</span><span>Comentario</span></div>
-          <div id="rtSignalList" class="rt-signal-list"></div>
-        </section>
-
-        <section id="rtArgentinaSignals" class="rt-card rt-reading-card">
-          <div class="rt-reading-head">
-            <h2>Lectura para Argentina</h2>
-            <div class="rt-reading-tabs"><button class="active" data-reading-period="day">Hoy</button><button data-reading-period="week">Semana</button><button data-reading-period="month">Mes</button></div>
-          </div>
-          <div class="rt-reading-gauge">
-            <div class="rt-gauge-arc"></div>
-            <i id="rtArgentinaNeedle"></i>
-            <strong id="rtArgentinaScore">0,0</strong>
-            <b id="rtArgentinaLabel">NEUTRAL - CAUTELA</b>
-          </div>
-          <div id="rtArgentinaBullets" class="rt-reading-bullets"></div>
-        </section>
+  <div class="rt-main-grid">
+    <section class="rt-card rt-world-card">
+      <div class="rt-map-head"><h2>Mapa de Sentimiento Global</h2><p>Rendimiento regional (últimas 24 hs)</p><span id="rtContextBadge" class="rt-context-badge">🌐 Global</span></div>
+      <div class="rt-session-box">
+        <div id="rtSessionFlag" class="rt-session-flag">🇺🇸</div>
+        <div class="rt-session-copy"><small>Sesión activa</small><b id="rtSessionName">Calculando…</b></div>
+        <span class="rt-session-dot"></span>
+        <div class="rt-session-count"><small>Cierra en</small><b id="rtSessionCountdown">--:--:--</b></div>
       </div>
-
-      <section id="rtOpportunities" class="rt-card rt-opps-card">
-        <div class="rt-opps-header">
-          <div class="rt-opps-title"><h2>Oportunidades en Argentina</h2><p>CEDEARs, Acciones y Bonos · volumen + lectura técnica real</p></div>
-          <div class="rt-tabs">
-            <button class="rt-tab active" data-rt-filter="all">Destacadas</button>
-            <button class="rt-tab" data-rt-filter="cedear">CEDEARs</button>
-            <button class="rt-tab" data-rt-filter="argstock">Acciones</button>
-            <button class="rt-tab" data-rt-filter="argbond">Bonos</button>
-          </div>
-          <button id="rtMoreOpps" class="rt-link-button">Ver todas →</button>
+      <div id="rtNextSessions" class="rt-next-sessions"><b>Próximas sesiones:</b><div id="rtNextSessionRows"></div></div>
+      <div class="rt-world-wrap">
+        <div id="rtWorldMapHost" class="rt-world-map rt-world-map-host" aria-label="Mapa mundial interactivo">
+          <div class="rt-map-loading"><span></span><b>Cargando cartografía de mercado…</b></div>
         </div>
-        <div class="rt-opps-wrap">
-          <table class="rt-opps-table">
-            <thead><tr><th>Ticker</th><th>Activo</th><th>Tipo</th><th>Precio</th><th>Var. %</th><th>Tendencia</th><th>Volumen</th><th>Señal</th><th>Razón de la oportunidad</th></tr></thead>
-            <tbody id="rtOppsBody"><tr><td colspan="9" class="rt-opps-empty">Analizando oportunidades con datos reales…</td></tr></tbody>
-          </table>
+        <div class="rt-map-label rt-label-na" data-label-region="northamerica"><b>América del Norte</b><strong>—</strong><small>S&P 500 · NASDAQ</small></div>
+        <div class="rt-map-label rt-label-eu" data-label-region="europe"><b>Europa</b><strong>—</strong><small>DAX · FTSE · CAC</small></div>
+        <div class="rt-map-label rt-label-asia" data-label-region="asia"><b>Asia</b><strong>—</strong><small>NIKKEI · HANG SENG</small></div>
+        <div class="rt-map-label rt-label-latam" data-label-region="latam"><b>LatAm</b><strong>—</strong><small>BOVESPA · MERVAL</small></div>
+        <div class="rt-map-label rt-label-oceania" data-label-region="oceania"><b>Oceanía</b><strong>—</strong><small>ASX 200</small></div>
+        <div class="rt-map-legend">
+          <div class="rt-legend-line"><i class="s1"></i>Fuerte alza</div>
+          <div class="rt-legend-line"><i class="s2"></i>Alza moderada</div>
+          <div class="rt-legend-line"><i class="s3"></i>Neutral</div>
+          <div class="rt-legend-line"><i class="s4"></i>Caída moderada</div>
+          <div class="rt-legend-line"><i class="s5"></i>Fuerte caída</div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
 
-    <aside class="rt-reference-sidebar">
-      <section class="rt-card rt-side-card rt-indices-card">
-        <div class="rt-side-head"><h3>Índices principales</h3><button class="rt-link-button">Ver todos →</button></div>
-        <div class="rt-side-columns"><span>Índice</span><span>Último</span><span>Var. %</span><span>Tendencia</span></div>
-        <div id="rtIndicesList" class="rt-side-list"></div>
-      </section>
+    <div class="rt-middle-stack">
+    <section class="rt-card rt-risk-card">
+      <div class="rt-risk-card-left">
+        <span>Riesgo Global</span>
+        <div class="rt-risk-gauge"><span class="zone low"></span><span class="zone mid"></span><span class="zone high"></span><i id="rtRiskNeedle" style="left:50%"></i></div>
+      </div>
+      <div class="rt-risk-card-right">
+        <b id="rtRiskLabel">CALCULANDO</b>
+        <div class="rt-risk-meta"><span id="rtRiskVix">VIX —</span><i></i><span id="rtRiskMove">MOVE —</span><span id="rtRiskTnx" hidden>US10Y —</span></div>
+      </div>
+    </section>
+    <section id="rtRegionDetail" class="rt-card rt-detail-card">
+      <div class="rt-section-title"><div><h3 id="rtDetailTitle"><span id="rtDetailFlag" class="rt-detail-flag">🇪🇺</span> Detalle de Región: Europa</h3><p id="rtDetailSubtitle">Índices principales y tendencia</p></div><button id="rtRegionOpen" class="rt-link-button">Abrir vista completa →</button></div>
+      <div class="rt-detail-topgrid">
+        <div class="rt-detail-map">
+          <div id="rtDetailGeoHost" class="rt-detail-geo-host"></div>
+        </div>
+        <div id="rtRegionList" class="rt-detail-list"></div>
+      </div>
+      <div class="rt-detail-chart">
+        <div class="rt-detail-chart-head"><span id="rtDetailChartName">Índice regional · última sesión</span><b id="rtRegionLastValue">—</b></div>
+        <div id="rtDetailYAxis" class="rt-detail-yaxis"><span>—</span><span>—</span></div>
+        <svg viewBox="0 0 520 94" preserveAspectRatio="none">
+          <defs><linearGradient id="rtAreaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#27d77e" stop-opacity=".30"/><stop offset="100%" stop-color="#27d77e" stop-opacity="0"/></linearGradient></defs>
+          <g class="rt-chart-grid"><path d="M7 18H513M7 42H513M7 66H513"/><path d="M104 8V80M208 8V80M312 8V80M416 8V80"/></g>
+          <path id="rtRegionArea" class="area" d=""/><path id="rtRegionSpark" d=""/>
+        </svg>
+        <div id="rtDetailAxis" class="rt-detail-axis"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>
+      </div>
+    </section>
+    </div>
 
-      <section class="rt-card rt-side-card rt-commodities-card">
-        <div class="rt-side-head"><h3>Commodities y monedas</h3></div>
-        <div class="rt-side-columns"><span>Activo</span><span>Último</span><span>Var. %</span><span>Tendencia</span></div>
-        <div id="rtCommoditiesList" class="rt-side-list"></div>
-      </section>
-
-      <section class="rt-card rt-side-card rt-alerts-card">
-        <div class="rt-side-head"><h3>Alertas relevantes</h3><span class="rt-live-mini">LIVE</span></div>
-        <div id="rtAlertsList" class="rt-alerts-list"></div>
-      </section>
-    </aside>
+    <section class="rt-card rt-watch-card">
+      <div class="rt-section-title"><div><h3>Watchlist</h3><p>Mercados clave</p></div><button id="rtWatchAll" class="rt-link-button">Ver todo</button></div>
+      <div id="rtWatchList" class="rt-watch-list"></div>
+    </section>
   </div>
+
+  <div class="rt-mid-grid">
+    <section id="rtArgentinaSignals" class="rt-card rt-arg-card">
+      <div class="rt-section-title"><div><h2>Argentina: Semáforos</h2><p>Lectura combinada del contexto global y local</p></div><button id="rtRefresh" class="rt-link-button">Actualizar</button></div>
+      <div id="rtTrafficGrid" class="rt-traffic-grid"></div>
+    </section>
+
+    <section id="rtMarketSignals" class="rt-card rt-signals-card">
+      <div class="rt-signals-head"><div><h2>Semáforos de Mercado</h2><small>Cruce de variables globales y su impacto en Argentina</small></div></div>
+      <div id="rtSignalList" class="rt-signal-list"></div>
+    </section>
+  </div>
+
+  <section class="rt-card rt-opps-card">
+    <div class="rt-opps-header">
+      <div class="rt-opps-title"><h2>Oportunidades Argentina</h2><p>Mayor volumen por segmento + evaluación real de oportunidad.</p></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="rt-tabs">
+          <button class="rt-tab active" data-rt-filter="all">Todos</button>
+          <button class="rt-tab" data-rt-filter="cedear">CEDEARs</button>
+          <button class="rt-tab" data-rt-filter="argbond">Bonos</button>
+          <button class="rt-tab" data-rt-filter="argstock">Merval</button><button class="rt-tab" data-rt-filter="adr">ADRs</button><button class="rt-tab" data-rt-filter="bill">Letras</button>
+        </div>
+        <button id="rtMoreOpps" class="rt-link-button">Ver más oportunidades →</button>
+      </div>
+    </div>
+    <div class="rt-opps-layout">
+      <div class="rt-opps-wrap">
+        <table class="rt-opps-table">
+          <thead><tr><th>Activo</th><th>Tipo</th><th>Último precio</th><th>Var. 24h</th><th>Volumen / ranking</th><th>Gráfico 20d</th><th>Setup técnico</th><th>Tendencia</th><th>Oportunidad</th><th>Comentario</th></tr></thead>
+          <tbody id="rtOppsBody"><tr><td colspan="10" class="rt-opps-empty">Analizando oportunidades con datos reales…</td></tr></tbody>
+        </table>
+      </div>
+      <aside class="rt-opps-aside">
+        <div class="rt-legend-panel">
+          <b>Leyenda de Colores</b>
+          <div><i class="s1"></i><span>Fuerte alza</span><small>&gt; +2%</small></div>
+          <div><i class="s2"></i><span>Alza moderada</span><small>+0,5% a +2%</small></div>
+          <div><i class="s3"></i><span>Neutral</span><small>-0,5% a +0,5%</small></div>
+          <div><i class="s4"></i><span>Caída moderada</span><small>-2% a -0,5%</small></div>
+          <div><i class="s5"></i><span>Fuerte caída</span><small>&lt; -2%</small></div>
+        </div>
+        <div class="rt-source-panel">
+          <b>Fuentes y mercado</b>
+          <p><span class="rt-status-dot"></span>Datos en tiempo real</p>
+          <small>Bolsas, índices, commodities, bonos y tipo de cambio. Delayed en algunos mercados.</small>
+        </div>
+      </aside>
+    </div>
+  </section>
   <div id="rtRefreshOverlay" class="rt-refresh-overlay" aria-live="polite"><div class="rt-refresh-core"><span class="rt-refresh-spinner"></span><b>Actualizando Radar</b><small id="rtRefreshPhase">Mercados, volumen y oportunidades…</small></div></div>`;
   dash.prepend(root);
   bindDashboard();
@@ -552,12 +569,6 @@ function bindDashboard(){
   $('rtWatchAll')?.addEventListener('click',()=>clickOriginal('watchlistViewBtn'));
   $('rtMoreOpps')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
   $('rtRefresh')?.addEventListener('click',()=>refresh(true));
-  $('rtMapReset')?.addEventListener('click',()=>resetContext());
-  qa('[data-reading-period]').forEach(b=>b.addEventListener('click',()=>{
-    state.readingPeriod=b.dataset.readingPeriod||'day';
-    qa('[data-reading-period]').forEach(x=>x.classList.toggle('active',x===b));
-    renderArgentinaReading();
-  }));
   qa('[data-rt-filter]').forEach(b=>b.addEventListener('click',()=>{
     state.filter=b.dataset.rtFilter||'all';
     qa('[data-rt-filter]').forEach(x=>x.classList.toggle('active',x===b));
@@ -570,25 +581,6 @@ function zonedParts(date,timeZone){
   const o=Object.fromEntries(parts.map(x=>[x.type,x.value]));
   const dayIndex={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[o.weekday];
   return{day:dayIndex,h:Number(o.hour)%24,m:Number(o.minute),s:Number(o.second)};
-}
-function zonedCalendarParts(date,timeZone){
-  const p=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
-  return Object.fromEntries(p.map(x=>[x.type,x.value]));
-}
-function localWallTimeToUtc(year,month,day,hour,minute,timeZone){
-  const wanted=Date.UTC(Number(year),Number(month)-1,Number(day),hour,minute,0);
-  let guess=wanted;
-  for(let i=0;i<3;i++){
-    const p=zonedCalendarParts(new Date(guess),timeZone);
-    const actual=Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),Number(p.hour),Number(p.minute),0);
-    guess+=wanted-actual;
-  }
-  return new Date(guess);
-}
-function sessionWindowArg(date,session){
-  const p=zonedCalendarParts(date,session.tz),fmtArg=d=>d.toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false});
-  const oh=Math.floor(session.open/3600),om=Math.floor((session.open%3600)/60),ch=Math.floor(session.close/3600),cm=Math.floor((session.close%3600)/60);
-  return [fmtArg(localWallTimeToUtc(p.year,p.month,p.day,oh,om,session.tz)),fmtArg(localWallTimeToUtc(p.year,p.month,p.day,ch,cm,session.tz))];
 }
 function nextOpenDelta(now,session){
   const p=zonedParts(now,session.tz),sec=p.h*3600+p.m*60+p.s;
@@ -605,8 +597,8 @@ function nextOpenDelta(now,session){
 function renderSession(date){
   if(!$('rtSessionName'))return;
   const sessions=[
-    {name:'EE.UU.',city:'Nueva York',flag:'🇺🇸',tz:'America/New_York',open:9*3600+30*60,close:16*3600},
-    {name:'Europa',city:'Londres',flag:'🇪🇺',tz:'Europe/London',open:8*3600,close:16*3600+30*60},
+    {name:'Nueva York',flag:'🇺🇸',tz:'America/New_York',open:9*3600+30*60,close:16*3600},
+    {name:'Londres',flag:'🇬🇧',tz:'Europe/London',open:8*3600,close:16*3600+30*60},
     {name:'Tokio',flag:'🇯🇵',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60},
     {name:'Sídney',flag:'🇦🇺',tz:'Australia/Sydney',open:10*3600,close:16*3600}
   ];
@@ -619,7 +611,7 @@ function renderSession(date){
   qa('.rt-market-marker').forEach(m=>m.classList.remove('active-session'));
   if(active){
     $('rtSessionName').textContent=active.name;$('rtSessionFlag').textContent=active.flag;
-    const cityMap={'EE.UU.':'sp500','Europa':'ftse','Tokio':'nikkei','Sídney':'asx'};
+    const cityMap={'Nueva York':'sp500','Londres':'ftse','Tokio':'nikkei','Sídney':'asx'};
     const activeAsset=cityMap[active.name];
     if(activeAsset)qa(`.rt-market-marker[data-marker-asset="${activeAsset}"]`).forEach(m=>m.classList.add('active-session'));
     const left=Math.max(0,active.left),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
@@ -628,109 +620,9 @@ function renderSession(date){
     $('rtSessionName').textContent='Entre sesiones';$('rtSessionFlag').textContent='🌐';$('rtSessionCountdown').textContent='—';
   }
   if($('rtNextSessionRows')){
-    const next=sessions.map(x=>({...x,delta:nextOpenDelta(date,x)})).sort((a,b)=>a.delta-b.delta).slice(0,1);
-    $('rtNextSessionRows').innerHTML=next.map(x=>`<span><i>${x.flag}</i><b>${x.name}</b><small>En ${Math.floor(x.delta/3600)}h ${Math.floor((x.delta%3600)/60)}m</small></span>`).join('');
+    const next=sessions.map(x=>({...x,delta:nextOpenDelta(date,x)})).sort((a,b)=>a.delta-b.delta).slice(0,3);
+    $('rtNextSessionRows').innerHTML=next.map(x=>`<span><i>${x.flag}</i><b>${x.name}</b><small>+${Math.floor(x.delta/3600)}h ${Math.floor((x.delta%3600)/60)}m</small></span>`).join('');
   }
-  if(active){
-    const duration=Math.max(1,active.close-active.open),elapsed=Math.max(0,active.sec-active.open);
-    if($('rtSessionProgress'))$('rtSessionProgress').style.width=`${clamp(elapsed/duration*100,0,100)}%`;
-    if($('rtSessionWindow')){const [ao,ac]=sessionWindowArg(date,active);$('rtSessionWindow').textContent=`${ao} – ${ac} (ARG)`}
-    if($('rtSessionStatus'))$('rtSessionStatus').textContent='En curso';
-  }else{
-    if($('rtSessionProgress'))$('rtSessionProgress').style.width='0%';
-    if($('rtSessionWindow'))$('rtSessionWindow').textContent='Mercados principales entre sesiones';
-    if($('rtSessionStatus'))$('rtSessionStatus').textContent='Próxima apertura';
-  }
-  renderMarketSessions(date);
-}
-
-function applyMapViewport(){
-  const svg=q('#rtWorldMapHost svg'),host=$('rtWorldMapHost'),reset=$('rtMapReset');
-  if(!svg||!host)return;
-  let view=[0,0,MAP_VIEW.w,MAP_VIEW.h];
-  if(state.selectedCountry==='ARG')view=REGION_VIEWS.argentina;
-  else if(state.scope==='region'||state.scope==='country')view=REGION_VIEWS[state.selectedRegion]||view;
-  svg.setAttribute('viewBox',view.join(' '));
-  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
-  const zoomed=state.scope!=='global';
-  host.closest('.rt-world-card')?.classList.toggle('rt-map-zoomed',zoomed);
-  if(reset){reset.hidden=!zoomed;reset.textContent=zoomed?`← Volver al mundo · ${contextInfo().flag} ${contextInfo().label}`:'← Volver al mundo'}
-}
-function renderMarketSessions(date){
-  const root=$('rtSessionStrip');if(!root)return;
-  const defs=[
-    {label:'Asia',flag:'🌏',tz:'Asia/Hong_Kong',open:9*3600+30*60,close:16*3600,asset:'hangseng',region:'asia'},
-    {label:'Sídney',flag:'🇦🇺',tz:'Australia/Sydney',open:10*3600,close:16*3600,asset:'asx',region:'oceania'},
-    {label:'Tokio',flag:'🇯🇵',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60,asset:'nikkei',region:'asia'},
-    {label:'Europa',flag:'🇪🇺',tz:'Europe/London',open:8*3600,close:16*3600+30*60,asset:'stoxx',region:'europe'},
-    {label:'Nueva York',flag:'🇺🇸',tz:'America/New_York',open:9*3600+30*60,close:16*3600,asset:'sp500',region:'northamerica'}
-  ];
-  root.innerHTML=defs.map(x=>{
-    const p=zonedParts(date,x.tz),sec=p.h*3600+p.m*60+p.s,weekday=p.day>=1&&p.day<=5;
-    const active=weekday&&sec>=x.open&&sec<x.close,upcoming=weekday&&sec<x.open;
-    const status=active?'En curso':upcoming?'Próxima':'Cerrada',ch=x.asset?periodChange(get(x.asset),'day'):regionChange(x.region,'day');
-    const cls=Number.isFinite(ch)?ch>.03?'positive':ch<-.03?'negative':'neutral':'neutral';
-    const [argOpen,argClose]=sessionWindowArg(date,x);
-    return `<article class="rt-session-tile ${active?'active':''}"><div class="rt-session-tile-top"><i>${x.flag}</i><b>${x.label}</b><span class="${cls}"></span></div><small class="${active?'live':''}">${status}</small><div><em>${argOpen} – ${argClose}</em><strong class="${signClass(ch)}">${pct(ch)}</strong></div></article>`;
-  }).join('');
-}
-function sideMarketRow(assetId,labelOverride=null){
-  const a=ASSET_BY_ID[assetId],m=get(assetId);if(!a||!m||!Number.isFinite(m.last))return'';
-  const ch=periodChange(m,'day'),bars=(m.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
-  return `<div class="rt-side-row"><b>${esc(labelOverride||a.name)}</b><span>${fmt(m.last,a.decimals)}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(bars)}</span></div>`;
-}
-function renderIndicesPanel(){
-  const root=$('rtIndicesList');if(!root)return;
-  const ids=[['sp500','S&P 500'],['nasdaq','Nasdaq'],['dow','Dow Jones'],['dax','DAX (Alemania)'],['ftse','FTSE 100 (UK)'],['nikkei','Nikkei 225'],['hangseng','Hang Seng (HK)'],['bovespa','Bovespa (BR)'],['merval','S&P Merval (ARG)']];
-  const rows=ids.map(([id,label])=>sideMarketRow(id,label)).filter(Boolean);
-  root.innerHTML=rows.length?rows.join(''):'<div class="rt-side-empty">Cargando índices…</div>';
-}
-function renderCommoditiesPanel(){
-  const root=$('rtCommoditiesList');if(!root)return;
-  const rows=[sideMarketRow('wti','Petróleo WTI'),sideMarketRow('gold','Oro (XAU)'),sideMarketRow('soy','Soja'),sideMarketRow('copper','Cobre'),sideMarketRow('dxy','DXY (Dólar)')].filter(Boolean);
-  const ccl=window.RadarDashboardData?.fx?.ccl||{},last=num(ccl.venta),ch=num(ccl.changePct);
-  if(Number.isFinite(last)){
-    const hist=(ccl.history||[]).map(x=>num(x.value)).filter(Number.isFinite);
-    rows.push(`<div class="rt-side-row"><b>USD/ARS (CCL)</b><span>${fmt(last,1)}</span><span class="${signClass(ch)}">${pct(ch)}</span><span>${miniSpark(hist)}</span></div>`);
-  }
-  const v=sideMarketRow('vix','VIX');if(v)rows.push(v);
-  root.innerHTML=rows.join('')||'<div class="rt-side-empty">Cargando commodities…</div>';
-}
-function renderAlertsPanel(){
-  const root=$('rtAlertsList');if(!root)return;
-  const now=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Argentina/Buenos_Aires'}),rows=[];
-  const push=(tone,text)=>rows.push({tone,text});
-  const vix=get('vix'),vixCh=periodChange(vix,'day');if(Number.isFinite(vixCh))push(vixCh>0?'bad':'good',`VIX ${vixCh>=0?'sube':'baja'} ${Math.abs(vixCh).toFixed(1)}% · volatilidad global`);
-  const oil=get('wti'),oilCh=periodChange(oil,'day');if(Number.isFinite(oilCh))push(oilCh>0?'warn':'good',`WTI ${oilCh>=0?'sube':'baja'} ${Math.abs(oilCh).toFixed(1)}% · energía`);
-  const tnx=get('tnx'),tnxCh=periodChange(tnx,'day');if(Number.isFinite(tnxCh))push(tnxCh>0?'bad':'good',`US 10Y ${tnxCh>=0?'sube':'baja'} ${Math.abs(tnxCh).toFixed(2)}% · tasas globales`);
-  const dxy=get('dxy'),dxyCh=periodChange(dxy,'day');if(Number.isFinite(dxyCh))push(dxyCh>0?'bad':'good',`DXY ${dxyCh>=0?'se fortalece':'se debilita'} ${Math.abs(dxyCh).toFixed(2)}%`);
-  const m=get('merval'),mCh=periodChange(m,'day');if(Number.isFinite(mCh))push(mCh>0?'good':'bad',`Merval ${mCh>=0?'sube':'baja'} ${Math.abs(mCh).toFixed(1)}% en la rueda`);
-  const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous);
-  if(Number.isFinite(rv)){const delta=Number.isFinite(rp)?rv-rp:NaN;push(Number.isFinite(delta)&&delta>0?'bad':Number.isFinite(delta)&&delta<0?'good':'warn',`Riesgo país ${fmt(rv,0)} pb${Number.isFinite(delta)?` · ${delta>=0?'+':''}${fmt(delta,0)} pb`:''}`)}
-  const soy=get('soy'),soyCh=periodChange(soy,'day');if(Number.isFinite(soyCh))push(soyCh>0?'good':soyCh<0?'warn':'warn',`Soja ${soyCh>=0?'sube':'baja'} ${Math.abs(soyCh).toFixed(1)}% · agro`);
-  const ccl=window.RadarDashboardData?.fx?.ccl||{},cclCh=num(ccl.changePct);if(Number.isFinite(cclCh))push(cclCh>0?'warn':cclCh<0?'good':'warn',`CCL ${cclCh>=0?'sube':'baja'} ${Math.abs(cclCh).toFixed(2)}% · FX local`);
-  root.innerHTML=rows.slice(0,7).map(x=>`<div class="rt-alert-row"><time>${now}</time><i class="${x.tone}"></i><span>${esc(x.text)}</span></div>`).join('')||'<div class="rt-side-empty">Sin alertas con datos válidos.</div>';
-}
-function renderArgentinaReading(){
-  if(!$('rtArgentinaScore'))return;
-  const period=state.readingPeriod||'day',score=clamp(scoreArgentina(period),-1,1),s=trafficState(score),angle=-78+(score+1)*78;
-  $('rtArgentinaScore').textContent=fmt(score,1);
-  $('rtArgentinaLabel').textContent=s.key==='positive'?'POSITIVO':s.key==='negative'?'NEGATIVO - CAUTELA':'NEUTRAL - CAUTELA';
-  $('rtArgentinaLabel').className=s.key;
-  if($('rtArgentinaNeedle'))$('rtArgentinaNeedle').style.transform=`rotate(${angle}deg)`;
-  const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rd=period==='day'&&Number.isFinite(rv)&&Number.isFinite(rp)?rv-rp:localRiskChange(period);
-  const metrics=[
-    ['tnx','Tasa EE.UU. 10Y',x=>`${fmt(x.last,2)}% · ${pct(periodChange(x,period))}`],
-    ['vix','VIX',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,period))}`],
-    ['wti','Petróleo WTI',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,period))}`],
-    ['dxy','DXY',x=>`${fmt(x.last,1)} · ${pct(periodChange(x,period))}`]
-  ];
-  const bullets=metrics.map(([id,label,fn])=>{const x=get(id);if(!Number.isFinite(x?.last))return'';const ch=periodChange(x,period),tone=!Number.isFinite(ch)?'warn':id==='vix'||id==='tnx'||id==='dxy'?(ch>0?'bad':'good'):(ch>0?'warn':'good');return `<div><i class="${tone}"></i><span><b>${label}:</b> ${fn(x)}</span></div>`}).filter(Boolean);
-  if(Number.isFinite(rv))bullets.push(`<div><i class="${Number.isFinite(rd)?rd>0?'bad':rd<0?'good':'warn':'warn'}"></i><span><b>Riesgo país:</b> ${fmt(rv,0)} pb${Number.isFinite(rd)?` · ${rd>=0?'+':''}${fmt(rd,0)} pb`:''}</span></div>`);
-  $('rtArgentinaBullets').innerHTML=bullets.slice(0,4).join('');
-}
-function renderReferencePanels(){
-  renderIndicesPanel();renderCommoditiesPanel();renderAlertsPanel();renderArgentinaReading();renderMarketSessions(new Date());applyMapViewport();
 }
 
 async function fetchHistoryBars(symbol,signal){
@@ -761,10 +653,8 @@ async function buildLocalOpportunityLeaders(signal){
   ];
   const rows=await Promise.all(pools.map(async x=>{
     const symbol=String(x.panel.symbol||'').toUpperCase(),bars=await fetchHistoryBars(symbol,signal),tech=techFromBars(bars);
-    const last=num(x.panel.trade??x.panel.closingPrice??bars.at(-1)?.close);
-    const histLast=bars.length?num(bars.at(-1)?.close):NaN,histPrev=bars.length>1?num(bars.at(-2)?.close):NaN;
-    const panelChange=num(x.panel.changePct);
-    const changePct=Number.isFinite(panelChange)?panelChange:(Number.isFinite(histLast)&&Number.isFinite(histPrev)&&histPrev?((histLast/histPrev)-1)*100:NaN);
+    const last=num(x.panel.trade??x.panel.closingPrice??bars.at(-1)?.close),prev=bars.length>1?num(bars.at(-2)?.close):NaN;
+    const changePct=Number.isFinite(last)&&Number.isFinite(prev)&&prev?((last/prev)-1)*100:NaN;
     const volume=num(x.panel.volumeAmount??x.panel.tradeVolume??x.panel.volume);
     return{item:{symbol,type:x.type,requestedType:x.type,label:symbol,panel:x.panel},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars,marketData:{last,changePct,volume,bars,source:x.panel?.source||'Open BYMADATA'}};
   }));
@@ -870,7 +760,6 @@ function renderMap(){
       const strong=q('strong',label);if(strong)strong.textContent=pct(ch);
     }
   }
-  applyMapViewport();
 }
 
 function renderWatch(){
@@ -998,30 +887,19 @@ function localRiskChange(period='day'){
 }
 function scoreArgentina(period){
   const values=[
-    {v:periodChange(get('merval'),period),good:1,w:1.35},
-    {v:periodChange(get('eem'),period),good:1,w:1.00},
-    {v:periodChange(get('vix'),period),good:-1,w:1.10},
-    {v:periodChange(get('tnx'),period),good:-1,w:.90},
-    {v:periodChange(get('dxy'),period),good:-1,w:.80},
-    {v:localRiskChange(period),good:-1,w:1.25}
+    {v:periodChange(get('merval'),period),good:1,w:1.4},
+    {v:periodChange(get('eem'),period),good:1,w:1},
+    {v:periodChange(get('vix'),period),good:-1,w:1.2},
+    {v:periodChange(get('tnx'),period),good:-1,w:1},
+    {v:periodChange(get('dxy'),period),good:-1,w:.9},
+    {v:localRiskChange(period),good:-1,w:1.5}
   ];
   let score=0,used=0;
   for(const x of values){
     if(!Number.isFinite(x.v)||Math.abs(x.v)<.02)continue;
     score+=(x.v>0?1:-1)*x.good*x.w;used+=x.w;
   }
-  const levels=[
-    {v:num(get('tnx')?.last),score:v=>v>=4.5?-1:v<=3.75?1:0,w:1.00},
-    {v:num(get('vix')?.last),score:v=>v>=22?-1:v<=16?1:0,w:.80},
-    {v:num(get('dxy')?.last),score:v=>v>=105?-1:v<=99?1:0,w:.55},
-    {v:num(window.RadarDashboardData?.risk?.value),score:v=>v>=1000?-1:v<=700?1:0,w:1.15}
-  ];
-  for(const x of levels){
-    if(!Number.isFinite(x.v))continue;
-    const s=x.score(x.v);if(!s)continue;
-    score+=s*x.w;used+=x.w;
-  }
-  return used?clamp(score/used,-1,1):0;
+  return used?score/used:0;
 }
 function trafficState(score){
   if(score>.2)return{key:'positive',label:'POSITIVO',copy:'Mejora en bonos y flujo de capitales.'};
@@ -1072,85 +950,43 @@ const SIGNAL_ICONS={
   globe:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18"/></svg>',
   risk:'<svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg>'
 };
-function signalComment(name,stateKey,change){
-  const n=String(name||'').toLowerCase();
-  if(n.includes('bonos')||n.includes('10y'))return stateKey==='bad'?'Tasas altas restan flujo a emergentes.':'Menor presión financiera global.';
-  if(n.includes('vix'))return stateKey==='bad'?'Aumenta la aversión al riesgo.':'Baja la volatilidad global.';
-  if(n.includes('petróleo'))return 'Impacta inflación y sector energético.';
-  if(n.includes('dólar')||n.includes('dxy'))return stateKey==='bad'?'Dólar fuerte complica emergentes.':'Dólar más débil alivia emergentes.';
-  if(n.includes('emergentes'))return stateKey==='good'?'Mejora el apetito por riesgo emergente.':'Flujo débil hacia emergentes.';
-  if(n.includes('riesgo país'))return stateKey==='bad'?'Sube el costo de financiamiento local.':'Mejora el costo de financiamiento local.';
-  if(n.includes('merval'))return stateKey==='good'?'Mejora el pulso accionario local.':'Presión sobre acciones argentinas.';
-  return stateKey==='bad'?'Condición adversa para riesgo.':stateKey==='good'?'Condición favorable para riesgo.':'Sin señal direccional dominante.';
-}
-function macroSignalOverride(kind,last,change){
-  const v=num(last),c=num(change);
-  if(kind==='tnx'){
-    if(Number.isFinite(v)&&v>=4.50)return{kind:'bad',label:'Negativo'};
-    if(Number.isFinite(v)&&v<=3.75)return{kind:'good',label:'Positivo'};
-  }
-  if(kind==='vix'){
-    if(Number.isFinite(v)&&v>=22)return{kind:'bad',label:'Negativo'};
-    if(Number.isFinite(v)&&v<=16)return{kind:'good',label:'Positivo'};
-  }
-  if(kind==='dxy'){
-    if(Number.isFinite(v)&&v>=105)return{kind:'bad',label:'Negativo'};
-    if(Number.isFinite(v)&&v<=99)return{kind:'good',label:'Positivo'};
-  }
-  if(kind==='risk'){
-    if(Number.isFinite(v)&&v>=1000)return{kind:'bad',label:'Negativo'};
-    if(Number.isFinite(v)&&v<=700)return{kind:'good',label:'Positivo'};
-  }
-  if(kind==='gold'){
-    if(Number.isFinite(c)&&c>.03)return{kind:'good',label:'Positivo'};
-    if(Number.isFinite(c)&&c<-.03)return{kind:'warn',label:'Mixto'};
-  }
-  if(kind==='eem'){
-    if(Number.isFinite(c)&&c>.03)return{kind:'good',label:'Positivo'};
-    if(Number.isFinite(c)&&c<-.03)return{kind:'bad',label:'Negativo'};
-  }
-  return null;
-}
 function signalRow(icon,name,value,change,polarity,note,override=null){
-  const c=num(change);let stateKey='warn';
+  const c=num(change);let stateKey='warn',label='NEUTRAL',arrow='•';
   if(Number.isFinite(c)&&Math.abs(c)>.03){
     const adverse=(c>0&&polarity==='upbad')||(c<0&&polarity==='downbad');
-    stateKey=adverse?'bad':'good';
+    stateKey=adverse?'bad':'good';label=c>0?'ALZA':'BAJA';arrow=c>0?'↑':'↓';
   }
-  if(/petróleo/i.test(name))stateKey='warn';
-  if(override?.kind)stateKey=override.kind;
-  const label=override?.label||(stateKey==='bad'?'Negativo':stateKey==='good'?'Positivo':'Mixto');
-  return `<div class="rt-signal-row">
-    <span class="rt-signal-indicator"><span class="rt-signal-icon">${SIGNAL_ICONS[icon]||''}</span><b>${esc(name)}</b></span>
-    <span class="rt-signal-value">${value||'—'}</span>
-    <span class="rt-signal-state ${stateKey}"><i></i>${label}</span>
-    <span class="rt-signal-impact">${esc(note)}</span>
-    <span class="rt-signal-note">${esc(signalComment(name,stateKey,c))}</span>
-  </div>`;
+  if(override){
+    if(override.label)label=override.label;
+    if(override.kind)stateKey=override.kind;
+    if(override.arrow!==undefined)arrow=override.arrow;
+  }
+  return `<div class="rt-signal-row"><span class="rt-signal-icon">${SIGNAL_ICONS[icon]||''}</span><b>${esc(name)}</b><span class="rt-signal-arrow ${signClass(c)}">${arrow}</span><span class="rt-signal-value">${value||''}</span><span class="rt-signal-state ${stateKey}">${label}</span><span class="rt-signal-note">${esc(note)}</span></div>`;
 }
 function renderSignals(){
-  const ctx=contextInfo(),tnx=get('tnx'),vix=get('vix'),wti=get('wti'),gold=get('gold'),soy=get('soy'),dxy=get('dxy'),eem=get('eem');
-  const oil=periodChange(wti,'day'),yieldCh=periodChange(tnx,'day'),vixCh=periodChange(vix,'day'),goldCh=periodChange(gold,'day'),soyCh=periodChange(soy,'day'),dxyCh=periodChange(dxy,'day'),eemCh=periodChange(eem,'day');
-  const head=q('#rtMarketSignals .rt-signals-head h2');
-  if(head)head.textContent=state.scope==='region'?`Semáforos · ${ctx.label}`:'Semáforos globales (impacto en Argentina)';
-  const rows=[],risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rch=Number.isFinite(rv)&&Number.isFinite(rp)&&rp?(rv/rp-1)*100:NaN;
+  const ctx=contextInfo(),tnx=get('tnx'),vix=get('vix'),wti=get('wti'),dxy=get('dxy'),eem=get('eem');
+  const oil=periodChange(wti,'day'),yieldCh=periodChange(tnx,'day'),vixCh=periodChange(vix,'day'),dxyCh=periodChange(dxy,'day'),eemCh=periodChange(eem,'day');
+  const head=q('#rtMarketSignals .rt-signals-head h2'),note=q('#rtMarketSignals .rt-signals-head small');
+  if(head)head.textContent=ctx.isArgentina?'Semáforos de Mercado · Argentina':state.scope==='region'?`Semáforos · ${ctx.label}`:'Semáforos de Mercado';
+  if(note)note.textContent=ctx.isArgentina?'Variables que impactan directamente en activos argentinos':state.scope==='region'?'Variables globales + mercado seleccionado':'Cruce de variables globales y su impacto en Argentina';
+  const rows=[];
   if(ctx.isArgentina){
-    const m=get('merval'),mch=periodChange(m,'day');
-    rows.push(signalRow('globe','MERVAL',Number.isFinite(m?.last)?fmt(m.last,0):'s/d',mch,'downbad','Pulso accionario local'));
-    rows.push(signalRow('risk','Riesgo País',Number.isFinite(rv)?fmt(rv,0):'s/d',rch,'upbad','Costo de financiamiento'));
-  }else if(state.scope==='region'){
+    const m=get('merval'),mch=periodChange(m,'day');rows.push(signalRow('globe','MERVAL',Number.isFinite(m?.last)?fmt(m.last,0):'s/d',mch,'downbad','Pulso accionario local'));
+    const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous),rch=Number.isFinite(rv)&&Number.isFinite(rp)&&rp?(rv/rp-1)*100:NaN;rows.push(signalRow('risk','Riesgo País',Number.isFinite(rv)?fmt(rv,0):'s/d',rch,'upbad','Costo financiero argentino'));
+    rows.push(signalRow('dollar','Dólar / DXY',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Dólar fuerte presiona emergentes'));
+    rows.push(signalRow('rates','Bonos EE.UU. 10Y',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Tasa global de descuento'));
+    rows.push(signalRow('vix','VIX',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Aversión global al riesgo'));
+    rows.push(signalRow('oil','Petróleo WTI',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'downbad','Impacto en energía argentina'));
+  }else{
     const focus=REGIONS[state.selectedRegion]?.focus||'sp500',asset=ASSET_BY_ID[focus],fm=get(focus),fch=periodChange(fm,'day');
-    if(asset)rows.push(signalRow('globe',asset.name,Number.isFinite(fm?.last)?fmt(fm.last,asset.decimals):'s/d',fch,'downbad',`Pulso principal de ${ctx.label}`));
+    if(state.scope==='region'&&asset)rows.push(signalRow('globe',asset.name,Number.isFinite(fm?.last)?fmt(fm.last,asset.decimals):'s/d',fch,'downbad',`Pulso principal de ${ctx.label}`));
+    rows.push(signalRow('rates','Bonos de EE.UU. (Tasas)',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Condición financiera global'));
+    rows.push(signalRow('vix','VIX (volatilidad)',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Aversión al riesgo'));
+    rows.push(signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'upbad','Inflación / energía'));
+    rows.push(signalRow('dollar','Dólar / DXY',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Condición monetaria global'));
+    rows.push(signalRow('risk','Emergentes / EEM',Number.isFinite(eem?.last)?fmt(eem.last,2):'s/d',eemCh,'downbad','Apetito por riesgo emergente'));
   }
-  rows.push(signalRow('rates','Bonos EE.UU. (Tasa 10Y)',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Presión sobre USD/ARS',macroSignalOverride('tnx',tnx?.last,yieldCh)));
-  rows.push(signalRow('vix','VIX',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Mayor aversión al riesgo',macroSignalOverride('vix',vix?.last,vixCh)));
-  rows.push(signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'upbad','Inflación / Energéticas',{kind:'warn',label:'Mixto'}));
-  rows.push(signalRow('globe','Oro',Number.isFinite(gold?.last)?fmt(gold.last,1):'s/d',goldCh,'downbad','Demanda de cobertura',macroSignalOverride('gold',gold?.last,goldCh)));
-  rows.push(signalRow('dollar','DXY (Dólar global)',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Presión cambiaria',macroSignalOverride('dxy',dxy?.last,dxyCh)));
-  rows.push(signalRow('globe','Commodities agrícolas',Number.isFinite(soy?.last)?fmt(soy.last,1):'s/d',soyCh,'downbad','Clave para Argentina',{kind:'warn',label:'Mixto'}));
-  rows.push(signalRow('risk','Bonos Emergentes (EEM)',Number.isFinite(eem?.last)?fmt(eem.last,2):'s/d',eemCh,'downbad','Flujo a emergentes',macroSignalOverride('eem',eem?.last,eemCh)));
-  if(Number.isFinite(rv))rows.push(signalRow('risk','Riesgo País Argentina',fmt(rv,0),rch,'upbad','Costo de financiamiento',macroSignalOverride('risk',rv,rch)));
-  $('rtSignalList').innerHTML=rows.filter(Boolean).slice(0,8).join('');
+  $('rtSignalList').innerHTML=rows.filter(Boolean).slice(0,6).join('');
 }
 function extractBars(r){
   const candidates=[r?.bars,r?.data,r?.dataset,r?.datasets?.short,r?.datasets?.medium,r?.result?.bars];
@@ -1222,7 +1058,7 @@ function opportunityFallback(symbol){
 }
 function oppType(r){
   const t=opportunityAssetType(r);
-  if(t==='cedear')return'CEDEAR';if(t==='adr')return'ADR';if(t==='bill'||t==='letra')return'Letra';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Acción';if(t==='crypto')return'Crypto';return t||'Activo';
+  if(t==='cedear')return'CEDEAR';if(t==='adr')return'ADR';if(t==='bill'||t==='letra')return'Letra';if(t==='argbond'||t==='bond')return'Bono';if(t==='argstock')return'Merval';if(t==='crypto')return'Crypto';return t||'Activo';
 }
 
 function opportunityVolumeValue(r){
@@ -1315,21 +1151,19 @@ function opportunityComment(r){
 }
 function loadingOpportunityRows(){
   return OPPORTUNITY_LOADING.map(x=>`<tr class="rt-opportunity-loading">
-    <td><b class="ticker">${esc(x.symbol)}</b></td>
-    <td><span class="rt-cell-skeleton w78"></span></td>
-    <td><span class="rt-type rt-type-${x.type}">${x.type==='argbond'?'Bono':'Acción'}</span></td>
-    <td><span class="rt-cell-skeleton w55"></span></td>
-    <td><span class="rt-cell-skeleton w38"></span></td>
+    <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[x.symbol]||x.symbol)}</b><small>${esc(SECONDARY_TICKER[x.symbol]||x.symbol)}</small></div></td>
+    <td><span class="rt-type rt-type-${x.type}">${x.type==='argbond'?'Bono':'Merval'}</span></td>
+    <td><span class="rt-cell-skeleton w55"></span></td><td><span class="rt-cell-skeleton w38"></span></td>
+    <td><span class="rt-mini-bars-loading"><i></i><i></i><i></i><i></i><i></i><i></i></span></td>
     <td><span class="rt-spark-loading"></span></td>
-    <td><span class="rt-cell-skeleton w56"></span></td>
-    <td><span class="rt-cell-skeleton w48"></span></td>
-    <td><span class="rt-cell-skeleton w90"></span></td>
+    <td><span class="rt-cell-skeleton w78"></span></td><td><span class="rt-cell-skeleton w56"></span></td>
+    <td><span class="rt-cell-skeleton w48"></span></td><td><span class="rt-cell-skeleton w90"></span></td>
   </tr>`).join('');
 }
 
 function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
-  const allowed=new Set(['cedear','argstock','argbond','bond','adr','bill','letra']);
+  const allowed=new Set(['cedear','argstock','argbond','bond','adr','bill','letra','stock']);
   let results=[...(state.opportunityLeaders||[]),...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(opportunityAssetType(r)));
 
   const bySymbol=new Map();
@@ -1383,14 +1217,14 @@ function renderOpportunities(){
     if((priority[bd.cls]||0)!==(priority[ad.cls]||0))return(priority[bd.cls]||0)-(priority[ad.cls]||0);
     const av=opportunityVolumeValue(a),bv=opportunityVolumeValue(b);
     return (Number.isFinite(bv)?bv:-1)-(Number.isFinite(av)?av:-1);
-  }).slice(0,5);
+  }).slice(0,6);
 
   if(!results.length){
     if(!daily?.lastRun||daily?.running){
       $('rtOppsBody').innerHTML=loadingOpportunityRows();
       return;
     }
-    $('rtOppsBody').innerHTML='<tr><td colspan="9" class="rt-opps-empty">Sin activos con volumen y datos válidos para este filtro.</td></tr>';return;
+    $('rtOppsBody').innerHTML='<tr><td colspan="10" class="rt-opps-empty">Sin activos con volumen y datos válidos para este filtro.</td></tr>';return;
   }
 
   $('rtOppsBody').innerHTML=results.map(r=>{
@@ -1407,17 +1241,17 @@ function renderOpportunities(){
     const comment=opportunityComment(r);
     const fullComment=String(r?.reason||r?.why||r?.status?.reason||r?.plan?.reason||comment).replace(/\s+/g,' ').trim();
     const vv=opportunityVolumeValue(r),vr=volumeRank.get(r);
-    const symbol=String(r.item.symbol||'').toUpperCase(),assetName=OPPORTUNITY_LABEL[symbol]||r.item.label||symbol;
     return `<tr data-rt-symbol="${esc(r.item.symbol)}" data-rt-type="${esc(r.item.requestedType||r.item.type||'auto')}">
-      <td><b class="ticker">${esc(symbol)}</b></td>
-      <td class="rt-asset-name">${esc(assetName)}</td>
+      <td><div class="rt-asset-cell"><b class="ticker">${esc(TICKER_ALIAS[r.item.symbol]||r.item.symbol)}</b><small>${esc(SECONDARY_TICKER[r.item.symbol]||r.item.symbol)}</small></div></td>
       <td><span class="rt-type rt-type-${esc(opportunityAssetType(r))}">${esc(oppType(r))}</span></td>
       <td>${opportunityPrice(r,price)}</td>
       <td class="${signClass(day)}">${pct(day)}</td>
-      <td><div class="rt-trend-cell">${miniSpark(bars.map(x=>x.close))}<span class="rt-trend ${trend[1]}">${trend[1]==='bad'?'↘':trend[1]==='warn'?'→':'↗'} ${esc(trend[0])}</span></div></td>
-      <td><div class="rt-volume-ref"><b>${compactVolume(vv)}</b><small>#${vr?.rank||'—'}${Number.isFinite(rv)?' · '+fmt(rv,1)+'x':''}</small></div></td>
-      <td><span class="rt-opp-decision ${decision.cls}">${esc(decision.label)}</span></td>
-      <td title="${esc(fullComment)}">${esc(setup+' · '+comment)}</td>
+      <td><div class="rt-volume-cell">${volumeChart(volumeBars)}<small>#${vr?.rank||'—'} · ${compactVolume(vv)}${Number.isFinite(rv)?' · '+fmt(rv,1)+'x':''}</small></div></td>
+      <td>${miniSpark(bars.map(x=>x.close))}</td>
+      <td>${esc(setup)}</td>
+      <td><span class="rt-trend ${trend[1]}"><i>${trend[1]==='bad'?'↓':trend[1]==='warn'?'●':'↑'}</i>${trend[0]}</span></td>
+      <td><span class="rt-opp-decision ${decision.cls}">${decision.label}</span></td>
+      <td title="${esc(fullComment)}">${esc(comment)}</td>
     </tr>`;
   }).join('');
 
@@ -1430,7 +1264,7 @@ function renderOpportunities(){
 
 function renderAll(){
   if(!$('rtGlobalRadar'))return;
-  renderMap();renderSession(new Date());renderSignals();renderReferencePanels();renderOpportunities();
+  renderMap();renderWatch();renderRisk();renderRegionDetail();renderTraffic();renderSignals();renderOpportunities();
 }
 
 async function refresh(force=false){
