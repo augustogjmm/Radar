@@ -1293,9 +1293,9 @@ body.rt-global-shell .wrap{padding:7px 12px 12px!important}
 }
 .rt-signal-columns{height:25px;padding:0 10px;border-bottom:1px solid #17384a;color:#7f98a9;font-size:8px}
 .rt-signal-list{padding:0 10px 8px!important}
-.rt-signal-row{height:34px!important;border-top:1px solid #123244!important;font-size:9px!important}
+.rt-signal-row{height:26px!important;border-top:1px solid #123244!important;font-size:9px!important}
 .rt-signal-row:first-child{border-top:0!important}
-.rt-signal-indicator{display:flex;align-items:center;gap:7px;min-width:0}.rt-signal-indicator b{font-size:9px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt-signal-indicator{display:flex;align-items:center;gap:6px;min-width:0}.rt-signal-indicator b{font-size:9px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rt-signal-icon{width:17px!important;height:17px!important}.rt-signal-icon svg{width:15px!important;height:15px!important}
 .rt-signal-value{font-size:9px!important;color:#dce8ef!important}
 .rt-signal-state{justify-self:start;display:inline-flex!important;align-items:center!important;gap:5px!important;padding:0!important;background:transparent!important;border:0!important;font-size:9px!important}
@@ -1359,3 +1359,9 @@ body.rt-global-shell .wrap{padding:7px 12px 12px!important}
   .rt-side-row .rt-spark{width:61px!important}
   .rt-opps-title p{display:none}
 }
+
+/* reference 5.1 finishing alignment */
+.rt-signals-card .rt-signal-list{height:216px;overflow:hidden}
+.rt-alerts-card{height:245px!important}
+.rt-reference-sidebar .rt-card{box-shadow:0 10px 24px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.025)!important}
+.rt-reading-tabs button{cursor:pointer}
