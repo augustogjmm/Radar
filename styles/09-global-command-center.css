@@ -822,3 +822,363 @@ body.rt-refreshing #rtGlobalRadar{filter:saturate(.75) brightness(.76)}
 .rt-detail-chart svg{filter:drop-shadow(0 0 4px rgba(39,215,126,.10))}
 .rt-spark{filter:drop-shadow(0 0 3px rgba(41,223,132,.12))}
 .rt-map-label{backdrop-filter:blur(4px);box-shadow:0 8px 22px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.05)!important}
+
+
+/* ===== REFERENCE LOCK 4.0 · OCT 02 2026 ===== */
+/* This block is intentionally last. It locks the live UI to the approved
+   cinematic financial-dashboard reference without changing market logic. */
+
+body.rt-global-shell{
+  background:
+    radial-gradient(ellipse at 52% -10%,rgba(20,92,139,.14),transparent 34%),
+    radial-gradient(ellipse at 8% 36%,rgba(0,91,148,.08),transparent 30%),
+    linear-gradient(180deg,#020b14 0%,#020911 56%,#01070c 100%)!important;
+}
+body.rt-global-shell #rtGlobalRadar{
+  filter:none;
+  text-shadow:0 1px 0 rgba(0,0,0,.22);
+}
+
+/* Premium shell and glass hierarchy */
+.rt-appbar{
+  background:
+    linear-gradient(180deg,rgba(4,18,30,.995),rgba(2,10,18,.99))!important;
+  border-bottom-color:#1b465f!important;
+  box-shadow:0 10px 32px rgba(0,0,0,.43),inset 0 -1px 0 rgba(83,194,255,.035)!important;
+}
+.rt-card{
+  background:
+    radial-gradient(circle at 45% -16%,rgba(41,123,171,.08),transparent 42%),
+    linear-gradient(180deg,rgba(8,26,39,.985),rgba(3,14,23,.992))!important;
+  border-color:#1b4056!important;
+  box-shadow:
+    0 13px 31px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.035),
+    inset 0 -1px 0 rgba(0,0,0,.32)!important;
+}
+.rt-card:before{
+  height:1px!important;
+  background:linear-gradient(90deg,transparent 0%,rgba(88,203,255,.22) 28%,rgba(88,203,255,.08) 72%,transparent 100%)!important;
+}
+.rt-section-title h2,.rt-section-title h3,.rt-signals-head h2,.rt-opps-title h2{
+  text-shadow:0 1px 0 #000,0 0 12px rgba(111,210,255,.035);
+}
+
+/* World map: reference-like depth, relief, luminous heat and ocean grain */
+.rt-world-wrap{
+  border:1px solid rgba(34,78,101,.68)!important;
+  background:
+    radial-gradient(ellipse at 48% 38%,rgba(15,64,88,.22),transparent 48%),
+    linear-gradient(180deg,#03121d,#020a11)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.012),
+    inset 0 -42px 90px rgba(0,0,0,.30),
+    0 14px 34px rgba(0,0,0,.28)!important;
+}
+.rt-world-map-host{
+  background:
+    radial-gradient(circle at 52% 46%,rgba(14,78,105,.22),transparent 42%),
+    radial-gradient(circle at 22% 78%,rgba(0,104,128,.10),transparent 30%),
+    linear-gradient(180deg,#03111b 0%,#020a12 100%)!important;
+  isolation:isolate;
+}
+.rt-world-map-host:before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  background-image:
+    linear-gradient(rgba(51,116,146,.065) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(51,116,146,.055) 1px,transparent 1px)!important;
+  background-size:72px 72px!important;
+  opacity:.42!important;
+  mask-image:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.8) 45%,rgba(0,0,0,.30))!important;
+}
+.rt-world-map-host:after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  inset:-10%!important;
+  z-index:1!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.14) 64%,rgba(0,0,0,.58) 100%)!important;
+  box-shadow:inset 0 0 90px rgba(0,0,0,.50)!important;
+}
+.rt-world-map-host>svg{z-index:2!important;filter:saturate(1.18) contrast(1.08) brightness(.98)!important}
+.rt-graticule path{stroke:#2a6b8e!important;opacity:.13!important;stroke-width:.42!important}
+.rt-equator{stroke:#3d83a6!important;opacity:.18!important}
+
+/* Tone gradients are injected in the SVG defs by runtime 17. */
+#rtWorldGeoSvg .rt-country{
+  stroke:#829aa8!important;
+  stroke-width:.48!important;
+  stroke-opacity:.82!important;
+  fill-opacity:1!important;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))!important;
+  transition:filter .18s ease,stroke .18s ease,opacity .18s ease!important;
+}
+#rtWorldGeoSvg .rt-country.strong-up{fill:url(#rtToneStrongUp)!important;stroke:#91ffd0!important}
+#rtWorldGeoSvg .rt-country.mod-up{fill:url(#rtToneModUp)!important;stroke:#91e8b6!important}
+#rtWorldGeoSvg .rt-country.neutral{fill:url(#rtToneNeutral)!important;stroke:#829baa!important}
+#rtWorldGeoSvg .rt-country.mod-down{fill:url(#rtToneModDown)!important;stroke:#ff9b8c!important}
+#rtWorldGeoSvg .rt-country.strong-down{fill:url(#rtToneStrongDown)!important;stroke:#ff9fad!important}
+#rtWorldGeoSvg .rt-country:hover{
+  stroke:#f3fdff!important;
+  stroke-width:1.35!important;
+  filter:brightness(1.18) saturate(1.12) drop-shadow(0 0 5px rgba(116,226,255,.52))!important;
+}
+#rtWorldGeoSvg .rt-country.selected-region{
+  stroke:#d1f5ff!important;
+  stroke-width:1.18!important;
+  filter:brightness(1.10) drop-shadow(0 0 4px rgba(72,193,255,.50))!important;
+}
+#rtWorldGeoSvg .rt-country.selected-country{
+  stroke:#f5feff!important;
+  stroke-width:2.25!important;
+  filter:brightness(1.16) drop-shadow(0 0 5px rgba(120,232,255,.92)) drop-shadow(0 0 13px rgba(47,167,255,.58))!important;
+}
+
+/* Separate texture and aura keep geography sharp while adding relief. */
+#rtTextureLayer{
+  display:block!important;
+  opacity:.47!important;
+  mix-blend-mode:soft-light!important;
+  filter:url(#rtProceduralTerrain)!important;
+}
+#rtTextureLayer .rt-land-texture{
+  fill:#d5e0e5!important;
+  fill-opacity:.34!important;
+  stroke:#d4e4eb!important;
+  stroke-opacity:.06!important;
+}
+#rtTerrainOverlay{
+  display:block!important;
+  opacity:.23!important;
+  mix-blend-mode:overlay!important;
+}
+#rtTerrainOverlay .rt-terrain-overlay{
+  fill:#dce7ec!important;
+  fill-opacity:.20!important;
+  stroke:#cfe0e8!important;
+  stroke-opacity:.09!important;
+  filter:url(#rtProceduralTerrain)!important;
+}
+#rtOceanTexture{
+  display:block!important;
+  opacity:.15!important;
+  mix-blend-mode:screen!important;
+}
+#rtCityLightsLayer{display:block!important;opacity:.82!important;mix-blend-mode:screen!important}
+#rtCityLightsLayer .rt-city-light{
+  fill:#ffe1a5!important;
+  filter:url(#rtUrbanGlow)!important;
+}
+#rtHeatGlowLayer{
+  display:block!important;
+  opacity:.34!important;
+  filter:blur(8px)!important;
+  mix-blend-mode:screen!important;
+}
+#rtHeatGlowLayer .rt-heat-glow{opacity:.32!important}
+#rtRegionAuraLayer{display:block!important;opacity:.40!important;mix-blend-mode:screen!important}
+#rtRegionAuraLayer .rt-region-aura{filter:blur(20px)!important}
+
+/* Market dots read as illuminated pins, not flat circles. */
+.rt-market-marker circle:first-of-type{
+  fill:#eaffff!important;
+  stroke:#54d8ff!important;
+  stroke-width:1.55!important;
+  filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px rgba(63,200,255,.96))!important;
+}
+.rt-market-marker .halo{stroke:#55cdfa!important;opacity:.58!important}
+.rt-market-marker.up circle:first-of-type{stroke:#65f4ad!important;filter:drop-shadow(0 0 2px #eafff3) drop-shadow(0 0 7px rgba(66,239,150,.92))!important}
+.rt-market-marker.down circle:first-of-type{stroke:#ff7383!important;filter:drop-shadow(0 0 2px #fff1f3) drop-shadow(0 0 7px rgba(255,78,100,.88))!important}
+.rt-market-marker text{
+  fill:#f5fbff!important;
+  stroke:#020b12!important;
+  stroke-width:4px!important;
+  paint-order:stroke!important;
+  font-weight:850!important;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.75));
+}
+
+/* Regional callouts: stronger glass + state glow, matching reference cards. */
+.rt-map-label{
+  border-color:#315e76!important;
+  border-radius:7px!important;
+  background:
+    linear-gradient(180deg,rgba(7,29,43,.96),rgba(3,15,24,.96))!important;
+  box-shadow:
+    0 10px 25px rgba(0,0,0,.48),
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 -1px 0 rgba(0,0,0,.38)!important;
+}
+.rt-map-label b{font-size:11.5px!important}
+.rt-map-label strong{font-size:21px!important;text-shadow:0 0 12px currentColor}
+.rt-map-label.positive{
+  border-color:#29b875!important;
+  background:linear-gradient(180deg,rgba(7,92,55,.97),rgba(2,42,28,.97))!important;
+  box-shadow:0 10px 25px rgba(0,0,0,.45),0 0 19px rgba(38,221,133,.15),inset 0 1px 0 rgba(168,255,213,.10)!important;
+}
+.rt-map-label.negative{
+  border-color:#c14756!important;
+  background:linear-gradient(180deg,rgba(105,26,35,.97),rgba(47,10,17,.97))!important;
+  box-shadow:0 10px 25px rgba(0,0,0,.45),0 0 19px rgba(255,67,87,.16),inset 0 1px 0 rgba(255,185,192,.09)!important;
+}
+
+/* Session and flags */
+.rt-session-box,.rt-next-sessions{
+  border-color:#2a607c!important;
+  background:
+    radial-gradient(circle at 18% 0%,rgba(42,143,197,.13),transparent 45%),
+    linear-gradient(180deg,rgba(7,31,47,.985),rgba(3,16,27,.985))!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.rt-session-flag{
+  width:39px!important;height:39px!important;border-radius:50%!important;
+  border:1px solid #4a86a5!important;
+  background:radial-gradient(circle at 34% 27%,#1c4b68 0%,#0a2639 45%,#04131f 100%)!important;
+  box-shadow:inset 0 0 15px rgba(95,220,255,.18),0 0 14px rgba(43,182,255,.18)!important;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));
+}
+.rt-detail-flag{font-size:19px!important;filter:drop-shadow(0 0 6px rgba(255,255,255,.22))!important}
+.rt-context-badge{
+  border-color:#32779b!important;
+  background:linear-gradient(180deg,rgba(8,41,61,.96),rgba(3,22,34,.96))!important;
+  box-shadow:0 7px 18px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+
+/* Physical traffic lights: metal housing + glass lenses. */
+.rt-light{
+  border:1px solid #56666f!important;
+  background:
+    linear-gradient(90deg,#020506 0%,#182229 48%,#040708 100%)!important;
+  box-shadow:
+    0 0 0 2px #050a0d,
+    0 0 0 3px #34444e,
+    inset 0 0 0 2px #000,
+    inset 8px 0 14px rgba(255,255,255,.025),
+    inset -8px 0 15px rgba(0,0,0,.52),
+    0 10px 21px rgba(0,0,0,.48)!important;
+}
+.rt-light:before{
+  inset:4px!important;
+  border-radius:24px!important;
+  background:linear-gradient(90deg,rgba(255,255,255,.09),transparent 24%,transparent 72%,rgba(255,255,255,.025))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.rt-light i{
+  overflow:hidden;
+  border:1px solid #3f5159!important;
+  box-shadow:inset 0 4px 7px rgba(255,255,255,.045),inset 0 -8px 13px rgba(0,0,0,.86),0 2px 4px rgba(0,0,0,.7)!important;
+}
+.rt-light i:after{
+  content:"";position:absolute;left:6px;top:5px;width:11px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.18);filter:blur(.3px);opacity:.75;
+}
+.rt-light.positive i:nth-child(2){
+  background:radial-gradient(circle at 35% 28%,#d8ffe9 0%,#6affb2 10%,#21e886 36%,#08b65f 67%,#024829 100%)!important;
+  box-shadow:0 0 9px #2af18c,0 0 27px rgba(38,239,139,.83),inset 0 2px 6px rgba(255,255,255,.62),inset 0 -8px 12px rgba(0,70,38,.58)!important;
+}
+.rt-light.neutral i:nth-child(2){
+  background:radial-gradient(circle at 35% 28%,#fffbd8 0%,#ffe879 11%,#ffd13b 38%,#cf9106 68%,#584006 100%)!important;
+  box-shadow:0 0 9px #ffd642,0 0 27px rgba(255,210,51,.82),inset 0 2px 6px rgba(255,255,255,.60),inset 0 -8px 12px rgba(91,62,0,.54)!important;
+}
+.rt-light.negative i:nth-child(2){
+  background:radial-gradient(circle at 35% 28%,#ffe2e5 0%,#ff8491 11%,#ff465d 38%,#ce1b35 67%,#590a18 100%)!important;
+  box-shadow:0 0 9px #ff5368,0 0 27px rgba(255,69,92,.82),inset 0 2px 6px rgba(255,255,255,.58),inset 0 -8px 12px rgba(92,0,17,.57)!important;
+}
+.rt-traffic-card{
+  border-color:#21495f!important;
+  background:
+    radial-gradient(circle at 14% 0%,rgba(43,128,171,.09),transparent 38%),
+    linear-gradient(180deg,#0a2131,#05131e)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 8px 18px rgba(0,0,0,.22)!important;
+}
+
+/* Detail panel keeps the same terrain language as the main map. */
+.rt-detail-map{
+  background:
+    radial-gradient(circle at 50% 44%,rgba(16,79,105,.22),transparent 45%),
+    linear-gradient(180deg,#03131f,#020b13)!important;
+  box-shadow:inset 0 0 35px rgba(0,0,0,.34)!important;
+}
+.rt-detail-geo-svg #rtTextureLayer{display:block!important;opacity:.42!important;mix-blend-mode:soft-light!important}
+.rt-detail-geo-svg #rtTerrainOverlay{display:block!important;opacity:.18!important;mix-blend-mode:overlay!important}
+.rt-detail-geo-svg #rtOceanTexture{display:block!important;opacity:.11!important}
+.rt-detail-geo-svg #rtCityLightsLayer{display:block!important;opacity:.72!important}
+
+/* Opportunity semantics: tint the row subtly as well as the decision pill. */
+.rt-opps-table tbody tr:has(.rt-opp-decision.yes){
+  background:linear-gradient(90deg,rgba(25,117,76,.17),rgba(4,18,27,.02) 42%)!important;
+  box-shadow:inset 3px 0 0 #24ea87!important;
+}
+.rt-opps-table tbody tr:has(.rt-opp-decision.near),
+.rt-opps-table tbody tr:has(.rt-opp-decision.watch){
+  background:linear-gradient(90deg,rgba(155,117,21,.13),rgba(4,18,27,.02) 42%)!important;
+  box-shadow:inset 3px 0 0 #ffd24b!important;
+}
+.rt-opps-table tbody tr:has(.rt-opp-decision.no){
+  background:linear-gradient(90deg,rgba(149,34,50,.14),rgba(4,18,27,.02) 42%)!important;
+  box-shadow:inset 3px 0 0 #ff4e63!important;
+}
+.rt-opp-decision{
+  min-width:80px!important;
+  border-radius:10px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 10px rgba(0,0,0,.18)!important;
+}
+.rt-opp-decision.yes{
+  background:linear-gradient(180deg,#176a48,#0a3a28)!important;
+  color:#90ffc8!important;border-color:#2a9165!important;
+  text-shadow:0 0 9px rgba(97,255,177,.32)!important;
+}
+.rt-opp-decision.near,.rt-opp-decision.watch{
+  background:linear-gradient(180deg,#6a5319,#3a2d0c)!important;
+  color:#ffe68d!important;border-color:#8a7029!important;
+}
+.rt-opp-decision.no{
+  background:linear-gradient(180deg,#7b2634,#43131d)!important;
+  color:#ffabb4!important;border-color:#9d3948!important;
+}
+.rt-data-missing{
+  border-color:#315267!important;
+  background:linear-gradient(180deg,#0a2030,#06141f)!important;
+  color:#9bb1c0!important;
+}
+
+/* Sharper charts and mini-lines */
+.rt-detail-chart{
+  border-color:#1c455c!important;
+  background:linear-gradient(180deg,rgba(7,29,43,.92),rgba(3,14,23,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),inset 0 -16px 28px rgba(0,0,0,.16)!important;
+}
+.rt-detail-chart #rtRegionSpark{
+  stroke:#39ef91!important;
+  stroke-width:1.9!important;
+  filter:drop-shadow(0 0 3px rgba(45,238,144,.48))!important;
+}
+.rt-spark .spark-line{stroke-width:1.7!important;filter:drop-shadow(0 0 2px rgba(40,231,137,.35))}
+.rt-spark.down .spark-line{filter:drop-shadow(0 0 2px rgba(255,79,99,.34))}
+
+/* Refresh state must feel deliberate and premium. */
+.rt-refresh-overlay{background:rgba(1,8,14,.66)!important;backdrop-filter:blur(3px) saturate(.8)!important}
+.rt-refresh-core{
+  border-color:#318fba!important;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(56,170,225,.14),transparent 42%),
+    linear-gradient(180deg,rgba(7,36,53,.99),rgba(3,17,27,.995))!important;
+  box-shadow:0 22px 65px rgba(0,0,0,.62),0 0 34px rgba(36,177,245,.18),inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+.rt-refresh-spinner{
+  border-color:#1a4a63!important;border-top-color:#56ccff!important;
+  box-shadow:0 0 16px rgba(86,204,255,.36)!important;
+}
+
+@media(max-width:1500px){
+  .rt-map-label strong{font-size:19px!important}
+  .rt-market-marker text{font-size:10px!important}
+  .rt-session-box{right:76px!important}
+}
