@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='reference-5.1-functional-lock';
+const VERSION='reference-5.2-data-fidelity';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -707,6 +707,8 @@ function renderAlertsPanel(){
   const m=get('merval'),mCh=periodChange(m,'day');if(Number.isFinite(mCh))push(mCh>0?'good':'bad',`Merval ${mCh>=0?'sube':'baja'} ${Math.abs(mCh).toFixed(1)}% en la rueda`);
   const risk=window.RadarDashboardData?.risk||{},rv=num(risk.value),rp=num(risk.previous);
   if(Number.isFinite(rv)){const delta=Number.isFinite(rp)?rv-rp:NaN;push(Number.isFinite(delta)&&delta>0?'bad':Number.isFinite(delta)&&delta<0?'good':'warn',`Riesgo país ${fmt(rv,0)} pb${Number.isFinite(delta)?` · ${delta>=0?'+':''}${fmt(delta,0)} pb`:''}`)}
+  const soy=get('soy'),soyCh=periodChange(soy,'day');if(Number.isFinite(soyCh))push(soyCh>0?'good':soyCh<0?'warn':'warn',`Soja ${soyCh>=0?'sube':'baja'} ${Math.abs(soyCh).toFixed(1)}% · agro`);
+  const ccl=window.RadarDashboardData?.fx?.ccl||{},cclCh=num(ccl.changePct);if(Number.isFinite(cclCh))push(cclCh>0?'warn':cclCh<0?'good':'warn',`CCL ${cclCh>=0?'sube':'baja'} ${Math.abs(cclCh).toFixed(2)}% · FX local`);
   root.innerHTML=rows.slice(0,7).map(x=>`<div class="rt-alert-row"><time>${now}</time><i class="${x.tone}"></i><span>${esc(x.text)}</span></div>`).join('')||'<div class="rt-side-empty">Sin alertas con datos válidos.</div>';
 }
 function renderArgentinaReading(){
@@ -759,8 +761,10 @@ async function buildLocalOpportunityLeaders(signal){
   ];
   const rows=await Promise.all(pools.map(async x=>{
     const symbol=String(x.panel.symbol||'').toUpperCase(),bars=await fetchHistoryBars(symbol,signal),tech=techFromBars(bars);
-    const last=num(x.panel.trade??x.panel.closingPrice??bars.at(-1)?.close),prev=bars.length>1?num(bars.at(-2)?.close):NaN;
-    const changePct=Number.isFinite(last)&&Number.isFinite(prev)&&prev?((last/prev)-1)*100:NaN;
+    const last=num(x.panel.trade??x.panel.closingPrice??bars.at(-1)?.close);
+    const histLast=bars.length?num(bars.at(-1)?.close):NaN,histPrev=bars.length>1?num(bars.at(-2)?.close):NaN;
+    const panelChange=num(x.panel.changePct);
+    const changePct=Number.isFinite(panelChange)?panelChange:(Number.isFinite(histLast)&&Number.isFinite(histPrev)&&histPrev?((histLast/histPrev)-1)*100:NaN);
     const volume=num(x.panel.volumeAmount??x.panel.tradeVolume??x.panel.volume);
     return{item:{symbol,type:x.type,requestedType:x.type,label:symbol,panel:x.panel},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars,marketData:{last,changePct,volume,bars,source:x.panel?.source||'Open BYMADATA'}};
   }));
@@ -994,19 +998,30 @@ function localRiskChange(period='day'){
 }
 function scoreArgentina(period){
   const values=[
-    {v:periodChange(get('merval'),period),good:1,w:1.4},
-    {v:periodChange(get('eem'),period),good:1,w:1},
-    {v:periodChange(get('vix'),period),good:-1,w:1.2},
-    {v:periodChange(get('tnx'),period),good:-1,w:1},
-    {v:periodChange(get('dxy'),period),good:-1,w:.9},
-    {v:localRiskChange(period),good:-1,w:1.5}
+    {v:periodChange(get('merval'),period),good:1,w:1.35},
+    {v:periodChange(get('eem'),period),good:1,w:1.00},
+    {v:periodChange(get('vix'),period),good:-1,w:1.10},
+    {v:periodChange(get('tnx'),period),good:-1,w:.90},
+    {v:periodChange(get('dxy'),period),good:-1,w:.80},
+    {v:localRiskChange(period),good:-1,w:1.25}
   ];
   let score=0,used=0;
   for(const x of values){
     if(!Number.isFinite(x.v)||Math.abs(x.v)<.02)continue;
     score+=(x.v>0?1:-1)*x.good*x.w;used+=x.w;
   }
-  return used?score/used:0;
+  const levels=[
+    {v:num(get('tnx')?.last),score:v=>v>=4.5?-1:v<=3.75?1:0,w:1.00},
+    {v:num(get('vix')?.last),score:v=>v>=22?-1:v<=16?1:0,w:.80},
+    {v:num(get('dxy')?.last),score:v=>v>=105?-1:v<=99?1:0,w:.55},
+    {v:num(window.RadarDashboardData?.risk?.value),score:v=>v>=1000?-1:v<=700?1:0,w:1.15}
+  ];
+  for(const x of levels){
+    if(!Number.isFinite(x.v))continue;
+    const s=x.score(x.v);if(!s)continue;
+    score+=s*x.w;used+=x.w;
+  }
+  return used?clamp(score/used,-1,1):0;
 }
 function trafficState(score){
   if(score>.2)return{key:'positive',label:'POSITIVO',copy:'Mejora en bonos y flujo de capitales.'};
@@ -1068,6 +1083,34 @@ function signalComment(name,stateKey,change){
   if(n.includes('merval'))return stateKey==='good'?'Mejora el pulso accionario local.':'Presión sobre acciones argentinas.';
   return stateKey==='bad'?'Condición adversa para riesgo.':stateKey==='good'?'Condición favorable para riesgo.':'Sin señal direccional dominante.';
 }
+function macroSignalOverride(kind,last,change){
+  const v=num(last),c=num(change);
+  if(kind==='tnx'){
+    if(Number.isFinite(v)&&v>=4.50)return{kind:'bad',label:'Negativo'};
+    if(Number.isFinite(v)&&v<=3.75)return{kind:'good',label:'Positivo'};
+  }
+  if(kind==='vix'){
+    if(Number.isFinite(v)&&v>=22)return{kind:'bad',label:'Negativo'};
+    if(Number.isFinite(v)&&v<=16)return{kind:'good',label:'Positivo'};
+  }
+  if(kind==='dxy'){
+    if(Number.isFinite(v)&&v>=105)return{kind:'bad',label:'Negativo'};
+    if(Number.isFinite(v)&&v<=99)return{kind:'good',label:'Positivo'};
+  }
+  if(kind==='risk'){
+    if(Number.isFinite(v)&&v>=1000)return{kind:'bad',label:'Negativo'};
+    if(Number.isFinite(v)&&v<=700)return{kind:'good',label:'Positivo'};
+  }
+  if(kind==='gold'){
+    if(Number.isFinite(c)&&c>.03)return{kind:'good',label:'Positivo'};
+    if(Number.isFinite(c)&&c<-.03)return{kind:'warn',label:'Mixto'};
+  }
+  if(kind==='eem'){
+    if(Number.isFinite(c)&&c>.03)return{kind:'good',label:'Positivo'};
+    if(Number.isFinite(c)&&c<-.03)return{kind:'bad',label:'Negativo'};
+  }
+  return null;
+}
 function signalRow(icon,name,value,change,polarity,note,override=null){
   const c=num(change);let stateKey='warn';
   if(Number.isFinite(c)&&Math.abs(c)>.03){
@@ -1099,14 +1142,14 @@ function renderSignals(){
     const focus=REGIONS[state.selectedRegion]?.focus||'sp500',asset=ASSET_BY_ID[focus],fm=get(focus),fch=periodChange(fm,'day');
     if(asset)rows.push(signalRow('globe',asset.name,Number.isFinite(fm?.last)?fmt(fm.last,asset.decimals):'s/d',fch,'downbad',`Pulso principal de ${ctx.label}`));
   }
-  rows.push(signalRow('rates','Bonos EE.UU. (Tasa 10Y)',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Presión sobre USD/ARS'));
-  rows.push(signalRow('vix','VIX',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Mayor aversión al riesgo'));
-  rows.push(signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'upbad','Inflación / Energéticas'));
-  rows.push(signalRow('globe','Oro',Number.isFinite(gold?.last)?fmt(gold.last,1):'s/d',goldCh,'downbad','Demanda de cobertura'));
-  rows.push(signalRow('dollar','DXY (Dólar global)',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Presión cambiaria'));
+  rows.push(signalRow('rates','Bonos EE.UU. (Tasa 10Y)',Number.isFinite(tnx?.last)?fmt(tnx.last,2)+'%':'s/d',yieldCh,'upbad','Presión sobre USD/ARS',macroSignalOverride('tnx',tnx?.last,yieldCh)));
+  rows.push(signalRow('vix','VIX',Number.isFinite(vix?.last)?fmt(vix.last,1):'s/d',vixCh,'upbad','Mayor aversión al riesgo',macroSignalOverride('vix',vix?.last,vixCh)));
+  rows.push(signalRow('oil','Petróleo (WTI)',Number.isFinite(wti?.last)?fmt(wti.last,1):'s/d',oil,'upbad','Inflación / Energéticas',{kind:'warn',label:'Mixto'}));
+  rows.push(signalRow('globe','Oro',Number.isFinite(gold?.last)?fmt(gold.last,1):'s/d',goldCh,'downbad','Demanda de cobertura',macroSignalOverride('gold',gold?.last,goldCh)));
+  rows.push(signalRow('dollar','DXY (Dólar global)',Number.isFinite(dxy?.last)?fmt(dxy.last,1):'s/d',dxyCh,'upbad','Presión cambiaria',macroSignalOverride('dxy',dxy?.last,dxyCh)));
   rows.push(signalRow('globe','Commodities agrícolas',Number.isFinite(soy?.last)?fmt(soy.last,1):'s/d',soyCh,'downbad','Clave para Argentina',{kind:'warn',label:'Mixto'}));
-  rows.push(signalRow('risk','Bonos Emergentes (EEM)',Number.isFinite(eem?.last)?fmt(eem.last,2):'s/d',eemCh,'downbad','Flujo a emergentes'));
-  if(Number.isFinite(rv))rows.push(signalRow('risk','Riesgo País Argentina',fmt(rv,0),rch,'upbad','Costo de financiamiento'));
+  rows.push(signalRow('risk','Bonos Emergentes (EEM)',Number.isFinite(eem?.last)?fmt(eem.last,2):'s/d',eemCh,'downbad','Flujo a emergentes',macroSignalOverride('eem',eem?.last,eemCh)));
+  if(Number.isFinite(rv))rows.push(signalRow('risk','Riesgo País Argentina',fmt(rv,0),rch,'upbad','Costo de financiamiento',macroSignalOverride('risk',rv,rch)));
   $('rtSignalList').innerHTML=rows.filter(Boolean).slice(0,8).join('');
 }
 function extractBars(r){
@@ -1286,7 +1329,7 @@ function loadingOpportunityRows(){
 
 function renderOpportunities(){
   const daily=window.RadarDailyRadar?.state;
-  const allowed=new Set(['cedear','argstock','argbond','bond','adr','bill','letra','stock']);
+  const allowed=new Set(['cedear','argstock','argbond','bond','adr','bill','letra']);
   let results=[...(state.opportunityLeaders||[]),...(daily?.results||[]),...(daily?.rf||[])].filter(r=>r?.item?.symbol&&allowed.has(opportunityAssetType(r)));
 
   const bySymbol=new Map();
