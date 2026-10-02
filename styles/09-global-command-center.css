@@ -1409,3 +1409,151 @@ body.rt-global-shell .wrap{padding:7px 12px 12px!important}
 /* Avoid visual noise from impossible daily percentages if a provider ever
    changes denomination again; JS now keeps change and quote on one source. */
 .rt-opps-table td.rt-up,.rt-opps-table td.rt-down{font-weight:800}
+
+/* ===== REFERENCE 6.0 · PIXEL FIDELITY LOCK ===== */
+/* Spatial and typographic lock against the approved 1536×1024 reference. */
+
+/* The approved reference lets the map speak for itself; no floating title over terrain. */
+.rt-map-head{display:none!important}
+.rt-world-map-host{left:210px!important}
+.rt-session-box{width:210px!important}
+.rt-map-reset{top:10px!important;right:10px!important}
+
+/* Header: slightly brighter, cleaner, and closer to the reference proportions. */
+.rt-appbar{
+  border-bottom:1px solid #1d4962!important;
+  box-shadow:0 8px 26px rgba(0,0,0,.44),inset 0 -1px 0 rgba(65,186,255,.05)!important
+}
+.rt-brand-copy b{font-size:22px!important;font-weight:760!important;letter-spacing:.01em!important}
+.rt-brand-copy small{font-size:8.5px!important;color:#94aabd!important}
+.rt-nav button{font-size:10.5px!important;font-weight:620!important}
+.rt-header-search input{font-size:10.5px!important}
+.rt-clockblock b{font-size:17px!important}
+
+/* Left session rail: stronger hierarchy and visual parity with the approved card. */
+.rt-session-box{
+  padding:14px 14px!important;
+  background:
+    radial-gradient(circle at 20% -4%,rgba(33,125,178,.17),transparent 38%),
+    linear-gradient(180deg,#071d2c 0%,#04131e 100%)!important;
+}
+.rt-session-label{font-size:10px!important;margin-bottom:12px!important}
+.rt-session-copy small{font-size:10.5px!important;font-weight:650!important}
+.rt-session-copy b{font-size:21px!important;letter-spacing:-.02em!important}
+.rt-session-window{font-size:10.5px!important;color:#d1dce3!important}
+.rt-session-next-label{font-size:10.5px!important}
+#rtNextSessionRows b{font-size:13.5px!important}
+#rtNextSessionRows small{font-size:10px!important}
+.rt-session-count{
+  border-color:#21475d!important;
+  background:linear-gradient(180deg,rgba(7,29,43,.92),rgba(3,16,25,.94))!important
+}
+
+/* Map: larger regional badges, brighter city markers, more photographic terrain depth. */
+.rt-world-map-host{
+  background:
+    radial-gradient(ellipse at 48% 44%,rgba(24,79,104,.24),transparent 47%),
+    radial-gradient(circle at 74% 18%,rgba(89,21,35,.10),transparent 27%),
+    linear-gradient(180deg,#04131d 0%,#020b12 100%)!important
+}
+.rt-world-map-host>svg{
+  filter:saturate(1.09) contrast(1.14) brightness(.91)!important
+}
+#rtTextureLayer{opacity:.66!important}
+#rtTextureLayer .rt-land-texture{fill-opacity:.46!important}
+#rtTerrainOverlay{opacity:.34!important}
+#rtOceanTexture{opacity:.13!important}
+#rtCityLightsLayer{opacity:.78!important}
+#rtHeatGlowLayer{opacity:.46!important;filter:blur(10px)!important}
+#rtRegionAuraLayer{opacity:.47!important}
+#rtWorldGeoSvg .rt-country{stroke-width:.46!important;stroke-opacity:.72!important}
+.rt-map-label{
+  min-width:142px!important;
+  padding:8px 11px!important;
+  border-width:1px!important;
+  border-radius:7px!important;
+  backdrop-filter:blur(6px)!important
+}
+.rt-map-label b{font-size:11px!important}
+.rt-map-label strong{font-size:19px!important;margin:4px 0 2px!important}
+.rt-map-label small{font-size:7.5px!important}
+.rt-label-na{left:30.5%!important;top:18%!important}
+.rt-label-eu{left:51.5%!important;top:11%!important}
+.rt-label-asia{right:12%!important;top:24%!important}
+.rt-label-latam{left:37.5%!important;top:59%!important}
+.rt-label-oceania{right:7%!important;bottom:12%!important}
+.rt-market-marker text{font-size:10.5px!important}
+.rt-market-marker circle:first-of-type{r:4.4}
+
+/* Session strip: target-sized typography and brighter active session. */
+.rt-sessions-card{height:108px!important}
+.rt-sessions-head{height:30px!important;padding:7px 10px 5px!important}
+.rt-sessions-head b{font-size:13px!important}.rt-sessions-head span{font-size:10.5px!important}
+.rt-session-strip{padding:7px 9px 9px!important}
+.rt-session-tile{height:69px!important;padding:8px 10px!important}
+.rt-session-tile-top b{font-size:10.5px!important}
+.rt-session-tile>small{font-size:8.5px!important}
+.rt-session-tile em{font-size:8.5px!important}.rt-session-tile strong{font-size:10.5px!important}
+.rt-session-tile.active{
+  border-color:#2fe798!important;
+  box-shadow:0 0 0 1px rgba(47,231,152,.20),0 0 18px rgba(33,226,132,.20),inset 0 1px 0 rgba(255,255,255,.05)!important
+}
+
+/* Semaphores: readable at dashboard distance; keep target table density. */
+.rt-reference-lower{grid-template-columns:minmax(0,2.65fr) minmax(292px,1fr)!important;gap:10px!important}
+.rt-signals-card,.rt-reading-card{height:286px!important}
+.rt-signals-head{height:42px!important}
+.rt-signals-head h2{font-size:15.5px!important}
+.rt-signals-head h2 span{font-size:10.5px!important}
+.rt-signal-columns{height:26px!important;font-size:8.5px!important}
+.rt-signal-row{height:27px!important}
+.rt-signal-indicator b{font-size:9.5px!important}
+.rt-signal-value,.rt-signal-state{font-size:9.5px!important}
+.rt-signal-impact,.rt-signal-note{font-size:8.5px!important}
+.rt-signal-state i{width:10px!important;height:10px!important}
+.rt-reading-head{height:42px!important}
+.rt-reading-head h2{font-size:15.5px!important}
+.rt-reading-tabs button{font-size:7.5px!important}
+.rt-reading-bullets>div{font-size:9.5px!important;line-height:1.3!important}
+
+/* Right rail: typography and row rhythm match the reference more closely. */
+.rt-indices-card{height:326px!important}
+.rt-commodities-card{height:246px!important}
+.rt-alerts-card{height:247px!important}
+.rt-side-head{height:41px!important}
+.rt-side-head h3{font-size:15.5px!important}
+.rt-side-columns{height:24px!important;font-size:7.5px!important}
+.rt-side-row{height:28.5px!important;font-size:9.5px!important}
+.rt-side-row b{font-size:9.7px!important}
+.rt-side-row .rt-spark{width:74px!important;height:18px!important}
+.rt-alert-row{height:29px!important;font-size:8.5px!important}
+
+/* Opportunity table: increase readability without changing the approved single-screen composition. */
+.rt-opps-card{height:214px!important}
+.rt-opps-header{height:44px!important}
+.rt-opps-title h2{font-size:15.5px!important}
+.rt-opps-title p{font-size:8.5px!important}
+.rt-opps-wrap{height:170px!important}
+.rt-opps-table thead th{height:25px!important;font-size:8.5px!important}
+.rt-opps-table tbody td{height:28.5px!important;font-size:9px!important}
+.rt-asset-cell .ticker,.rt-opps-table .ticker{font-size:10px!important}
+.rt-asset-name{font-size:9px!important}
+.rt-type{font-size:8.5px!important}
+.rt-opp-decision{font-size:7.5px!important;min-width:68px!important}
+
+/* Stronger reference-style depth throughout, but no glossy overkill. */
+.rt-side-card,.rt-sessions-card,.rt-signals-card,.rt-reading-card,.rt-opps-card{
+  border-color:#1b4258!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.29),inset 0 1px 0 rgba(255,255,255,.028)!important
+}
+.rt-side-head,.rt-signals-head,.rt-reading-head,.rt-opps-header{
+  background:linear-gradient(180deg,rgba(10,31,44,.38),rgba(5,18,28,.10))!important
+}
+
+@media(max-width:1500px){
+  .rt-world-map-host{left:194px!important}
+  .rt-session-box{width:194px!important}
+  .rt-map-label{min-width:132px!important}
+  .rt-map-label strong{font-size:18px!important}
+  .rt-side-row b{font-size:9.2px!important}
+}
