@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-candidate';
+const VERSION='golden-1.0';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
