@@ -1722,3 +1722,173 @@ body.rt-rdc-open{overflow:hidden!important}
   animation-delay:0s!important;
   animation-iteration-count:1!important;
 }
+
+/* ===== PIXEL FIDELITY 4.0 · REAL SCREEN COMPARE ===== */
+/* Geometry measured against the approved 1672×941 reference and the real QA capture. */
+.rdc-shell{padding:0 22px 10px!important;min-width:1280px!important}
+.rdc-topbar{
+  height:60px!important;margin:0 -22px!important;padding:0 22px!important;
+  grid-template-columns:225px minmax(610px,1fr) 300px 158px 112px!important;
+  gap:10px!important
+}
+.rdc-x{display:none!important}
+.rdc-brand b{font-size:22px!important}.rdc-nav button{font-size:11px!important;font-weight:680!important}
+.rdc-search input{font-size:10.5px!important}.rdc-live{font-size:9.5px!important}.rdc-topclock b{font-size:20px!important}.rdc-topclock small{font-size:8px!important}
+
+/* Hero now follows the reference: flag + title + status, then countdown, then the city strip. */
+.rdc-hero{
+  height:88px!important;margin:0!important;padding:7px 14px!important;
+  grid-template-columns:470px 130px minmax(560px,1fr)!important;
+  gap:10px!important;overflow:hidden!important
+}
+.rdc-region-id{gap:15px!important;min-width:0!important}
+.rdc-hero-flag{width:90px!important;height:61px!important;flex:0 0 90px!important}
+.rdc-title-line{display:flex;align-items:center;gap:13px;white-space:nowrap}
+.rdc-title-line h1{font-size:37px!important;letter-spacing:-.035em!important}
+.rdc-title-line #rtRdcOpenBadge{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:5px;
+  font-size:10px;font-weight:900;line-height:1;border:1px solid #315364;background:#10212b;color:#9fb4bf
+}
+.rdc-title-line #rtRdcOpenBadge:before{content:"";width:9px;height:9px;border-radius:50%;background:#7d9099}
+.rdc-title-line #rtRdcOpenBadge.open{border-color:#168e5b;background:#07452f;color:#5ef1a5}
+.rdc-title-line #rtRdcOpenBadge.open:before{background:#22ef8c;box-shadow:0 0 9px rgba(34,239,140,.55)}
+.rdc-title-line #rtRdcOpenBadge.closed{border-color:#7f3140;background:#3d151d;color:#ff8d98}
+.rdc-title-line #rtRdcOpenBadge.closed:before{background:#ff586a}
+.rdc-region-id p{font-size:14px!important;margin-top:6px!important}
+.rdc-countdown{
+  position:relative;z-index:3;height:61px;align-self:center;padding:8px 12px;
+  border:1px solid #1c5069;border-radius:5px;background:rgba(4,20,31,.94);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 7px 17px rgba(0,0,0,.24)
+}
+.rdc-countdown small{display:block;color:#85a0b1;font-size:8px;font-weight:700}
+.rdc-countdown b{display:block;margin-top:4px;font-size:24px;line-height:1;font-weight:880;font-variant-numeric:tabular-nums}
+.rdc-skyline{left:485px!important;right:460px!important;top:0!important;bottom:0!important;background-size:108% 100%!important;background-position:54% center!important}
+.rdc-skyline:before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:58px;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,#041522 0%,rgba(4,21,34,.98) 35%,transparent 100%)
+}
+.rdc-clocks{height:58px!important;position:relative;z-index:4!important}
+.rdc-city-clock{padding-left:25px!important}.rdc-city-clock span{font-size:8px!important}.rdc-city-clock b{font-size:15.5px!important}.rdc-city-clock small{display:none!important}
+
+/* KPI cards: the real capture was too small/dim compared with the target. */
+.rdc-kpis{gap:8px!important;margin-top:7px!important}
+.rdc-kpi-card{height:99px!important;grid-template-columns:55px minmax(0,1fr) 112px!important;padding:10px 12px!important}
+.rdc-kpi-icon{width:46px!important;height:46px!important}.rdc-kpi-icon svg{width:42px!important;height:42px!important}
+.rdc-kpi-copy small{font-size:12px!important;font-weight:720!important;color:#d4e2e9!important}
+.rdc-kpi-copy strong{font-size:29px!important;line-height:.98!important}
+.rdc-kpi-copy span{font-size:9.5px!important;color:#91a9b7!important}
+.rdc-kpi-spark .rt-spark{width:108px!important;height:43px!important}
+.rdc-kpi-card{border-color:#176283!important;box-shadow:0 9px 23px rgba(0,0,0,.31),inset 0 1px 0 rgba(218,245,255,.035)!important}
+
+/* Main panel titles and body typography. */
+.rdc-main{grid-template-rows:397px 219px!important;gap:8px!important;margin-top:7px!important}
+.rdc-panel>header{height:46px!important;padding:8px 12px!important}
+.rdc-panel>header h2{font-size:19px!important;font-weight:820!important;letter-spacing:-.018em!important}
+.rdc-panel>header small{font-size:8.5px!important;margin-top:2px!important}
+.rdc-more{font-size:10px!important}
+
+/* The target drivers table has five columns — no artificial trend column. */
+.rdc-driver-head,.rdc-driver-row{
+  grid-template-columns:minmax(180px,1.12fr) 88px 75px 94px minmax(265px,1.55fr)!important;
+  gap:7px!important
+}
+.rdc-driver-head{height:27px!important;padding:0 12px!important;font-size:8px!important}
+.rdc-driver-row{height:45px!important;padding:0 12px!important}
+.rdc-driver-name i{font-size:15px!important}.rdc-driver-name b{font-size:12px!important;font-weight:800!important}
+.rdc-driver-last,.rdc-driver-change{font-size:11px!important}.rdc-impact{font-size:8.5px!important;padding:4px 8px!important}
+.rdc-driver-note{font-size:10px!important;line-height:1.15!important;color:#b6c6cf!important}
+.rdc-driver-spark{display:none!important}
+
+/* Internals exactly follow the reference: breadth + sectors top-left, indices below, map spanning the full right side. */
+.rdc-internal-grid{
+  height:351px;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(255px,1.02fr);
+  grid-template-rows:113px 231px;
+  gap:7px;padding:8px 9px 9px
+}
+.rdc-internal-grid .rdc-breadth-card{grid-column:1;grid-row:1}
+.rdc-internal-grid .rdc-sector-wrap{grid-column:2;grid-row:1}
+.rdc-internal-grid .rdc-index-list{grid-column:1/3;grid-row:2}
+.rdc-internal-grid .rdc-map-card{grid-column:3;grid-row:1/3}
+.rdc-internal-top,.rdc-internal-bottom{display:none!important}
+.rdc-breadth-card,.rdc-sector-wrap,.rdc-index-list,.rdc-map-card{min-width:0!important}
+.rdc-breadth-card>b,.rdc-sector-head b{font-size:10.5px!important}
+.rdc-breadth-card strong{font-size:15px!important}.rdc-breadth-card>div:last-child span{font-size:8.5px!important}
+.rdc-sector-head{height:22px!important}.rdc-sector-head span{font-size:7.5px!important}
+.rdc-market-tiles>div{height:67px!important;padding:6px 3px!important}
+.rdc-market-tiles strong{font-size:11px!important}.rdc-market-tiles i{font-size:18px!important}.rdc-market-tiles span{font-size:7.5px!important}
+.rdc-index-head,.rdc-index-row{grid-template-columns:minmax(175px,1.3fr) 82px 66px 125px!important;padding:0 9px!important}
+.rdc-index-head{height:25px!important;font-size:7.5px!important}
+.rdc-index-row{height:32.5px!important;font-size:10px!important}
+.rdc-index-row b{font-size:10.5px!important}.rdc-index-row .rt-spark{width:116px!important;height:20px!important}
+.rdc-map-title{height:29px!important;padding:5px 8px!important}.rdc-map-title>span strong{font-size:9.5px!important}.rdc-map-title>span em{font-size:7px!important}
+.rdc-map-host{min-height:0!important}
+.rdc-map-svg{filter:saturate(1.12) contrast(1.13) brightness(.86)!important}
+.rdc-map-svg #rtHeatGlowLayer{opacity:.50!important}.rdc-map-svg #rtTerrainOverlay{opacity:.42!important}
+.rdc-map-callout{min-width:80px!important;padding:5px 7px!important}.rdc-map-callout span{font-size:8.5px!important}.rdc-map-callout b{font-size:13px!important}
+
+/* Bottom-left Argentina block: increase legibility without changing its composition. */
+.rdc-arg-grid{height:173px!important;grid-template-columns:1.08fr 1fr!important}
+.rdc-impact-cards{padding:8px!important;gap:7px!important}
+.rdc-impact-card small{font-size:11px!important}.rdc-signal-ring{width:37px!important;height:37px!important}
+.rdc-impact-card>b{left:60px!important;top:48px!important;font-size:8.5px!important}
+.rdc-impact-card>p{font-size:9.5px!important;line-height:1.2!important;max-width:150px!important}
+.rdc-subtitle{font-size:10px!important}.rdc-channel{height:31px!important}.rdc-channel span b{font-size:9.5px!important}.rdc-channel strong{font-size:9.5px!important}
+
+/* Bottom-right asset table: target uses much larger, clearer rows than the old capture. */
+.rdc-asset-head,.rdc-asset-row{
+  grid-template-columns:105px 92px 68px 122px 82px minmax(165px,1fr)!important;
+  gap:7px!important;padding:0 10px!important
+}
+.rdc-asset-head{height:25px!important;font-size:7.7px!important}
+.rdc-asset-row{height:25.5px!important;font-size:9.7px!important}
+.rdc-asset-row>b{font-size:10px!important}.rdc-asset-flag{font-size:11px!important}
+.rdc-asset-row .rt-spark{width:113px!important;height:18px!important}.rdc-setup{font-size:7.7px!important;padding:3px 7px!important}
+.rdc-assets .rdc-comment{font-size:9px!important;color:#b4c5ce!important}
+
+/* Bottom event strip aligned to the target. */
+.rdc-timeline{height:61px!important;margin-top:7px!important;grid-template-columns:220px 1fr 185px!important}
+.rdc-timeline-title b{font-size:16px!important}.rdc-timeline-title small{font-size:8px!important}
+.rdc-event{grid-template-columns:39px 8px 1fr!important;padding:6px 10px!important}
+.rdc-event time{font-size:8.5px!important}.rdc-event span b{font-size:9.5px!important}.rdc-event span small{font-size:7.5px!important}
+.rdc-news-btn{font-size:9px!important}
+
+/* Absolutely no continuous visual motion. */
+.rdc-shell .rdc-brand-mark .pulse,
+.rdc-shell .rdc-live i,
+.rdc-shell .rdc-city-clock i,
+.rdc-shell .rdc-open-state>span.open,
+.rdc-shell .rdc-title-line #rtRdcOpenBadge,
+.rdc-shell .rdc-kpi-spark .rt-spark .spark-line,
+.rdc-shell .rdc-driver-spark .spark-line,
+.rdc-shell .rdc-market-tiles>div,
+.rdc-shell .rdc-index-row .spark-line,
+.rdc-shell .rdc-map-svg .rt-market-marker .halo,
+.rdc-shell .rdc-map-callout,
+.rdc-shell .rdc-signal-glass,
+.rdc-shell .rdc-signal-ring,
+.rdc-shell .rdc-channel.good>i,
+.rdc-shell .rdc-asset-row .spark-line,
+.rdc-shell .rdc-timeline:after,
+.rdc-shell .rdc-event>i.rt-up,
+.rdc-shell.rdc-enter .rdc-hero,
+.rdc-shell.rdc-enter .rdc-kpi-card,
+.rdc-shell.rdc-enter .rdc-panel,
+.rdc-shell.rdc-data-pulse .rdc-kpi-card,
+.rdc-shell.rdc-data-pulse .rdc-driver-row{
+  animation:none!important;animation-name:none!important;animation-duration:0s!important;animation-delay:0s!important;animation-iteration-count:1!important
+}
+
+@media(max-width:1500px){
+  .rdc-topbar{grid-template-columns:190px minmax(500px,1fr) 245px 145px 95px!important}
+  .rdc-nav button{padding:0 12px!important;font-size:9.5px!important}
+  .rdc-hero{grid-template-columns:420px 118px minmax(490px,1fr)!important}
+  .rdc-title-line h1{font-size:33px!important}
+  .rdc-skyline{left:435px!important;right:405px!important}
+  .rdc-kpi-card{grid-template-columns:46px minmax(0,1fr) 86px!important}
+  .rdc-kpi-copy small{font-size:10.5px!important}.rdc-kpi-copy strong{font-size:25px!important}.rdc-kpi-spark .rt-spark{width:84px!important}
+  .rdc-driver-head,.rdc-driver-row{grid-template-columns:minmax(150px,1fr) 72px 59px 78px minmax(190px,1.35fr)!important}
+  .rdc-driver-name b{font-size:10.5px!important}.rdc-driver-note{font-size:8.5px!important}
+  .rdc-internal-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(215px,.9fr)!important}
+  .rdc-asset-head,.rdc-asset-row{grid-template-columns:82px 78px 54px 92px 66px minmax(115px,1fr)!important}
+}
