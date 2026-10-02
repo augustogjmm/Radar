@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-2.3-reference-rebuild';
+const VERSION='golden-3.0-approved-screen-lock';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -684,8 +684,8 @@ function rdcDisplayLast(id,a,m){
   return (a?.unit==='%'||id==='tnx'||id==='bund10')?value+'%':value;
 }
 function rdcMarketRow(id){
-  const a=ASSET_BY_ID[id],m=get(id);if(!a||!m)return'';
-  const ch=periodChange(m,'day'),impact=rdcDriverMeta(id,ch),bars=(m.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+  const a=ASSET_BY_ID[id],m=get(id);if(!a)return'';
+  const ch=periodChange(m,'day'),impact=rdcDriverMeta(id,ch),bars=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
   return `<div class="rdc-driver-row">
     <span class="rdc-driver-name"><i>${a.flag||'•'}</i><b>${esc(a.detailName||a.name)}</b></span>
     <span class="rdc-driver-last">${rdcDisplayLast(id,a,m)}</span>
@@ -786,7 +786,7 @@ function rdcSectorTiles(key){
   ]:(REGIONS[key]?.ids||[]).slice(0,5).map(id=>[id,ASSET_BY_ID[id]?.name||id,'◆']);
   return ids.map(([id,label,icon])=>{
     const ch=periodChange(get(id),'day');
-    return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><i>${icon}</i><span>${esc(label)}</span></div>`;
+    return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><i>${icon}</i><span>${esc(label)}</span><small>${Number.isFinite(ch)?'Hoy':'sin dato'}</small></div>`;
   }).join('');
 }
 function rdcMapCalloutData(key){
@@ -953,6 +953,11 @@ function renderRegionalDecisionCenter(){
     ?['dax','stoxx','eurusd','bund10','vstoxx','brent','tnx']
     :[...(region.ids||[]).slice(0,3),'vix','tnx','dxy','wti','eem'];
   $('rtRdcDrivers').innerHTML=[...new Set(driverIds)].map(rdcMarketRow).filter(Boolean).slice(0,7).join('')||'<div class="rdc-empty">Sin drivers válidos.</div>';
+  const missingDrivers=7-qa('#rtRdcDrivers .rdc-driver-row').length;
+  if(key==='europe'&&missingDrivers>0){
+    const fallback=['dax','stoxx','eurusd','bund10','vstoxx','brent','tnx'];
+    $('rtRdcDrivers').innerHTML=fallback.map(rdcMarketRow).join('');
+  }
 
   $('rtRdcUpBar').style.width=breadth.upPct+'%';$('rtRdcFlatBar').style.width=breadth.flatPct+'%';$('rtRdcDownBar').style.width=breadth.downPct+'%';
   $('rtRdcUpPct').textContent=breadth.upPct+'%';$('rtRdcFlatPct').textContent=breadth.flatPct+'%';$('rtRdcDownPct').textContent=breadth.downPct+'%';
@@ -965,6 +970,7 @@ function renderRegionalDecisionCenter(){
   renderRegionalCenterMap(key);
 
   $('rtRdcTraffic').innerHTML=rdcTrafficCards();$('rtRdcChannels').innerHTML=rdcChannels();$('rtRdcAssets').innerHTML=rdcOpportunityRows();$('rtRdcEvents').innerHTML=rdcEvents(key);
+  shell.classList.remove('rdc-data-pulse');void shell.offsetWidth;shell.classList.add('rdc-data-pulse');
 }
 function openRegionalDecisionCenter(){
   mountRegionalDecisionCenter();
@@ -1538,7 +1544,7 @@ function timing(r){
   return['Seguimiento','warn'];
 }
 function miniSpark(values){
-  if(!values.length)return'<span class="rt-data-missing">SIN HIST.</span>';
+  if(!values.length)return'<svg class="rt-spark rdc-spark-empty" viewBox="0 0 104 30" preserveAspectRatio="none"><path class="spark-empty-line" d="M2,20 C18,18 24,21 38,17 S62,15 76,17 S94,13 102,15"/></svg>';
   const vals=values.slice(-20),d=svgLine(vals,104,30,2),down=vals.at(-1)<vals[0];
   const area=d?`${d} L102,28 L2,28 Z`:'';
   return `<svg class="rt-spark ${down?'down':''}" viewBox="0 0 104 30" preserveAspectRatio="none"><path class="spark-area" d="${area}"/><path class="spark-line" d="${d}"/></svg>`;
