@@ -82,10 +82,9 @@ try{
       globalAppbarHeight:document.getElementById('rtGlobalAppbar')?.getBoundingClientRect().height||0,
       globalSections:{
         map:!!document.querySelector('.rt-world-card'),
-        sessions:!!document.querySelector('.rt-sessions-card'),
-        indices:!!document.querySelector('.rt-indices-card'),
-        commodities:!!document.querySelector('.rt-commodities-card'),
-        alerts:!!document.querySelector('.rt-alerts-card'),
+        risk:!!document.querySelector('.rt-risk-card'),
+        region:!!document.getElementById('rtRegionDetail'),
+        watch:!!document.querySelector('.rt-watch-card'),
         argentina:!!document.getElementById('rtArgentinaSignals'),
         signals:!!document.getElementById('rtMarketSignals'),
         opportunities:!!document.querySelector('.rt-opps-card')
@@ -147,10 +146,8 @@ try{
       global:{
         enabled:!!document.getElementById('rtGlobalRadar'),
         map:!!document.querySelector('.rt-world-card'),
-        sessions:!!document.querySelector('.rt-sessions-card'),
-        indices:!!document.querySelector('.rt-indices-card'),
-        commodities:!!document.querySelector('.rt-commodities-card'),
-        alerts:!!document.querySelector('.rt-alerts-card'),
+        region:!!document.getElementById('rtRegionDetail'),
+        watch:!!document.querySelector('.rt-watch-card'),
         argentina:!!document.getElementById('rtArgentinaSignals'),
         signals:!!document.getElementById('rtMarketSignals'),
         opportunities:!!document.querySelector('.rt-opps-card'),
@@ -164,12 +161,11 @@ try{
   await assert(finalContract.nav.scanner==='Oportunidades','Navegación Scanner no quedó como Oportunidades');
   await assert(finalContract.nav.fixed==='Renta fija'&&finalContract.nav.watch==='Seguimiento'&&finalContract.nav.portfolio==='Cartera'&&finalContract.nav.signals==='Historial','Navegación final inconsistente: '+JSON.stringify(finalContract.nav));
   if(finalContract.global.enabled){
-    await assert(finalContract.global.map&&finalContract.global.sessions,'Global Command Center perdió mapa o sesiones');
-    await assert(finalContract.global.indices&&finalContract.global.commodities&&finalContract.global.alerts,'Global Command Center perdió la columna de contexto de mercado');
-    await assert(finalContract.global.argentina&&finalContract.global.signals&&finalContract.global.opportunities,'Global Command Center perdió lectura Argentina, semáforos u oportunidades');
+    await assert(finalContract.global.map&&finalContract.global.region&&finalContract.global.watch,'Global Command Center perdió mapa, detalle regional o watchlist');
+    await assert(finalContract.global.argentina&&finalContract.global.signals&&finalContract.global.opportunities,'Global Command Center perdió semáforos u oportunidades');
     const opportunityRows=await page.evaluate(()=>document.querySelectorAll('#rtOppsBody tr[data-rt-symbol]').length);
-    await assert(opportunityRows===5,'Oportunidades debe renderizar exactamente 5 filas reales: '+opportunityRows);
-    await assert(finalContract.global.tabs>=6,'Navegación superior global incompleta: '+finalContract.global.tabs);
+    await assert(opportunityRows===6,'Oportunidades debe renderizar exactamente 6 filas reales: '+opportunityRows);
+    await assert(finalContract.global.tabs>=7,'Navegación superior global incompleta: '+finalContract.global.tabs);
   }else{
     await assert(finalContract.home.hero&&finalContract.home.daily&&finalContract.home.decision,'Inicio perdió portada, Radar de hoy o prioridades');
     await assert(finalContract.home.market&&finalContract.home.marketHasKpis,'Inicio perdió Mercado en cuatro números');
