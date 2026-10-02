@@ -616,9 +616,9 @@ async function deepHealth(){
       const x=await fxCurrent();if(!(num(x?.fx?.mep?.venta)>0)&&!(num(x?.fx?.ccl?.venta)>0))throw new Error('MEP/CCL no disponible');
       return {mep:x.fx?.mep?.venta,ccl:x.fx?.ccl?.venta};
     }),
-    run('Renta fija',true,async()=>{
+    run('Renta fija curva',false,async()=>{
       const x=await fixedIncomeCurve();if(!Array.isArray(x.bonds)||x.bonds.length<2)throw new Error('curva soberana insuficiente');
-      return {count:x.bonds.length};
+      return {count:x.bonds.length,source:x.source};
     }),
     run('Riesgo país',false,async()=>{
       const x=await riskNow();if(!(num(x?.value)>0))throw new Error('riesgo país no disponible');
@@ -637,6 +637,11 @@ async function deepHealth(){
     const u=new URL('https://radar.local/api/byma/cedears');u.searchParams.set('liquid','1');
     const x=await bymaCedears(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo vacío');
     return {count:x.items.length,liquidCount:x.liquidCount,source:x.source,fallback:!!x.fallback};
+  });
+  await run('BYMA renta fija',true,async()=>{
+    const u=new URL('https://radar.local/api/byma/fixed-income');u.searchParams.set('kind','all');u.searchParams.set('currency','ALL');u.searchParams.set('liquid','1');
+    const x=await bymaFixedIncome(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo de renta fija vacío');
+    return {count:x.items.length,source:x.source};
   });
   await run('BYMA histórico GGAL',true,async()=>{
     const u=new URL('https://radar.local/api/byma/scan-history');u.searchParams.set('symbol','GGAL');u.searchParams.set('tf','short');
