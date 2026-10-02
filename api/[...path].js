@@ -87,10 +87,10 @@ async function yahooLocalUniverse(symbols,sourcePanel){
     if(last===null||last<=0)continue;
     items.push({
       symbol:String(q.symbol||'').toUpperCase().replace(/\.BA$/,''),
-      trade:last,closingPrice:last,volume,tradeVolume:volume,
+      trade:last,closingPrice:last,changePct:num(q.changePct),volume,tradeVolume:volume,
       volumeAmount:volume>0?last*volume:0,
       settlementType:'2',denominationCcy:'ARS',
-      sourcePanel,source:'Yahoo Finance fallback',fallback:true
+      sourcePanel,sourceSymbol:String(q.symbol||'').toUpperCase(),source:'Yahoo Finance fallback',fallback:true
     });
   }
   return items.sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
