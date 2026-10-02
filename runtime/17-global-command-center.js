@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-1.1-reference-lock';
+const VERSION='golden-1.2-stable-providers';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -656,7 +656,7 @@ async function buildLocalOpportunityLeaders(signal){
     const last=num(x.panel.trade??x.panel.closingPrice??bars.at(-1)?.close),prev=bars.length>1?num(bars.at(-2)?.close):NaN;
     const changePct=Number.isFinite(last)&&Number.isFinite(prev)&&prev?((last/prev)-1)*100:NaN;
     const volume=num(x.panel.volumeAmount??x.panel.tradeVolume??x.panel.volume);
-    return{item:{symbol,type:x.type,requestedType:x.type,label:symbol,panel:x.panel},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars,marketData:{last,changePct,volume,bars,source:'Open BYMADATA'}};
+    return{item:{symbol,type:x.type,requestedType:x.type,label:symbol,panel:x.panel},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars,marketData:{last,changePct,volume,bars,source:x.panel?.source||'Open BYMADATA'}};
   }));
   state.opportunityLeaders=rows.filter(r=>Number.isFinite(r.marketData?.last)&&Number.isFinite(r.marketData?.volume)&&r.marketData.volume>0);
 }
@@ -669,14 +669,16 @@ async function fetchBatch(force=false){
     const stamp=Date.now(),fresh=force?'1':'0';
     const dailyUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d&fresh=${fresh}&_=${stamp}`;
     const intraUrl=`/api/yahoo-batch?symbols=${encodeURIComponent(intradaySymbols.join(','))}&range=5d&interval=15m&fresh=${fresh}&_=${stamp}`;
-    const [dailyRes,intraRes,equityRes,cedearRes,fixedRes]=await Promise.all([
+    const [dailyRes,intraRes]=await Promise.all([
       fetch(dailyUrl,{cache:'no-store',signal:ctrl.signal}),
-      fetch(intraUrl,{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
-      fetch('/api/byma/equities?mode=all',{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
-      fetch('/api/byma/cedears?liquid=1',{cache:'no-store',signal:ctrl.signal}).catch(()=>null),
-      fetch('/api/byma/fixed-income?kind=all&currency=ALL&liquid=1',{cache:'no-store',signal:ctrl.signal}).catch(()=>null)
+      fetch(intraUrl,{cache:'no-store',signal:ctrl.signal}).catch(()=>null)
     ]);
     if(!dailyRes.ok)throw new Error(`Mercado HTTP ${dailyRes.status}`);
+    // Query local BYMA universes sequentially. Open BYMADATA is considerably
+    // more reliable when we avoid a three-endpoint burst from the same refresh.
+    const equityRes=await fetch('/api/byma/equities?mode=all',{cache:'no-store',signal:ctrl.signal}).catch(()=>null);
+    const cedearRes=await fetch('/api/byma/cedears?liquid=1',{cache:'no-store',signal:ctrl.signal}).catch(()=>null);
+    const fixedRes=await fetch('/api/byma/fixed-income?kind=all&currency=ALL&liquid=1',{cache:'no-store',signal:ctrl.signal}).catch(()=>null);
     const j=await dailyRes.json();
     for(const x of (j.items||[])){
       const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
