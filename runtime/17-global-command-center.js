@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-2.1-reference-match';
+const VERSION='golden-2.2-premium-fidelity';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -715,7 +715,10 @@ function rdcTrafficCards(){
   return [['Hoy','day'],['Semana','week'],['Mes','month']].map(([label,p])=>{
     const score=scoreArgentina(p),s=trafficState(score);
     return `<div class="rdc-impact-card ${s.key}">
-      <small>${label}</small><i class="rdc-light"></i><b>${s.label}</b><p>${esc(trafficNarrative(p,s))}</p>
+      <small>${label}</small>
+      <div class="rdc-signal-bezel" aria-hidden="true"><span class="rdc-signal-glass"></span></div>
+      <b>${s.label}</b>
+      <p>${esc(trafficNarrative(p,s))}</p>
     </div>`;
   }).join('');
 }
@@ -782,6 +785,18 @@ function rdcSectorTiles(key){
     return `<div class="${signClass(ch)}"><strong>${pct(ch)}</strong><i>${icon}</i><span>${esc(label)}</span></div>`;
   }).join('');
 }
+function rdcMapCalloutData(key){
+  const defs={
+    europe:[
+      ['Londres','ftse',17,35],['Frankfurt','dax',65,25],['París','cac',34,53],['Madrid','ibex',28,74],['Milán','ftsemib',72,61]
+    ],
+    northamerica:[['Nueva York','sp500',69,48],['Toronto','sp500',55,35]],
+    asia:[['Tokio','nikkei',77,54],['Hong Kong','hangseng',46,68],['Shanghái','shanghai',40,42]],
+    latam:[['São Paulo','bovespa',66,48],['Buenos Aires','merval',48,72],['México','mexico',23,24]],
+    oceania:[['Sídney','asx',63,63]]
+  };
+  return defs[key]||[];
+}
 function renderRegionalCenterMap(key){
   const source=q('#rtWorldMapHost svg'),host=$('rtRdcMapHost');if(!source||!host)return;
   const clone=source.cloneNode(true);clone.removeAttribute('id');clone.classList.add('rdc-map-svg');
@@ -794,6 +809,12 @@ function renderRegionalCenterMap(key){
   clone.querySelectorAll('.rt-market-marker').forEach(m=>m.remove());
   clone.querySelector('#rtCountryLayer')?.insertAdjacentHTML('beforeend',marketMarkers(key));
   host.replaceChildren(clone);
+  const layer=document.createElement('div');layer.className='rdc-map-callouts';
+  layer.innerHTML=rdcMapCalloutData(key).map(([label,id,x,y])=>{
+    const ch=periodChange(get(id),'day'),cls=signClass(ch);
+    return `<div class="rdc-map-callout ${cls}" style="left:${x}%;top:${y}%"><span>${esc(label)}</span><b>${pct(ch)}</b></div>`;
+  }).join('');
+  host.appendChild(layer);
 }
 function mountRegionalDecisionCenter(){
   if($('rtRegionalDecisionCenter'))return;
