@@ -136,6 +136,11 @@ try{
       indices:document.querySelectorAll('#rtRdcIndexRows .rdc-index-row').length,
       traffic:document.querySelectorAll('#rtRdcTraffic .rdc-impact-card').length,
       map:!!document.querySelector('#rtRdcMapHost svg'),
+      topbar:!!document.querySelector('#rtRegionalDecisionCenter .rdc-topbar'),
+      clocks:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-city-clock').length,
+      sectors:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-market-tiles > div').length,
+      timeline:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-event').length,
+      kpiSparks:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-kpi-spark .rt-spark').length,
       bg:getComputedStyle(document.getElementById('rtRegionalDecisionCenter')).backgroundImage
     }));
     await assert(regionalCenter.visible,'Centro regional no abrió');
@@ -144,6 +149,11 @@ try{
     await assert(regionalCenter.indices>=1,'Centro regional sin índices');
     await assert(regionalCenter.traffic===3,'Centro regional perdió semáforos Argentina');
     await assert(regionalCenter.map,'Centro regional no cargó mapa');
+    await assert(regionalCenter.topbar,'Centro regional perdió barra superior');
+    await assert(regionalCenter.clocks>=3,'Centro regional sin relojes por plaza: '+regionalCenter.clocks);
+    await assert(regionalCenter.sectors>=3,'Centro regional sin sectores/mercados internos: '+regionalCenter.sectors);
+    await assert(regionalCenter.timeline>=1,'Centro regional sin eventos de jornada');
+    await assert(regionalCenter.kpiSparks>=4,'Centro regional sin sparklines KPI: '+regionalCenter.kpiSparks);
     await assert(!/^none$/.test(regionalCenter.bg),'Centro regional quedó sin fondo visual');
     await page.click('#rtRdcClose');
     await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
