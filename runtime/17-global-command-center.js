@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-1.4-functional-restore';
+const VERSION='golden-1.5-session-detail-fix';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -443,12 +443,12 @@ function mountDashboard(){
     <section class="rt-card rt-world-card">
       <div class="rt-map-head"><h2>Mapa de Sentimiento Global</h2><p>Rendimiento regional (últimas 24 hs)</p><span id="rtContextBadge" class="rt-context-badge">🌐 Global</span></div>
       <div class="rt-session-box">
-        <div id="rtSessionFlag" class="rt-session-flag">🇺🇸</div>
-        <div class="rt-session-copy"><small>Sesión activa</small><b id="rtSessionName">Calculando…</b></div>
+        <div id="rtSessionFlag" class="rt-session-flag" aria-label="Banderas de sesiones activas"></div>
+        <div class="rt-session-copy"><small>Sesiones activas</small><b id="rtSessionName">Calculando…</b></div>
         <span class="rt-session-dot"></span>
-        <div class="rt-session-count"><small>Cierra en</small><b id="rtSessionCountdown">--:--:--</b></div>
+        <div class="rt-session-count"><small>Próximo cierre</small><b id="rtSessionCountdown">--:--:--</b></div>
       </div>
-      <div id="rtNextSessions" class="rt-next-sessions"><b>Próximas sesiones:</b><div id="rtNextSessionRows"></div></div>
+      <div id="rtNextSessions" class="rt-next-sessions"><b>Últimos cierres</b><div id="rtNextSessionRows"></div></div>
       <div class="rt-world-wrap">
         <div id="rtWorldMapHost" class="rt-world-map rt-world-map-host" aria-label="Mapa mundial interactivo">
           <div class="rt-map-loading"><span></span><b>Cargando cartografía de mercado…</b></div>
@@ -565,7 +565,7 @@ function bindDashboard(){
     const key=el.dataset.labelRegion;if(!key||!REGIONS[key])return;
     applyContext(key,null);
   }));
-  $('rtRegionOpen')?.addEventListener('click',()=>goHome('#rtRegionDetail'));
+  $('rtRegionOpen')?.addEventListener('click',()=>toggleRegionDetailExpanded());
   $('rtWatchAll')?.addEventListener('click',()=>clickOriginal('watchlistViewBtn'));
   $('rtMoreOpps')?.addEventListener('click',()=>clickOriginal('scannerViewBtn'));
   $('rtRefresh')?.addEventListener('click',()=>refresh(true));
@@ -574,6 +574,26 @@ function bindDashboard(){
     qa('[data-rt-filter]').forEach(x=>x.classList.toggle('active',x===b));
     renderOpportunities();
   }));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('rtRegionDetail')?.classList.contains('is-expanded'))toggleRegionDetailExpanded(false)});
+}
+
+function sessionFlagSvg(code){
+  const common='viewBox="0 0 28 18" role="img" aria-hidden="true"';
+  if(code==='AR')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#74acdf"/><rect y="6" width="28" height="6" fill="#fff"/><circle cx="14" cy="9" r="2" fill="#f6b40e"/></svg></span>`;
+  if(code==='US')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#fff"/><g fill="#b22234"><rect y="0" width="28" height="2"/><rect y="4" width="28" height="2"/><rect y="8" width="28" height="2"/><rect y="12" width="28" height="2"/><rect y="16" width="28" height="2"/></g><rect width="12" height="10" fill="#3c3b6e"/><g fill="#fff"><circle cx="2" cy="2" r=".6"/><circle cx="5" cy="2" r=".6"/><circle cx="8" cy="2" r=".6"/><circle cx="10.5" cy="2" r=".6"/><circle cx="3.5" cy="5" r=".6"/><circle cx="6.5" cy="5" r=".6"/><circle cx="9.5" cy="5" r=".6"/><circle cx="2" cy="8" r=".6"/><circle cx="5" cy="8" r=".6"/><circle cx="8" cy="8" r=".6"/></g></svg></span>`;
+  if(code==='GB')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#012169"/><path d="M0 0 28 18M28 0 0 18" stroke="#fff" stroke-width="4"/><path d="M0 0 28 18M28 0 0 18" stroke="#c8102e" stroke-width="2"/><path d="M14 0v18M0 9h28" stroke="#fff" stroke-width="6"/><path d="M14 0v18M0 9h28" stroke="#c8102e" stroke-width="3"/></svg></span>`;
+  if(code==='JP')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#fff"/><circle cx="14" cy="9" r="4.3" fill="#bc002d"/></svg></span>`;
+  if(code==='AU')return `<span class="rt-flag-svg"><svg ${common}><rect width="28" height="18" fill="#012169"/><rect width="12" height="8" fill="#012169"/><path d="M0 0 12 8M12 0 0 8" stroke="#fff" stroke-width="2.4"/><path d="M6 0v8M0 4h12" stroke="#fff" stroke-width="3"/><path d="M6 0v8M0 4h12" stroke="#c8102e" stroke-width="1.5"/><g fill="#fff"><circle cx="20" cy="5" r="1"/><circle cx="23" cy="10" r="1"/><circle cx="18" cy="13" r="1"/><circle cx="25" cy="15" r=".8"/></g></svg></span>`;
+  return `<span class="rt-flag-svg rt-flag-generic">🌐</span>`;
+}
+
+function toggleRegionDetailExpanded(force){
+  const card=$('rtRegionDetail'),btn=$('rtRegionOpen');if(!card)return;
+  const expand=typeof force==='boolean'?force:!card.classList.contains('is-expanded');
+  card.classList.toggle('is-expanded',expand);
+  document.body.classList.toggle('rt-detail-modal-open',expand);
+  if(btn)btn.textContent=expand?'Cerrar vista completa ×':'Abrir vista completa →';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>renderRegionDetail()));
 }
 
 function zonedParts(date,timeZone){
@@ -597,31 +617,36 @@ function nextOpenDelta(now,session){
 function renderSession(date){
   if(!$('rtSessionName'))return;
   const sessions=[
-    {name:'Nueva York',flag:'🇺🇸',tz:'America/New_York',open:9*3600+30*60,close:16*3600},
-    {name:'Londres',flag:'🇬🇧',tz:'Europe/London',open:8*3600,close:16*3600+30*60},
-    {name:'Tokio',flag:'🇯🇵',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60},
-    {name:'Sídney',flag:'🇦🇺',tz:'Australia/Sydney',open:10*3600,close:16*3600}
+    {name:'Nueva York',short:'NY',code:'US',tz:'America/New_York',open:9*3600+30*60,close:16*3600,asset:'sp500'},
+    {name:'Buenos Aires',short:'ARG',code:'AR',tz:'America/Argentina/Buenos_Aires',open:11*3600,close:17*3600,asset:'merval'},
+    {name:'Londres',short:'LON',code:'GB',tz:'Europe/London',open:8*3600,close:16*3600+30*60,asset:'ftse'},
+    {name:'Tokio',short:'TOK',code:'JP',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60,asset:'nikkei'},
+    {name:'Sídney',short:'SYD',code:'AU',tz:'Australia/Sydney',open:10*3600,close:16*3600,asset:'asx'}
   ];
   const live=sessions.map(x=>{
     const p=zonedParts(date,x.tz),sec=p.h*3600+p.m*60+p.s;
     const active=p.day>=1&&p.day<=5&&sec>=x.open&&sec<x.close;
-    return{...x,sec,active,left:active?x.close-sec:NaN};
+    return{...x,sec,active,left:active?x.close-sec:NaN,change:periodChange(get(x.asset),'day')};
   });
-  const active=live.find(x=>x.active)||null;
+  const active=live.filter(x=>x.active);
   qa('.rt-market-marker').forEach(m=>m.classList.remove('active-session'));
-  if(active){
-    $('rtSessionName').textContent=active.name;$('rtSessionFlag').textContent=active.flag;
-    const cityMap={'Nueva York':'sp500','Londres':'ftse','Tokio':'nikkei','Sídney':'asx'};
-    const activeAsset=cityMap[active.name];
-    if(activeAsset)qa(`.rt-market-marker[data-marker-asset="${activeAsset}"]`).forEach(m=>m.classList.add('active-session'));
-    const left=Math.max(0,active.left),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
+  active.forEach(x=>qa(`.rt-market-marker[data-marker-asset="${x.asset}"]`).forEach(m=>m.classList.add('active-session')));
+  const box=q('.rt-session-box');
+  box?.classList.toggle('multi-active',active.length>1);
+  if(active.length){
+    $('rtSessionName').textContent=active.map(x=>x.name).join(' · ');
+    $('rtSessionFlag').innerHTML=active.map(x=>sessionFlagSvg(x.code)).join('');
+    const left=Math.max(0,Math.min(...active.map(x=>x.left).filter(Number.isFinite))),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
     $('rtSessionCountdown').textContent=[hh,mm,ss].map(x=>String(x).padStart(2,'0')).join(':');
   }else{
-    $('rtSessionName').textContent='Entre sesiones';$('rtSessionFlag').textContent='🌐';$('rtSessionCountdown').textContent='—';
+    $('rtSessionName').textContent='Entre sesiones';$('rtSessionFlag').innerHTML=sessionFlagSvg('');$('rtSessionCountdown').textContent='—';
   }
   if($('rtNextSessionRows')){
-    const next=sessions.map(x=>({...x,delta:nextOpenDelta(date,x)})).sort((a,b)=>a.delta-b.delta).slice(0,3);
-    $('rtNextSessionRows').innerHTML=next.map(x=>`<span><i>${x.flag}</i><b>${x.name}</b><small>+${Math.floor(x.delta/3600)}h ${Math.floor((x.delta%3600)/60)}m</small></span>`).join('');
+    const closed=live.filter(x=>!x.active).sort((a,b)=>['Londres','Tokio','Sídney','Nueva York','Buenos Aires'].indexOf(a.name)-['Londres','Tokio','Sídney','Nueva York','Buenos Aires'].indexOf(b.name)).slice(0,3);
+    $('rtNextSessionRows').innerHTML=closed.map(x=>{
+      const cls=Number.isFinite(x.change)?x.change>.03?'rt-up':x.change<-.03?'rt-down':'rt-flat':'rt-flat';
+      return `<span class="rt-session-close-row"><i>${sessionFlagSvg(x.code)}</i><b>${x.name}</b><small class="${cls}">${pct(x.change)}</small></span>`;
+    }).join('');
   }
 }
 
