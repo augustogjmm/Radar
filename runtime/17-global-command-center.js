@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-3.2-reference-complete';
+const VERSION='golden-4.0-pixel-geometry';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -695,7 +695,6 @@ function rdcMarketRow(id){
     <span class="rdc-driver-change ${signClass(ch)}">${pct(ch)}</span>
     <span class="rdc-impact ${impact.cls}">${impact.label}</span>
     <span class="rdc-driver-note">${esc(impact.note)}</span>
-    <span class="rdc-driver-spark">${miniSpark(bars)}</span>
   </div>`;
 }
 function rdcOpportunityRows(){
@@ -828,7 +827,8 @@ function rdcMapCalloutData(key){
 function renderRegionalCenterMap(key){
   const source=q('#rtWorldMapHost svg'),host=$('rtRdcMapHost');if(!source||!host)return;
   const clone=source.cloneNode(true);clone.removeAttribute('id');clone.classList.add('rdc-map-svg');
-  clone.setAttribute('viewBox',(REGION_VIEWS[key]||REGION_VIEWS.europe).join(' '));
+  const rdcView=key==='europe'?[455,35,345,230]:(REGION_VIEWS[key]||REGION_VIEWS.europe);
+  clone.setAttribute('viewBox',rdcView.join(' '));
   clone.setAttribute('preserveAspectRatio','xMidYMid slice');
   clone.querySelectorAll('.rt-country').forEach(p=>{
     const match=p.dataset.region===key;
@@ -870,8 +870,8 @@ function mountRegionalDecisionCenter(){
       <div class="rdc-skyline" aria-hidden="true">
         <svg viewBox="0 0 900 82" preserveAspectRatio="none"><defs><linearGradient id="rdcSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123c57" stop-opacity=".55"/><stop offset="1" stop-color="#020d16" stop-opacity=".08"/></linearGradient></defs><rect width="900" height="82" fill="url(#rdcSky)"/><g fill="#071823" opacity=".92"><path d="M0 77h900v5H0zM34 77V43h18v34m7 0V35h12v42m23 0V49h26v28m7 0V24h8v53m5 0V13h6v64m7 0V29h10v48m18 0V45h34v32m7 0V18h7v59m5 0V8h5v69m7 0V26h8v51m20 0V39h27v38m14 0V31h12v46m17 0V19h8v58m19 0V46h24v31m12 0V27h8v50m4 0V7h5v70m6 0V29h8v48m18 0V43h32v34m11 0V34h11v43m14 0V22h7v55m20 0V41h31v36m13 0V26h9v51m7 0V15h7v62m19 0V47h25v30m16 0V35h15v42m15 0V18h7v59m6 0V5h5v72m6 0V25h9v52m17 0V42h36v35"/></g><g fill="#f4b64a" opacity=".36"><rect x="141" y="31" width="2" height="2"/><rect x="204" y="42" width="3" height="2"/><rect x="343" y="50" width="3" height="2"/><rect x="497" y="36" width="3" height="2"/><rect x="666" y="49" width="3" height="2"/><rect x="807" y="39" width="3" height="2"/></g></svg>
       </div>
-      <div class="rdc-region-id"><span id="rtRdcFlag" class="rdc-hero-flag"></span><div><h1 id="rtRdcTitle">Región</h1><p>Centro de decisión regional <b>›</b></p></div></div>
-      <div class="rdc-open-state"><span id="rtRdcOpenBadge">—</span><small>CIERRE EN</small><b id="rtRdcCountdown">—</b></div>
+      <div class="rdc-region-id"><span id="rtRdcFlag" class="rdc-hero-flag"></span><div><div class="rdc-title-line"><h1 id="rtRdcTitle">Región</h1><span id="rtRdcOpenBadge">—</span></div><p>Centro de decisión regional <b>›</b></p></div></div>
+      <div class="rdc-countdown"><small>CIERRA EN</small><b id="rtRdcCountdown">—</b></div>
       <div id="rtRdcClocks" class="rdc-clocks"></div>
     </div>
 
@@ -886,18 +886,16 @@ function mountRegionalDecisionCenter(){
     <div class="rdc-main">
       <section class="rdc-panel rdc-drivers">
         <header><div><h2>▤ &nbsp;Qué está moviendo <span id="rtRdcDriverRegion">la región</span> hoy</h2><small>Drivers con efecto sobre el contexto regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
-        <div class="rdc-driver-head"><span>ACTIVO / EVENTO</span><span>ÚLTIMO</span><span>VAR. %</span><span>IMPACTO</span><span>COMENTARIO</span><span>TENDENCIA</span></div>
+        <div class="rdc-driver-head"><span>ACTIVO / EVENTO</span><span>ÚLTIMO</span><span>VAR. %</span><span>IMPACTO</span><span>COMENTARIO</span></div>
         <div id="rtRdcDrivers"></div>
       </section>
 
       <section class="rdc-panel rdc-internals">
         <header><div><h2>▥ &nbsp;Internals del mercado <span id="rtRdcInternalRegion"></span></h2><small>Amplitud, sectores, índices y mapa regional</small></div><button class="rdc-more" data-rdc-action="markets">Ver más →</button></header>
-        <div class="rdc-internal-top">
+        <div class="rdc-internal-grid">
           <div class="rdc-breadth-card"><b>Amplitud regional</b><div class="rdc-breadth-bar"><i id="rtRdcUpBar"></i><i id="rtRdcFlatBar"></i><i id="rtRdcDownBar"></i></div><div><span><strong id="rtRdcUpPct">—</strong> Alcistas</span><span><strong id="rtRdcFlatPct">—</strong> Sin cambio</span><span><strong id="rtRdcDownPct">—</strong> Bajistas</span></div></div>
           <div class="rdc-sector-wrap"><div class="rdc-sector-head"><b id="rtRdcSectorTitle">Sectores (STOXX 600)</b><span>Hoy⌄</span></div><div class="rdc-market-tiles" id="rtRdcMarketTiles"></div></div>
-        </div>
-        <div class="rdc-internal-bottom">
-          <div class="rdc-index-list"><div class="rdc-index-head"><span>Principales índices</span><span>Último</span><span>Var. %</span><span>Tendencia (30D)</span></div><div id="rtRdcIndexRows"></div></div>
+          <div class="rdc-index-list"><div class="rdc-index-head"><span>Principales índices</span><span>Último</span><span>Var. %</span><span>Tendencia (1D)</span></div><div id="rtRdcIndexRows"></div></div>
           <div class="rdc-map-card"><div class="rdc-map-title"><span><strong>Mapa de mercado</strong> <em id="rtRdcMapPeriodLabel">(var. % 1D)</em></span><div class="rdc-period-tabs"><button data-rdc-period="day" class="active">1D</button><button data-rdc-period="week">5D</button><button data-rdc-period="month">1M</button></div></div><div id="rtRdcMapHost" class="rdc-map-host"></div></div>
         </div>
       </section>
