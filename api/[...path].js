@@ -59,6 +59,42 @@ async function request(url,{method='GET',body,timeout=16000,headers={}}={}){
 }
 async function getJson(url,opt){return JSON.parse(await request(url,opt))}
 async function postByma(endpoint,body={page_size:5000}){return JSON.parse(await request(BYMA+'/'+endpoint,{method:'POST',body,timeout:22000}))}
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function postBymaRows(endpoint,bodies){
+  const payloads=Array.isArray(bodies)&&bodies.length?bodies:[{page_size:5000,T1:true},{page_size:5000},{T1:true},{}];
+  const errors=[];
+  for(let round=0;round<2;round++){
+    for(const body of payloads){
+      try{
+        const x=await postByma(endpoint,body),rows=arr(x);
+        if(rows.length)return {rows,errors,body,round};
+        errors.push(endpoint+' vacío '+JSON.stringify(body));
+      }catch(e){errors.push(endpoint+' '+String(e?.message||e).slice(0,160))}
+    }
+    if(round===0)await wait(220);
+  }
+  return {rows:[],errors};
+}
+const ARG_EQUITY_FALLBACK=['GGAL.BA','YPFD.BA','PAMP.BA','VIST.BA','TGSU2.BA','BMA.BA','BBAR.BA','SUPV.BA','CEPU.BA','EDN.BA','TRAN.BA','TXAR.BA','ALUA.BA','LOMA.BA','COME.BA','MIRG.BA'];
+const ARG_CEDEAR_FALLBACK=['AAPL.BA','NVDA.BA','MELI.BA','MSFT.BA','AMZN.BA','GOOGL.BA','META.BA','TSLA.BA','SPY.BA','QQQ.BA','KO.BA','WMT.BA','XOM.BA','JPM.BA','BRKB.BA'];
+async function yahooLocalUniverse(symbols,sourcePanel){
+  const u=new URL('https://radar.local/api/yahoo-batch');
+  u.searchParams.set('symbols',symbols.join(','));u.searchParams.set('range','1mo');u.searchParams.set('interval','1d');
+  const x=await yahooBatch(u),items=[];
+  for(const q of (x.items||[])){
+    if(!q?.ok)continue;
+    const last=num(q.last),volume=num(q.volume)??num(q.bars?.at(-1)?.volume)??0;
+    if(last===null||last<=0)continue;
+    items.push({
+      symbol:String(q.symbol||'').toUpperCase().replace(/\.BA$/,''),
+      trade:last,closingPrice:last,volume,tradeVolume:volume,
+      volumeAmount:volume>0?last*volume:0,
+      settlementType:'2',denominationCcy:'ARS',
+      sourcePanel,source:'Yahoo Finance fallback',fallback:true
+    });
+  }
+  return items.sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
+}
 function uniqueBest(rows){
   const m=new Map();
   for(const x of rows){
@@ -304,23 +340,37 @@ async function binanceUniverse(url){
 }
 async function bymaEquities(url){
   const mode=url.searchParams.get('mode')||'all';
-  const [l,g]=await Promise.allSettled([postByma('leading-equity',{T1:true,page_size:5000}),postByma('general-equity',{T1:true,page_size:5000})]);
-  const leading=l.status==='fulfilled'?arr(l.value):[],general=g.status==='fulfilled'?arr(g.value):[];
+  const l=await postBymaRows('leading-equity',[{T1:true,page_size:5000},{page_size:5000},{T1:true},{}]);
+  const g=await postBymaRows('general-equity',[{T1:true,page_size:5000},{page_size:5000},{T1:true},{}]);
+  const leading=l.rows||[],general=g.rows||[],errors=[...(l.errors||[]),...(g.errors||[])];
   const leadingSet=new Set(leading.map(x=>String(x.symbol||'').toUpperCase()));
-  let items=uniqueBest([...leading,...general].filter(x=>!x.securityType||x.securityType==='CS').filter(x=>!x.market||x.market==='BYMA').filter(x=>!x.denominationCcy||String(x.denominationCcy).toUpperCase()==='ARS')).map(x=>({symbol:String(x.symbol).toUpperCase(),trade:num(x.trade),volume:num(x.volume),volumeAmount:num(x.volumeAmount),settlementType:String(x.settlementType??''),sourcePanel:leadingSet.has(String(x.symbol||'').toUpperCase())?'Lider':'General'})).sort((a,b)=>a.symbol.localeCompare(b.symbol));
-  if(mode==='leading')items=items.filter(x=>x.sourcePanel==='Lider'); if(mode==='general')items=items.filter(x=>x.sourcePanel==='General');
-  return {source:'Open BYMADATA leading-equity + general-equity',updated:new Date().toISOString(),mode,count:items.length,leadingCount:leadingSet.size,generalCount:new Set(general.map(x=>x.symbol)).size,errors:[],items};
+  let items=uniqueBest([...leading,...general].filter(x=>!x.securityType||x.securityType==='CS').filter(x=>!x.market||x.market==='BYMA').filter(x=>!x.denominationCcy||String(x.denominationCcy).toUpperCase()==='ARS')).map(x=>({symbol:String(x.symbol).toUpperCase(),trade:num(x.trade),closingPrice:num(x.closingPrice),volume:num(x.volume),tradeVolume:num(x.tradeVolume),volumeAmount:num(x.volumeAmount),settlementType:String(x.settlementType??''),denominationCcy:String(x.denominationCcy||''),sourcePanel:leadingSet.has(String(x.symbol||'').toUpperCase())?'Lider':'General',source:'Open BYMADATA'})).sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
+  let fallback=false,source='Open BYMADATA leading-equity + general-equity';
+  if(!items.length){
+    items=await yahooLocalUniverse(ARG_EQUITY_FALLBACK,'Fallback');
+    fallback=items.length>0;
+    if(fallback)source='Yahoo Finance fallback · curated BYMA equities';
+  }
+  if(mode==='leading'&&!fallback)items=items.filter(x=>x.sourcePanel==='Lider');
+  if(mode==='general'&&!fallback)items=items.filter(x=>x.sourcePanel==='General');
+  return {source,updated:new Date().toISOString(),mode,count:items.length,leadingCount:leadingSet.size,generalCount:new Set(general.map(x=>x.symbol)).size,fallback,errors,items};
 }
 async function bymaCedears(url){
   const liquidOnly=url.searchParams.get('liquid')==='1';
-  let x=await postByma('cedears',{page_size:5000,T1:true}),rows=arr(x);
-  if(!rows.length){x=await postByma('cedears',{T1:true});rows=arr(x)}
+  const r=await postBymaRows('cedears',[{page_size:5000,T1:true},{page_size:5000},{T1:true},{}]);
+  let rows=r.rows||[];
   const ars=rows.filter(x=>!x.denominationCcy||String(x.denominationCcy).toUpperCase()==='ARS');if(ars.length)rows=ars;
   const settled=rows.filter(x=>!x.settlementType||String(x.settlementType)==='2');if(settled.length)rows=settled;
-  let items=uniqueBest(rows).map(x=>({symbol:String(x.symbol||'').toUpperCase(),trade:num(x.trade),closingPrice:num(x.closingPrice),volume:num(x.volume),tradeVolume:num(x.tradeVolume),volumeAmount:num(x.volumeAmount),tradeHour:String(x.tradeHour||''),settlementType:String(x.settlementType||''),denominationCcy:String(x.denominationCcy||'')})).sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
+  let items=uniqueBest(rows).map(x=>({symbol:String(x.symbol||'').toUpperCase(),trade:num(x.trade),closingPrice:num(x.closingPrice),volume:num(x.volume),tradeVolume:num(x.tradeVolume),volumeAmount:num(x.volumeAmount),tradeHour:String(x.tradeHour||''),settlementType:String(x.settlementType||''),denominationCcy:String(x.denominationCcy||''),source:'Open BYMADATA'})).sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
+  let fallback=false,source='Open BYMADATA /cedears';
+  if(!items.length){
+    items=await yahooLocalUniverse(ARG_CEDEAR_FALLBACK,'CEDEAR fallback');
+    fallback=items.length>0;
+    if(fallback)source='Yahoo Finance fallback · curated CEDEAR universe';
+  }
   const liquidCount=items.filter(x=>(x.volume||0)>0||(x.tradeVolume||0)>0||(x.volumeAmount||0)>0).length;
   if(liquidOnly&&liquidCount)items=items.filter(x=>(x.volume||0)>0||(x.tradeVolume||0)>0||(x.volumeAmount||0)>0);
-  return {source:'Open BYMADATA /cedears',updated:new Date().toISOString(),liquidOnly,liquidCount,count:items.length,rawCount:rows.length,filterMode:'WEB+ARS+24hs',items};
+  return {source,updated:new Date().toISOString(),liquidOnly,liquidCount,count:items.length,rawCount:rows.length,filterMode:fallback?'YAHOO_FALLBACK':'WEB+ARS+24hs',fallback,errors:r.errors||[],items};
 }
 function aggregateBymaUdf(j,mode){
   if(!j||j.s!=='ok'||!Array.isArray(j.t)||!j.t.length||!['week','month'].includes(mode))return j;
@@ -361,8 +411,9 @@ async function bymaQuote(url){
 }
 async function bymaFixedIncome(url){
   const kind=(url.searchParams.get('kind')||'all').toLowerCase(),currency=(url.searchParams.get('currency')||'ALL').toUpperCase(),liquid=url.searchParams.get('liquid')==='1';
-  const [pub,on]=await Promise.allSettled([postByma('public-bonds',{page_size:5000,T1:true}),postByma('negociable-obligations',{page_size:5000,T1:true})]);
-  const publicRows=pub.status==='fulfilled'?arr(pub.value):[],onRows=on.status==='fulfilled'?arr(on.value):[];
+  const pub=await postBymaRows('public-bonds',[{page_size:5000,T1:true},{page_size:5000},{T1:true},{}]);
+  const on=await postBymaRows('negociable-obligations',[{page_size:5000,T1:true},{page_size:5000},{T1:true},{}]);
+  const publicRows=pub.rows||[],onRows=on.rows||[];
   const isLetterSymbol=s=>/^S[A-Z0-9]{4}$/.test(s)||/^T(?:[0-9]{2}[A-Z][0-9]|[0-9][A-Z][0-9])$/.test(s);
   const publicCategory=s=>{
     if(isLetterSymbol(s))return'LECAP/BONCAP';
@@ -386,7 +437,7 @@ async function bymaFixedIncome(url){
   if(currency!=='ALL')items=items.filter(x=>String(x.denominationCcy).toUpperCase()===currency);
   if(liquid)items=items.filter(x=>(x.volume||0)>0||(x.tradeVolume||0)>0||(x.volumeAmount||0)>0);
   items=uniqueBest(items).sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
-  return {source:'Open BYMADATA public-bonds + negociable-obligations',updated:new Date().toISOString(),count:items.length,publicCount:publicItems.length,onCount:onItems.length,kind,currency,liquidOnly:liquid,items};
+  return {source:'Open BYMADATA public-bonds + negociable-obligations',updated:new Date().toISOString(),count:items.length,publicCount:publicItems.length,onCount:onItems.length,kind,currency,liquidOnly:liquid,errors:[...(pub.errors||[]),...(on.errors||[])],items};
 }
 async function cedearPrograms(){
   const html=await request('https://www.comafi.com.ar/Programas-CEDEARs-2483.note.aspx',{timeout:18000,headers:{accept:'text/html,*/*'}});
@@ -561,21 +612,6 @@ async function deepHealth(){
       const x=await cryptoKlinesDetailed(u),rows=x.rows;if(!Array.isArray(rows)||rows.length<50)throw new Error('klines insuficientes');
       return {bars:rows.length,source:x.source,fallback:x.fallback,primaryError:x.fallback?x.primaryError:undefined};
     }),
-    run('BYMA acciones',true,async()=>{
-      const u=new URL('https://radar.local/api/byma/equities');u.searchParams.set('mode','all');
-      const x=await bymaEquities(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo vacío');
-      return {count:x.items.length};
-    }),
-    run('BYMA CEDEAR',true,async()=>{
-      const u=new URL('https://radar.local/api/byma/cedears');u.searchParams.set('liquid','1');
-      const x=await bymaCedears(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo vacío');
-      return {count:x.items.length,liquidCount:x.liquidCount};
-    }),
-    run('BYMA histórico GGAL',true,async()=>{
-      const u=new URL('https://radar.local/api/byma/scan-history');u.searchParams.set('symbol','GGAL');u.searchParams.set('tf','short');
-      const x=await bymaHistory(u);if(x?.s!=='ok'||!Array.isArray(x?.t)||x.t.length<30)throw new Error('histórico insuficiente');
-      return {bars:x.t.length};
-    }),
     run('Dólar',true,async()=>{
       const x=await fxCurrent();if(!(num(x?.fx?.mep?.venta)>0)&&!(num(x?.fx?.ccl?.venta)>0))throw new Error('MEP/CCL no disponible');
       return {mep:x.fx?.mep?.venta,ccl:x.fx?.ccl?.venta};
@@ -589,6 +625,24 @@ async function deepHealth(){
       return {value:x.value,date:x.date,source:x.source};
     })
   ]);
+  // BYMA list endpoints are deliberately checked in sequence. Open BYMADATA can
+  // return empty payloads under concurrent bursts; the public API now retries and
+  // falls back to live Yahoo quotes for the curated local universe.
+  await run('BYMA acciones',true,async()=>{
+    const u=new URL('https://radar.local/api/byma/equities');u.searchParams.set('mode','all');
+    const x=await bymaEquities(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo vacío');
+    return {count:x.items.length,source:x.source,fallback:!!x.fallback};
+  });
+  await run('BYMA CEDEAR',true,async()=>{
+    const u=new URL('https://radar.local/api/byma/cedears');u.searchParams.set('liquid','1');
+    const x=await bymaCedears(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo vacío');
+    return {count:x.items.length,liquidCount:x.liquidCount,source:x.source,fallback:!!x.fallback};
+  });
+  await run('BYMA histórico GGAL',true,async()=>{
+    const u=new URL('https://radar.local/api/byma/scan-history');u.searchParams.set('symbol','GGAL');u.searchParams.set('tf','short');
+    const x=await bymaHistory(u);if(x?.s!=='ok'||!Array.isArray(x?.t)||x.t.length<30)throw new Error('histórico insuficiente');
+    return {bars:x.t.length};
+  });
   const criticalFailures=checks.filter(x=>x.critical&&!x.ok);
   return {ok:criticalFailures.length===0,status:criticalFailures.length?'DEGRADED':'OK',release:'5.3.0',gitSha:process.env.VERCEL_GIT_COMMIT_SHA||null,checkedAt:new Date().toISOString(),durationMs:Date.now()-started,criticalFailures:criticalFailures.length,checks};
 }
