@@ -126,6 +126,29 @@ try{
   }
   await assert(design.bodyOverflow<=4,'Overflow horizontal global: '+design.bodyOverflow);
 
+  if(design.globalCommandCenter){
+    await page.click('#rtRegionOpen');
+    await page.waitForFunction(()=>{const x=document.getElementById('rtRegionalDecisionCenter');return x&&!x.hidden&&x.getBoundingClientRect().width>900&&x.getBoundingClientRect().height>500});
+    const regionalCenter=await page.evaluate(()=>({
+      visible:!document.getElementById('rtRegionalDecisionCenter')?.hidden,
+      kpis:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-kpis article').length,
+      drivers:document.querySelectorAll('#rtRdcDrivers .rdc-driver-row').length,
+      indices:document.querySelectorAll('#rtRdcIndexRows .rdc-index-row').length,
+      traffic:document.querySelectorAll('#rtRdcTraffic .rdc-impact-card').length,
+      map:!!document.querySelector('#rtRdcMapHost svg'),
+      bg:getComputedStyle(document.getElementById('rtRegionalDecisionCenter')).backgroundImage
+    }));
+    await assert(regionalCenter.visible,'Centro regional no abrió');
+    await assert(regionalCenter.kpis===5,'Centro regional perdió KPIs: '+regionalCenter.kpis);
+    await assert(regionalCenter.drivers>=5,'Centro regional sin drivers suficientes: '+regionalCenter.drivers);
+    await assert(regionalCenter.indices>=1,'Centro regional sin índices');
+    await assert(regionalCenter.traffic===3,'Centro regional perdió semáforos Argentina');
+    await assert(regionalCenter.map,'Centro regional no cargó mapa');
+    await assert(!/^none$/.test(regionalCenter.bg),'Centro regional quedó sin fondo visual');
+    await page.click('#rtRdcClose');
+    await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
+  }
+
   const finalContract=await page.evaluate(()=>{
     const required=[
       'dashboardView','decisionCenter','scannerView','startScanBtn','scanUniverse','scanTf',
