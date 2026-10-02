@@ -605,8 +605,8 @@ function nextOpenDelta(now,session){
 function renderSession(date){
   if(!$('rtSessionName'))return;
   const sessions=[
-    {name:'Nueva York',flag:'🇺🇸',tz:'America/New_York',open:9*3600+30*60,close:16*3600},
-    {name:'Londres',flag:'🇬🇧',tz:'Europe/London',open:8*3600,close:16*3600+30*60},
+    {name:'EE.UU.',city:'Nueva York',flag:'🇺🇸',tz:'America/New_York',open:9*3600+30*60,close:16*3600},
+    {name:'Europa',city:'Londres',flag:'🇪🇺',tz:'Europe/London',open:8*3600,close:16*3600+30*60},
     {name:'Tokio',flag:'🇯🇵',tz:'Asia/Tokyo',open:9*3600,close:15*3600+30*60},
     {name:'Sídney',flag:'🇦🇺',tz:'Australia/Sydney',open:10*3600,close:16*3600}
   ];
@@ -619,7 +619,7 @@ function renderSession(date){
   qa('.rt-market-marker').forEach(m=>m.classList.remove('active-session'));
   if(active){
     $('rtSessionName').textContent=active.name;$('rtSessionFlag').textContent=active.flag;
-    const cityMap={'Nueva York':'sp500','Londres':'ftse','Tokio':'nikkei','Sídney':'asx'};
+    const cityMap={'EE.UU.':'sp500','Europa':'ftse','Tokio':'nikkei','Sídney':'asx'};
     const activeAsset=cityMap[active.name];
     if(activeAsset)qa(`.rt-market-marker[data-marker-asset="${activeAsset}"]`).forEach(m=>m.classList.add('active-session'));
     const left=Math.max(0,active.left),hh=Math.floor(left/3600),mm=Math.floor((left%3600)/60),ss=Math.floor(left%60);
