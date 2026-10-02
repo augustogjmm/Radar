@@ -1695,3 +1695,30 @@ body.rt-rdc-open{overflow:hidden!important}
 
 /* No residual animation from older passes. */
 .rdc-shell,.rdc-shell *,.rdc-shell *::before,.rdc-shell *::after{animation:none!important}
+
+/* ===== HARD STOP MOTION 3.2.1 ===== */
+.rdc-shell .rdc-brand-mark .pulse,
+.rdc-shell .rdc-live i,
+.rdc-shell .rdc-city-clock i,
+.rdc-shell .rdc-open-state>span.open,
+.rdc-shell .rdc-kpi-spark .rt-spark .spark-line,
+.rdc-shell .rdc-driver-spark .spark-line,
+.rdc-shell .rdc-market-tiles>div,
+.rdc-shell .rdc-index-row .spark-line,
+.rdc-shell .rdc-map-svg .rt-market-marker .halo,
+.rdc-shell .rdc-map-callout,
+.rdc-shell .rdc-signal-glass,
+.rdc-shell .rdc-channel.good>i,
+.rdc-shell .rdc-asset-row .spark-line,
+.rdc-shell .rdc-timeline:after,
+.rdc-shell .rdc-event>i.rt-up,
+.rdc-shell.rdc-enter .rdc-hero,
+.rdc-shell.rdc-enter .rdc-kpi-card,
+.rdc-shell.rdc-enter .rdc-panel,
+.rdc-shell.rdc-data-pulse .rdc-kpi-card,
+.rdc-shell.rdc-data-pulse .rdc-driver-row{
+  animation-name:none!important;
+  animation-duration:0s!important;
+  animation-delay:0s!important;
+  animation-iteration-count:1!important;
+}
