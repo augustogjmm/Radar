@@ -1294,3 +1294,49 @@ body.rt-detail-modal-open:after{
   .rt-detail-card.is-expanded{inset:66px 10px 10px 10px!important}
   .rt-detail-card.is-expanded .rt-detail-topgrid{grid-template-columns:minmax(0,1.3fr) minmax(315px,.7fr)!important}
 }
+
+/* ===== LIVE SESSIONS + EXPANDED VIEW FIX 1.6 ===== */
+/* Multiple live markets without changing the approved console geometry. */
+.rt-session-box.triple-active{width:322px!important}
+.rt-session-flag .rt-active-flag{display:inline-flex;align-items:center}
+.rt-session-flag .rt-active-flag+.rt-active-flag{margin-left:-7px}
+.rt-session-flag .rt-active-flag .rt-flag-svg{margin-left:0!important}
+.rt-session-box.triple-active .rt-session-copy b{
+  font-size:12.5px!important;max-width:135px!important;line-height:1.06!important
+}
+.rt-session-count{min-width:92px!important}
+#rtSessionCountdown.multi{
+  display:grid!important;gap:1px!important;font-size:9.5px!important;line-height:1.05!important;
+  text-align:left!important;font-weight:800!important
+}
+#rtSessionCountdown.multi span{
+  display:grid;grid-template-columns:28px 1fr;gap:4px;align-items:center;white-space:nowrap
+}
+#rtSessionCountdown.multi em{
+  font-style:normal;color:#70cfff;font-size:8px;font-weight:850;letter-spacing:.03em
+}
+
+/* The prior black screen was a stacking-context problem: remove the body pseudo-overlay
+   and raise the existing middle stack itself above the rest of the dashboard. */
+body.rt-detail-modal-open:after{display:none!important}
+body.rt-detail-modal-open .rt-main-grid{isolation:auto!important}
+body.rt-detail-modal-open .rt-middle-stack{
+  z-index:5000!important;isolation:auto!important;position:relative!important
+}
+.rt-detail-card.is-expanded{
+  z-index:5100!important;
+  box-shadow:
+    0 0 0 100vmax rgba(1,7,12,.82),
+    0 30px 90px rgba(0,0,0,.72),
+    0 0 38px rgba(31,162,226,.13),
+    inset 0 1px 0 rgba(255,255,255,.035)!important
+}
+.rt-detail-card.is-expanded .rt-detail-geo-host,
+.rt-detail-card.is-expanded .rt-detail-map,
+.rt-detail-card.is-expanded .rt-detail-list,
+.rt-detail-card.is-expanded .rt-detail-chart{visibility:visible!important;opacity:1!important}
+
+@media(max-width:1500px){
+  .rt-session-box.triple-active{width:306px!important}
+  .rt-session-box.triple-active .rt-session-copy b{max-width:118px!important;font-size:11.5px!important}
+}
