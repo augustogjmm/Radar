@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-2.2-premium-fidelity';
+const VERSION='golden-2.3-reference-rebuild';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -33,6 +33,8 @@ const ASSETS=[
   {id:'wti',symbol:'CL=F',name:'WTI',region:'global',flag:'◉',decimals:2},
   {id:'eem',symbol:'EEM',name:'Emergentes',region:'global',flag:'◈',decimals:2},
   {id:'eurusd',symbol:'EURUSD=X',name:'EUR/USD',region:'europe',flag:'🇪🇺',decimals:4},
+  {id:'vstoxx',symbol:'^V2TX',name:'VSTOXX',region:'europe',flag:'◒',decimals:1},
+  {id:'brent',symbol:'BZ=F',name:'Petróleo Brent',region:'global',flag:'◉',decimals:2},
   {id:'bund10',symbol:'^DE10YB',name:'Bund 10Y',detailName:'Bund 10Y (Alemania)',region:'europe',flag:'🇩🇪',decimals:3,unit:'%'},
   {id:'euTech',symbol:'^SX8P',name:'Tecnología',region:'europe-sector',flag:'▦',decimals:1},
   {id:'euBanks',symbol:'^SX7P',name:'Bancos',region:'europe-sector',flag:'▥',decimals:1},
@@ -663,7 +665,9 @@ function rdcDriverMeta(id,ch){
     bovespa:{polarity:1,note:'Referencia regional para activos latinoamericanos.'},
     merval:{polarity:1,note:'Pulso directo del mercado argentino.'},
     eurusd:{polarity:1,note:'Fortaleza del euro y lectura de actividad europea.'},
-    bund10:{polarity:-1,note:'Rendimientos soberanos y condiciones financieras europeas.'}
+    bund10:{polarity:-1,note:'Rendimientos soberanos y condiciones financieras europeas.'},
+    vstoxx:{polarity:-1,note:'Volatilidad implícita específica del mercado europeo.'},
+    brent:{polarity:0,note:'Energía, inflación y sensibilidad cíclica europea.'}
   };
   const d=defs[id]||{polarity:1,note:'Pulso principal del mercado regional.'};
   let cls='warn',label='NEUTRAL';
@@ -821,7 +825,7 @@ function mountRegionalDecisionCenter(){
   const el=document.createElement('section');el.id='rtRegionalDecisionCenter';el.className='rdc-shell';el.hidden=true;
   el.innerHTML=`
     <header class="rdc-topbar">
-      <div class="rdc-brand"><span class="rdc-brand-mark">⌁</span><b>Radar Técnico</b></div>
+      <div class="rdc-brand"><span class="rdc-brand-mark"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 35 15 8l10 18L34 6l7 32-17-11L7 35Z"/><path class="pulse" d="M5 33 16 20l8 7 18-16"/><circle cx="24" cy="27" r="2.2"/></svg></span><b>Radar Técnico</b></div>
       <nav class="rdc-nav">
         <button data-rdc-action="global">Visión Global</button>
         <button data-rdc-region="europe">Europa</button>
@@ -848,11 +852,11 @@ function mountRegionalDecisionCenter(){
     </div>
 
     <div class="rdc-kpis">
-      <article><i class="rdc-kpi-icon">${rdcKpiIcon('sentiment')}</i><div><small>Sentimiento Regional</small><strong id="rtRdcSentiment">—</strong><span id="rtRdcSentimentNote">vs. cierre anterior</span></div><span id="rtRdcSentimentSpark" class="rdc-kpi-spark"></span></article>
-      <article><i class="rdc-kpi-icon">${rdcKpiIcon('breadth')}</i><div><small>Amplitud de Mercado</small><strong id="rtRdcBreadth">—</strong><span id="rtRdcBreadthNote">mercados de la región</span></div><span id="rtRdcBreadthSpark" class="rdc-kpi-spark"></span></article>
-      <article><i class="rdc-kpi-icon">${rdcKpiIcon('momentum')}</i><div><small>Momentum</small><strong id="rtRdcMomentum">—</strong><span>Tendencia de corto plazo</span></div><span id="rtRdcMomentumSpark" class="rdc-kpi-spark"></span></article>
-      <article><i class="rdc-kpi-icon">${rdcKpiIcon('volatility')}</i><div><small>Volatilidad (VIX)</small><strong id="rtRdcVolatility">—</strong><span id="rtRdcVolatilityNote">VIX</span></div><span id="rtRdcVolatilitySpark" class="rdc-kpi-spark"></span></article>
-      <article class="risk"><i class="rdc-kpi-icon shield">${rdcKpiIcon('risk')}</i><div><small>Riesgo Global</small><strong id="rtRdcRisk">—</strong><span>Índice de riesgo regional</span></div><span id="rtRdcRiskSpark" class="rdc-kpi-spark"></span></article>
+      <article class="rdc-kpi-card sentiment"><i class="rdc-kpi-icon">${rdcKpiIcon('sentiment')}</i><div class="rdc-kpi-copy"><small>Sentimiento Regional</small><strong id="rtRdcSentiment">—</strong><span id="rtRdcSentimentNote">vs. cierre anterior</span></div><span id="rtRdcSentimentSpark" class="rdc-kpi-spark"></span></article>
+      <article class="rdc-kpi-card breadth"><i class="rdc-kpi-icon">${rdcKpiIcon('breadth')}</i><div class="rdc-kpi-copy"><small>Amplitud de Mercado</small><strong id="rtRdcBreadth">—</strong><span id="rtRdcBreadthNote">mercados de la región</span></div><span id="rtRdcBreadthSpark" class="rdc-kpi-spark"></span></article>
+      <article class="rdc-kpi-card momentum"><i class="rdc-kpi-icon">${rdcKpiIcon('momentum')}</i><div class="rdc-kpi-copy"><small>Momentum</small><strong id="rtRdcMomentum">—</strong><span id="rtRdcMomentumNote">Tendencia de corto plazo</span></div><span id="rtRdcMomentumSpark" class="rdc-kpi-spark"></span></article>
+      <article class="rdc-kpi-card volatility"><i class="rdc-kpi-icon">${rdcKpiIcon('volatility')}</i><div class="rdc-kpi-copy"><small id="rtRdcVolatilityTitle">Volatilidad</small><strong id="rtRdcVolatility">—</strong><span id="rtRdcVolatilityNote">—</span></div><span id="rtRdcVolatilitySpark" class="rdc-kpi-spark"></span></article>
+      <article class="rdc-kpi-card risk"><i class="rdc-kpi-icon shield">${rdcKpiIcon('risk')}</i><div class="rdc-kpi-copy"><small>Riesgo Global</small><strong id="rtRdcRisk">—</strong><span id="rtRdcRiskNote">Índice de riesgo regional</span></div><span id="rtRdcRiskSpark" class="rdc-kpi-spark"></span></article>
     </div>
 
     <div class="rdc-main">
@@ -924,25 +928,29 @@ function renderRegionalDecisionCenter(){
   $('rtRdcDate').textContent=new Intl.DateTimeFormat('es-AR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'America/Argentina/Buenos_Aires'}).format(now).replaceAll('.','');
   shell.querySelectorAll('[data-rdc-region]').forEach(b=>b.classList.toggle('active',b.dataset.rdcRegion===key));
 
-  const sentiment=regionChange(key,'day'),breadth=rdcBreadth(key),mom=rdcMomentum(key),vix=get('vix'),vixCh=periodChange(vix,'day'),risk=riskModel();
+  const sentiment=regionChange(key,'day'),breadth=rdcBreadth(key),mom=rdcMomentum(key),vix=get('vix'),vstoxx=get('vstoxx');
+  const volItem=key==='europe'&&Number.isFinite(vstoxx?.last)?vstoxx:vix,volId=volItem===vstoxx?'VSTOXX':'VIX',volCh=periodChange(volItem,'day'),risk=riskModel();
   $('rtRdcSentiment').textContent=pct(sentiment);$('rtRdcSentiment').className=signClass(sentiment);
   $('rtRdcBreadth').textContent=`${breadth.upPct}% alcista`;$('rtRdcBreadth').className=breadth.upPct>breadth.downPct?'rt-up':breadth.downPct>breadth.upPct?'rt-down':'rt-flat';
-  $('rtRdcBreadthNote').textContent=`${breadth.up} suben · ${breadth.down} bajan`;
+  $('rtRdcBreadthNote').textContent=`${breadth.up} suben  |  ${breadth.down} bajan`;
   $('rtRdcMomentum').textContent=mom.label;$('rtRdcMomentum').className=mom.cls;
-  $('rtRdcVolatility').textContent=Number.isFinite(vixCh)?(vixCh<-.03?'Baja':vixCh>.03?'Alta':'Estable'):'s/d';$('rtRdcVolatility').className=signClass(-vixCh);
-  $('rtRdcVolatilityNote').textContent=`VIX ${Number.isFinite(vix?.last)?fmt(vix.last,1):'—'} · ${pct(vixCh)}`;
+  $('rtRdcMomentumNote').textContent=Number.isFinite(regionChange(key,'week'))?`Semana ${pct(regionChange(key,'week'))}`:'Tendencia de corto plazo';
+  $('rtRdcVolatilityTitle').textContent=`Volatilidad (${volId})`;
+  $('rtRdcVolatility').textContent=Number.isFinite(volCh)?(volCh<-.03?'Baja':volCh>.03?'Alta':'Estable'):'s/d';$('rtRdcVolatility').className=signClass(-volCh);
+  $('rtRdcVolatilityNote').textContent=`${Number.isFinite(volItem?.last)?fmt(volItem.last,1):'—'}  ${pct(volCh)}`;
   $('rtRdcRisk').textContent=risk.label;$('rtRdcRisk').className=risk.label==='BAJO'?'good':risk.label==='ALTO'?'bad':'warn';
+  const move=get('move'),tnx=get('tnx');$('rtRdcRiskNote').textContent=`VIX ${Number.isFinite(vix?.last)?fmt(vix.last,1):'—'} · MOVE ${Number.isFinite(move?.last)?fmt(move.last,0):'—'}`;
 
-  const regionVals=regionSeries(key),vixVals=(vix?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+  const regionVals=regionSeries(key),volVals=(volItem?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
   $('rtRdcSentimentSpark').innerHTML=miniSpark(regionVals);
   $('rtRdcBreadthSpark').innerHTML=miniSpark(regionVals.map((v,i)=>v+i*.02));
   $('rtRdcMomentumSpark').innerHTML=miniSpark(regionVals);
-  $('rtRdcVolatilitySpark').innerHTML=miniSpark(vixVals);
-  $('rtRdcRiskSpark').innerHTML=miniSpark(vixVals.length?vixVals:regionVals);
+  $('rtRdcVolatilitySpark').innerHTML=miniSpark(volVals);
+  $('rtRdcRiskSpark').innerHTML=miniSpark(volVals.length?volVals:regionVals);
 
   $('rtRdcDriverRegion').textContent=region.label;$('rtRdcInternalRegion').textContent=region.label.toLowerCase();
   const driverIds=key==='europe'
-    ?['dax','stoxx','eurusd','bund10','vix','wti','tnx']
+    ?['dax','stoxx','eurusd','bund10','vstoxx','brent','tnx']
     :[...(region.ids||[]).slice(0,3),'vix','tnx','dxy','wti','eem'];
   $('rtRdcDrivers').innerHTML=[...new Set(driverIds)].map(rdcMarketRow).filter(Boolean).slice(0,7).join('')||'<div class="rdc-empty">Sin drivers válidos.</div>';
 
@@ -962,6 +970,7 @@ function openRegionalDecisionCenter(){
   mountRegionalDecisionCenter();
   const shell=$('rtRegionalDecisionCenter');if(!shell)return;
   shell.hidden=false;document.body.classList.add('rt-rdc-open');
+  shell.classList.remove('rdc-enter');void shell.offsetWidth;shell.classList.add('rdc-enter');
   renderRegionalDecisionCenter();
 }
 function closeRegionalDecisionCenter(){
