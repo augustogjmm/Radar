@@ -38,6 +38,7 @@ const yahooBatchPayload=u=>{
     const last=shifted.at(-1).close,prev=shifted.at(-2).close;
     return {symbol,ok:true,last,changePct:((last/prev)-1)*100,volume:shifted.at(-1).volume,bars:shifted,source:'QA fixture'};
   })};
+};
 
 await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
