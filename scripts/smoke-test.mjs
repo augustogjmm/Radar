@@ -170,8 +170,7 @@ try{
     await assert(regionalCenter.mapCallouts>=3,'Centro regional sin callouts de mapa: '+regionalCenter.mapCallouts);
     await assert(!/^none$/.test(regionalCenter.bg),'Centro regional quedó sin fondo visual');
     await shot('02-regional-center');
-    await page.evaluate(()=>{ if(typeof closeRegionalDecisionCenter==='function') closeRegionalDecisionCenter(); });
-    await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
+    await page.evaluate(()=>document.getElementById('rtRdcClose')?.click());
     await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
   }
 
