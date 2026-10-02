@@ -169,10 +169,9 @@ try{
     await assert(regionalCenter.periodTabs===3,'Centro regional no conserva controles 1D/5D/1M: '+regionalCenter.periodTabs);
     await assert(regionalCenter.mapCallouts>=3,'Centro regional sin callouts de mapa: '+regionalCenter.mapCallouts);
     await assert(!/^none$/.test(regionalCenter.bg),'Centro regional quedó sin fondo visual');
-    const visualCapture=await page.screenshot({type:'jpeg',quality:40,clip:{x:0,y:0,width:1672,height:941}});
-    console.log('RDC_VISUAL_BASE64:'+visualCapture.toString('base64'));
-    throw new Error('RDC_VISUAL_CAPTURE');
-    await page.click('#rtRdcClose');
+    await shot('02-regional-center');
+    await page.evaluate(()=>{ if(typeof closeRegionalDecisionCenter==='function') closeRegionalDecisionCenter(); });
+    await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
     await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
   }
 
