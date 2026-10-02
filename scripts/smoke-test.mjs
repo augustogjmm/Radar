@@ -141,7 +141,9 @@ try{
       sectors:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-market-tiles > div').length,
       timeline:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-event').length,
       kpiSparks:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-kpi-spark .rt-spark').length,
-      trafficLenses:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-signal-glass').length,
+      trafficLenses:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-signal-ring').length,
+      runningAnimations:[...document.querySelectorAll('#rtRegionalDecisionCenter *')].filter(el=>getComputedStyle(el).animationName!=='none').length,
+      assets:document.querySelectorAll('#rtRdcAssets .rdc-asset-row').length,
       mapCallouts:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-map-callout').length,
       kpiCards:document.querySelectorAll('#rtRegionalDecisionCenter .rdc-kpi-card').length,
       bg:getComputedStyle(document.getElementById('rtRegionalDecisionCenter')).backgroundImage
@@ -158,7 +160,9 @@ try{
     await assert(regionalCenter.timeline>=1,'Centro regional sin eventos de jornada');
     await assert(regionalCenter.kpiSparks>=4,'Centro regional sin sparklines KPI: '+regionalCenter.kpiSparks);
     await assert(regionalCenter.kpiCards===5,'Centro regional debe tener 5 KPI: '+regionalCenter.kpiCards);
-    await assert(regionalCenter.trafficLenses===3,'Centro regional perdió los 3 semáforos premium: '+regionalCenter.trafficLenses);
+    await assert(regionalCenter.trafficLenses===3,'Centro regional perdió los 3 semáforos acordados: '+regionalCenter.trafficLenses);
+    await assert(regionalCenter.runningAnimations===0,'Centro regional tiene animaciones continuas no acordadas: '+regionalCenter.runningAnimations);
+    await assert(regionalCenter.assets===6,'Centro regional no conserva los 6 activos acordados: '+regionalCenter.assets);
     await assert(regionalCenter.mapCallouts>=3,'Centro regional sin callouts de mapa: '+regionalCenter.mapCallouts);
     await assert(!/^none$/.test(regionalCenter.bg),'Centro regional quedó sin fondo visual');
     await page.click('#rtRdcClose');
