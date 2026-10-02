@@ -1,6 +1,6 @@
 const base=(process.env.RADAR_URL||'https://radar-lovat-five.vercel.app').replace(/\/$/,'');
 const expected=(process.env.EXPECTED_SHA||'').trim();
-const required=['Yahoo SPY','Crypto BTC','BYMA acciones','BYMA CEDEAR','BYMA histórico GGAL','Dólar','Renta fija'];
+const required=['Yahoo SPY','Crypto BTC','BYMA acciones','BYMA CEDEAR','BYMA renta fija','BYMA histórico GGAL','Dólar'];
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const sameSha=(seen)=>!expected||seen===expected||String(seen||'').startsWith(expected)||expected.startsWith(String(seen||''));
