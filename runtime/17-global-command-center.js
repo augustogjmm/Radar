@@ -4,7 +4,7 @@
 (()=>{
 'use strict';
 
-const VERSION='golden-5.1-regional-reference';
+const VERSION='golden-5.2-region-nav-icons';
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -795,11 +795,11 @@ function rdcCityClocks(key,date=new Date()){
 }
 function rdcFlagMarkup(key){
   if(key==='europe')return `<svg viewBox="0 0 54 36" aria-label="Europa"><rect width="54" height="36" rx="4" fill="#003399"/><g fill="#ffcc00" transform="translate(27 18)">${Array.from({length:12},(_,i)=>{const a=(i*30-90)*Math.PI/180,x=Math.cos(a)*10,y=Math.sin(a)*10;return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.35"/>`}).join('')}</g></svg>`;
-  if(key==='northamerica')return sessionFlagSvg('US').replace('rt-flag-svg','rdc-hero-flag-svg');
+  if(key==='northamerica')return `<svg viewBox="0 0 54 36" aria-label="EE.UU."><rect width="54" height="36" rx="4" fill="#fff"/><g fill="#b22234">${Array.from({length:7},(_,i)=>`<rect y="${i*5.54}" width="54" height="2.77"/>`).join('')}</g><rect width="23" height="19.4" rx="1.5" fill="#3c3b6e"/><g fill="#fff">${[[4,4],[9,4],[14,4],[19,4],[6.5,8],[11.5,8],[16.5,8],[4,12],[9,12],[14,12],[19,12],[6.5,16],[11.5,16],[16.5,16]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1"/>`).join('')}</g></svg>`;
   if(key==='latam')return `<svg class="rdc-latam-badge" viewBox="0 0 64 44" aria-label="LatAm"><defs><radialGradient id="rdcLatamOcean" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#1e9bd1"/><stop offset=".62" stop-color="#0876a4"/><stop offset="1" stop-color="#064866"/></radialGradient><linearGradient id="rdcLatamLand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6af4bd"/><stop offset="1" stop-color="#19a86f"/></linearGradient></defs><rect x="1" y="1" width="62" height="42" rx="7" fill="#031b2b" stroke="#1585bc"/><circle cx="31" cy="22" r="17" fill="url(#rdcLatamOcean)" stroke="#50ddff" stroke-opacity=".42"/><path d="M24 7c5 1 9 3 12 6l-1 4 4 3-2 4-3 1-1 6-3 7-4-3 1-6-3-5-5-1-2-5 3-3-1-4 5-4Z" fill="url(#rdcLatamLand)" stroke="#b8ffe1" stroke-width=".7" stroke-opacity=".55"/></svg>`;
-  if(key==='asia')return `<div class="rdc-region-glyph">🌏</div>`;
-  if(key==='oceania')return sessionFlagSvg('AU').replace('rt-flag-svg','rdc-hero-flag-svg');
-  return `<div class="rdc-region-glyph">🌐</div>`;
+  if(key==='asia')return `<svg viewBox="0 0 64 44" aria-label="Asia"><defs><radialGradient id="rdcAsiaOcean" cx="38%" cy="33%" r="76%"><stop offset="0" stop-color="#1d9bcf"/><stop offset=".68" stop-color="#09688d"/><stop offset="1" stop-color="#053c57"/></radialGradient><linearGradient id="rdcAsiaLand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#75f0bf"/><stop offset="1" stop-color="#1e9f72"/></linearGradient></defs><rect x="1" y="1" width="62" height="42" rx="7" fill="#031b2b" stroke="#1585bc"/><circle cx="32" cy="22" r="17" fill="url(#rdcAsiaOcean)" stroke="#50ddff" stroke-opacity=".42"/><path d="M19 13l6-5 10 1 4 4 7 1 3 4-4 2 2 5-5 1-2 5-5 2-3-4-5 1-2-5-6-3 2-4-2-5Z" fill="url(#rdcAsiaLand)" stroke="#c4ffe6" stroke-width=".7" stroke-opacity=".55"/><circle cx="43" cy="28" r="1.4" fill="#6df2bd"/></svg>`;
+  if(key==='oceania')return `<svg viewBox="0 0 54 36" aria-label="Oceanía"><rect width="54" height="36" rx="4" fill="#012169"/><g><path d="M0 0 23 15M23 0 0 15" stroke="#fff" stroke-width="4"/><path d="M0 0 23 15M23 0 0 15" stroke="#c8102e" stroke-width="2"/><path d="M11.5 0v15M0 7.5h23" stroke="#fff" stroke-width="6"/><path d="M11.5 0v15M0 7.5h23" stroke="#c8102e" stroke-width="3"/></g><g fill="#fff"><circle cx="38" cy="9" r="2"/><circle cx="44" cy="18" r="1.8"/><circle cx="35" cy="25" r="1.8"/><circle cx="48" cy="29" r="1.5"/><circle cx="28" cy="19" r="1.4"/></g></svg>`;
+  return `<svg viewBox="0 0 64 44" aria-label="Región"><rect x="1" y="1" width="62" height="42" rx="7" fill="#031b2b" stroke="#1585bc"/><circle cx="32" cy="22" r="16" fill="#08769e" stroke="#50ddff" stroke-opacity=".45"/><path d="M18 20h28M32 6c-7 7-7 25 0 32M32 6c7 7 7 25 0 32M19 14c8 4 18 4 26 0M19 30c8-4 18-4 26 0" fill="none" stroke="#74f5c0" stroke-width="1"/></svg>`;
 }
 function rdcKpiIcon(kind){
   const icons={
@@ -866,12 +866,14 @@ function mountRegionalDecisionCenter(){
   const el=document.createElement('section');el.id='rtRegionalDecisionCenter';el.className='rdc-shell';el.hidden=true;
   el.innerHTML=`
     <header class="rdc-topbar">
-      <div class="rdc-brand"><span class="rdc-brand-mark"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 35 15 8l10 18L34 6l7 32-17-11L7 35Z"/><path class="pulse" d="M5 33 16 20l8 7 18-16"/><circle cx="24" cy="27" r="2.2"/></svg></span><b>Radar Técnico</b></div>
+      <div class="rdc-brand"><span class="rdc-brand-mark"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20"/><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="7"/><path d="M24 1v46M1 24h46"/><path class="pulse" d="M24 24 40 8"/><circle cx="24" cy="24" r="2.2"/></svg></span><b>Radar Técnico</b></div>
       <nav class="rdc-nav">
         <button data-rdc-action="global">Visión Global</button>
         <button data-rdc-region="europe">Europa</button>
         <button data-rdc-region="northamerica">EE.UU.</button>
         <button data-rdc-region="latam">LatAm</button>
+        <button data-rdc-region="asia">Asia</button>
+        <button data-rdc-region="oceania">Oceanía</button>
         <button data-rdc-action="markets">Mercados</button>
         <button data-rdc-action="sectors">Sectores</button>
         <button data-rdc-action="news">Noticias</button>
