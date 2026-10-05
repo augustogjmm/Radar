@@ -431,3 +431,398 @@ function boot(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.RadarWatchlistWorkstation=Object.freeze({open,close,render});
 })();
+
+/* Radar Técnico · Top Opportunities Workstation
+   Full ranking opened from Watchlist > Top oportunidades > Ver más.
+   Uses the existing analytical engines and market data; it does not fabricate signals. */
+(()=>{
+'use strict';
+if(window.RadarTopOpportunities)return;
+
+const $=id=>document.getElementById(id);
+const q=(s,r=document)=>r.querySelector(s);
+const qa=(s,r=document)=>[...r.querySelectorAll(s)];
+const num=v=>{const n=Number(v);return Number.isFinite(n)?n:NaN};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(v,d=2)=>Number.isFinite(num(v))?new Intl.NumberFormat('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(num(v)):'s/d';
+const pct=v=>Number.isFinite(num(v))?(num(v)>=0?'+':'')+fmt(v,2)+'%':'—';
+const global=()=>window.RadarGlobalCommandCenter;
+const gst=()=>global()?.state;
+const daily=()=>window.RadarDailyRadar?.state;
+
+let typeFilter='all',signalFilter='all',search='',selected='',rows=[],refreshing=false;
+
+const TYPE_META={
+  crypto:['Crypto','Crypto','USDT'],
+  cedear:['CEDEAR','BYMA','ARS'],
+  argstock:['Acción AR','BYMA','ARS'],
+  adr:['ADR','EE.UU.','USD'],
+  stock:['EE.UU. / ETF','EE.UU.','USD'],
+  equity:['Acción','Mercado','s/d'],
+  argbond:['Bono soberano','BYMA','s/d'],
+  bond:['Bono','BYMA','s/d'],
+  bill:['Letra','BYMA','ARS'],
+  letra:['Letra','BYMA','ARS']
+};
+
+function installStyles(){
+  if($('rtoStyles'))return;
+  const st=document.createElement('style');st.id='rtoStyles';
+  st.textContent=[
+'#rtTopOpportunities{--o-bg:#020b13;--o-panel:#061a28;--o-panel2:#03131e;--o-edge:#0a6386;--o-cyan:#25d7ff;--o-green:#2bef96;--o-red:#ff586a;--o-yellow:#ffd24b;--o-text:#edf7fb;--o-muted:#86a1b1;position:fixed!important;inset:0!important;z-index:15000!important;width:100vw!important;height:100vh!important;overflow:auto!important;padding:0 18px 18px!important;color:var(--o-text)!important;background:radial-gradient(circle at 78% -8%,rgba(24,126,166,.16),transparent 31%),linear-gradient(180deg,#03111b,#020911)!important;font-family:"Roboto Condensed","Arial Narrow","Segoe UI",Arial,sans-serif!important;-webkit-font-smoothing:antialiased!important}',
+'#rtTopOpportunities[hidden]{display:none!important}body.rto-open{overflow:hidden!important}#rtTopOpportunities *,#rtTopOpportunities *::before,#rtTopOpportunities *::after{box-sizing:border-box!important}',
+'#rtTopOpportunities .rto-topbar{height:58px!important;margin:0 -18px!important;padding:0 18px!important;display:grid!important;grid-template-columns:320px minmax(560px,1fr) 250px 132px 110px!important;gap:8px!important;align-items:center!important;background:linear-gradient(180deg,#03131f,#020b13)!important;border-bottom:1px solid #0d5874!important;box-shadow:0 7px 22px rgba(0,0,0,.38)!important;position:sticky!important;top:0!important;z-index:8!important}',
+'#rtTopOpportunities .rto-brand{height:54px!important;background-size:contain!important;background-repeat:no-repeat!important;background-position:left center!important}',
+'#rtTopOpportunities .rto-nav{height:38px!important;display:flex!important;align-items:center!important;justify-content:center!important;border:1px solid #104760!important;border-radius:5px!important;background:#03131f!important;overflow:hidden!important}',
+'#rtTopOpportunities .rto-nav button{height:100%!important;padding:0 12px!important;border:0!important;border-right:1px solid #10364b!important;background:transparent!important;color:#a9bdc9!important;font:700 10px/1 inherit!important;white-space:nowrap!important}#rtTopOpportunities .rto-nav button.active{color:#7cecff!important;background:linear-gradient(180deg,#073b5a,#05253b)!important;box-shadow:inset 0 -2px 0 #22ccef!important}',
+'#rtTopOpportunities .rto-search{height:32px!important;display:flex!important;align-items:center!important;gap:8px!important;padding:0 10px!important;border:1px solid #116083!important;border-radius:5px!important;background:#03141f!important;color:#42dfff!important}#rtTopOpportunities .rto-search input{width:100%!important;border:0!important;outline:0!important;background:transparent!important;color:#dcebf2!important;font:600 9px/1 inherit!important}',
+'#rtTopOpportunities .rto-live{height:32px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;border:1px solid #0c684c!important;border-radius:4px!important;background:#05251d!important;color:#55eda8!important;font:800 8px/1 inherit!important}#rtTopOpportunities .rto-live i{width:7px!important;height:7px!important;border-radius:50%!important;background:#2bef96!important;box-shadow:0 0 8px rgba(43,239,150,.8)!important}',
+'#rtTopOpportunities .rto-clock{text-align:right!important}#rtTopOpportunities .rto-clock b{display:block!important;font-size:14px!important}#rtTopOpportunities .rto-clock small{display:block!important;color:#718c9c!important;font-size:7px!important;margin-top:2px!important}',
+'#rtTopOpportunities .rto-hero{min-height:92px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important;padding:12px 8px!important;border-bottom:1px solid #0b4a65!important}',
+'#rtTopOpportunities .rto-hero-copy{display:flex!important;align-items:center!important;gap:13px!important}.rto-hero-icon{width:52px!important;height:52px!important;display:grid!important;place-items:center!important;border:1px solid #1381aa!important;border-radius:7px!important;background:linear-gradient(145deg,#073e5b,#052438)!important;color:#45e4ff!important;font-size:25px!important;box-shadow:0 0 20px rgba(30,184,230,.12)!important}',
+'#rtTopOpportunities .rto-hero h1{margin:0!important;font-size:30px!important;line-height:1!important;letter-spacing:-.5px!important}#rtTopOpportunities .rto-hero p{margin:7px 0 0!important;color:#95adba!important;font-size:11px!important}#rtTopOpportunities .rto-hero p b{color:#d7e7ee!important}',
+'#rtTopOpportunities .rto-hero-actions{display:flex!important;gap:7px!important}.rto-btn{height:32px!important;padding:0 13px!important;border:1px solid #146b8d!important;border-radius:4px!important;background:#062437!important;color:#bcecff!important;font:800 9px/1 inherit!important}.rto-btn.primary{border-color:#138e62!important;background:#073e2c!important;color:#5bf0a6!important}',
+'#rtTopOpportunities .rto-kpis{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:7px!important;margin:7px 0!important}.rto-kpi{min-height:76px!important;display:grid!important;grid-template-columns:42px 1fr!important;gap:8px!important;align-items:center!important;padding:9px 11px!important;border:1px solid #0c5877!important;border-radius:6px!important;background:linear-gradient(135deg,#072033,#041620)!important}.rto-kpi i{width:38px!important;height:38px!important;display:grid!important;place-items:center!important;border-radius:50%!important;border:1px solid #106d90!important;background:#052538!important;color:#36ddff!important;font-style:normal!important;font-size:17px!important}.rto-kpi small{display:block!important;color:#8aa3b1!important;font-size:7px!important;font-weight:800!important}.rto-kpi strong{display:block!important;margin-top:2px!important;font-size:21px!important;line-height:1!important}.rto-kpi span{display:block!important;margin-top:5px!important;color:#6f8a99!important;font-size:7px!important}.rto-kpi.good strong{color:#45eda0!important}.rto-kpi.warn strong{color:#ffda5b!important}.rto-kpi.bad strong{color:#ff6878!important}',
+'#rtTopOpportunities .rto-toolbar{height:46px!important;display:grid!important;grid-template-columns:1fr auto auto!important;gap:9px!important;align-items:center!important;padding:0 9px!important;border:1px solid #0c5574!important;border-radius:6px 6px 0 0!important;background:linear-gradient(180deg,#072337,#041823)!important}.rto-filters,.rto-signal-filters{display:flex!important;align-items:center!important;gap:4px!important}.rto-filters button,.rto-signal-filters button{height:27px!important;padding:0 9px!important;border:1px solid #153e53!important;border-radius:4px!important;background:#071925!important;color:#8ea7b5!important;font:800 7.5px/1 inherit!important}.rto-filters button.active,.rto-signal-filters button.active{border-color:#1a9bc9!important;background:#073958!important;color:#8eeaff!important}',
+'#rtTopOpportunities .rto-main{display:grid!important;grid-template-columns:minmax(0,1fr) 360px!important;gap:7px!important;min-height:560px!important}.rto-panel{border:1px solid #0c5574!important;border-radius:0 0 6px 6px!important;background:#041722!important;overflow:hidden!important}.rto-table-wrap{height:560px!important;overflow:auto!important}',
+'#rtTopOpportunities .rto-table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important}.rto-table th{height:31px!important;position:sticky!important;top:0!important;z-index:2!important;padding:0 7px!important;border-bottom:1px solid #0b4c68!important;background:#061b28!important;color:#7895a5!important;font-size:6.5px!important;text-align:left!important;white-space:nowrap!important}.rto-table td{height:42px!important;padding:0 7px!important;border-bottom:1px solid #0a374b!important;color:#becfd8!important;font-size:8px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.rto-table tr{cursor:pointer!important}.rto-table tbody tr:hover{background:#08263a!important}.rto-table tbody tr.selected{background:#08324a!important;box-shadow:inset 3px 0 0 #24d6ff!important}',
+'#rtTopOpportunities .rto-rank{width:23px!important;height:23px!important;display:grid!important;place-items:center!important;border-radius:4px!important;background:#0b4b75!important;color:#dff7ff!important;font-size:9px!important;font-weight:900!important}.rto-asset b{display:block!important;color:#edf7fb!important;font-size:9.5px!important}.rto-asset small{display:block!important;margin-top:2px!important;color:#6d8898!important;font-size:6.6px!important}.rto-tag{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:60px!important;height:19px!important;padding:0 6px!important;border:1px solid #2c586d!important;border-radius:3px!important;background:#102632!important;color:#b8cbd4!important;font-size:6.7px!important;font-weight:900!important}.rto-tag.crypto{border-color:#705b20!important;background:#30270a!important;color:#ffe073!important}.rto-tag.bond{border-color:#6b4c93!important;background:#251a36!important;color:#d4b0ff!important}.rto-up{color:#2bef96!important}.rto-down{color:#ff586a!important}.rto-flat{color:#9cb0bb!important}',
+'#rtTopOpportunities .rto-trend,.rto-status,.rto-risk{display:inline-flex!important;align-items:center!important;justify-content:center!important;height:19px!important;padding:0 6px!important;border-radius:3px!important;font-size:6.5px!important;font-weight:900!important}.rto-trend.bull,.rto-status.buy{border:1px solid #168e59!important;background:#073d2b!important;color:#59eea5!important}.rto-trend.neutral,.rto-status.near,.rto-risk.mid{border:1px solid #8d7120!important;background:#3b310b!important;color:#ffdf62!important}.rto-trend.bear,.rto-status.avoid,.rto-risk.high{border:1px solid #9e3446!important;background:#43151e!important;color:#ff8490!important}.rto-status.watch,.rto-risk.low{border:1px solid #236b6c!important;background:#0a3435!important;color:#70e5df!important}',
+'#rtTopOpportunities .rto-score{display:flex!important;align-items:center!important;gap:5px!important}.rto-score b{width:27px!important;text-align:right!important;font-size:8px!important}.rto-score i{height:7px!important;flex:1!important;border-radius:6px!important;background:#102d3b!important;overflow:hidden!important}.rto-score i em{display:block!important;height:100%!important;background:linear-gradient(90deg,#1d77b6,#2bef96)!important}.rto-score.mid i em{background:linear-gradient(90deg,#a17818,#ffd24b)!important}',
+'#rtTopOpportunities .rto-empty{height:150px!important;text-align:center!important;color:#7190a0!important;font-size:9px!important}',
+'#rtTopOpportunities .rto-side{display:grid!important;grid-template-rows:auto auto 1fr!important;gap:7px!important}.rto-card{border:1px solid #0c5574!important;border-radius:6px!important;background:#041722!important;overflow:hidden!important}.rto-card header{height:38px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 10px!important;border-bottom:1px solid #0b4c68!important;background:linear-gradient(180deg,#072337,#041823)!important}.rto-card header h2{margin:0!important;font-size:13px!important}.rto-card header span{color:#6e8b9a!important;font-size:7px!important}.rto-selected{padding:10px!important}.rto-selected-top{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:8px!important}.rto-selected-top h3{margin:0!important;font-size:18px!important}.rto-selected-top small{display:block!important;margin-top:3px!important;color:#718e9d!important;font-size:7px!important}.rto-big-score{width:54px!important;height:54px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:conic-gradient(#2bef96 calc(var(--score)*1%),#153646 0)!important;position:relative!important}.rto-big-score:after{content:""!important;position:absolute!important;inset:5px!important;border-radius:50%!important;background:#061821!important}.rto-big-score b{position:relative!important;z-index:1!important;font-size:16px!important}',
+'#rtTopOpportunities .rto-reason{margin:9px 0 0!important;padding:8px!important;border:1px solid #0c4057!important;border-radius:5px!important;background:#03131e!important;color:#b5c6ce!important;font-size:8px!important;line-height:1.4!important}.rto-metrics{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;margin-top:8px!important}.rto-metric{padding:7px!important;border:1px solid #0a4057!important;border-radius:4px!important;background:#051a27!important}.rto-metric small{display:block!important;color:#718d9c!important;font-size:6.5px!important}.rto-metric b{display:block!important;margin-top:3px!important;font-size:11px!important}',
+'#rtTopOpportunities .rto-plan{padding:10px!important}.rto-plan-state{height:34px!important;display:grid!important;place-items:center!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important}.rto-plan-state.buy{border:1px solid #168e59!important;background:#073d2b!important;color:#59eea5!important}.rto-plan-state.near{border:1px solid #8d7120!important;background:#3b310b!important;color:#ffdf62!important}.rto-plan-state.watch{border:1px solid #236b6c!important;background:#0a3435!important;color:#70e5df!important}.rto-plan p{margin:9px 0!important;color:#aebfc8!important;font-size:8px!important;line-height:1.45!important}.rto-plan-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important}.rto-plan-actions button{height:29px!important;border:1px solid #135f7f!important;border-radius:4px!important;background:#062438!important;color:#b7eaff!important;font:800 7.5px/1 inherit!important}',
+'#rtTopOpportunities .rto-method{padding:10px!important;color:#97acb7!important;font-size:7.5px!important;line-height:1.45!important}.rto-method b{color:#dbeaf0!important}.rto-method .formula{display:block!important;margin-top:7px!important;padding:7px!important;border:1px solid #0d4057!important;border-radius:4px!important;background:#03131e!important;color:#7fe9ff!important}',
+'@media(max-width:1450px){#rtTopOpportunities{padding-left:10px!important;padding-right:10px!important}#rtTopOpportunities .rto-topbar{margin-left:-10px!important;margin-right:-10px!important;padding-left:10px!important;padding-right:10px!important;grid-template-columns:255px minmax(500px,1fr) 205px 120px 95px!important}.rto-nav button{padding:0 8px!important;font-size:8.5px!important}#rtTopOpportunities .rto-main{grid-template-columns:minmax(0,1fr) 315px!important}#rtTopOpportunities .rto-table th:nth-child(9),#rtTopOpportunities .rto-table td:nth-child(9){display:none!important}}'
+  ].join('');
+  document.head.appendChild(st);
+}
+
+function typeOf(r){
+  const t=String(r?.item?.requestedType||r?.item?.type||'').toLowerCase();
+  if(t==='bond')return'argbond';
+  if(t==='letra')return'bill';
+  return t||'equity';
+}
+function symbolOf(r){return String(r?.item?.symbol||'').toUpperCase()}
+function marketFor(r){
+  if(r?.marketData)return r.marketData;
+  const st=gst(),s=symbolOf(r),t=typeOf(r);
+  if(!st)return null;
+  if(t==='argbond'||t==='bill')return st.fixedIncome?.get?.(s+'D')||st.fixedIncome?.get?.(s)||null;
+  const aliases={YPFD:'YPF',PAMP:'PAM',AL30:'AL30D',AE38:'AE38D',GD30:'GD30D'};
+  return st.markets?.get?.(s)||st.markets?.get?.(aliases[s])||null;
+}
+function barsOf(r){
+  const m=marketFor(r);
+  const candidates=[m?.bars,r?.bars,r?.data,r?.dataset,r?.datasets?.short,r?.result?.bars];
+  for(const a of candidates){
+    if(Array.isArray(a)&&a.length>1)return a.map(x=>({close:num(x?.close??x?.c),volume:num(x?.volume??x?.v),time:num(x?.time??x?.t)})).filter(x=>Number.isFinite(x.close));
+  }
+  return[];
+}
+function priceOf(r){
+  const m=marketFor(r);
+  return num(m?.last??m?.trade??m?.closingPrice??r?.price??r?.last??r?.item?.panel?.trade??r?.item?.panel?.closingPrice);
+}
+function changeOf(r,bars){
+  const m=marketFor(r),direct=num(m?.changePct??r?.changePct);
+  if(Number.isFinite(direct))return direct;
+  if(bars.length>1&&bars.at(-2).close)return (bars.at(-1).close/bars.at(-2).close-1)*100;
+  return NaN;
+}
+function volumeOf(r,bars){
+  const m=marketFor(r),v=num(m?.volume??r?.volume??r?.item?.panel?.volumeAmount??r?.item?.panel?.tradeVolume??r?.item?.panel?.volume);
+  if(Number.isFinite(v)&&v>0)return v;
+  const vs=bars.map(x=>x.volume).filter(x=>Number.isFinite(x)&&x>0);
+  return vs.length?vs.at(-1):NaN;
+}
+function relVolume(bars){
+  const v=bars.slice(-21).map(x=>x.volume).filter(x=>Number.isFinite(x)&&x>0);
+  if(v.length<5)return NaN;
+  const avg=v.slice(0,-1).reduce((a,b)=>a+b,0)/Math.max(1,v.length-1);
+  return avg?v.at(-1)/avg:NaN;
+}
+function trendOf(r,bars){
+  const text=[r?.trend,r?.plan?.trend,r?.analysis?.emaState,r?.status?.label,r?.why].filter(Boolean).join(' ').toLowerCase();
+  if(/alcista|bull|long|compra/.test(text))return{key:'bull',label:'ALCISTA'};
+  if(/bajista|bear|short|venta/.test(text))return{key:'bear',label:'BAJISTA'};
+  const c=bars.slice(-21).map(x=>x.close);
+  if(c.length>5&&c[0]){
+    const p=(c.at(-1)/c[0]-1)*100;
+    if(p>=2)return{key:'bull',label:'ALCISTA'};
+    if(p<=-2)return{key:'bear',label:'BAJISTA'};
+  }
+  return{key:'neutral',label:'NEUTRAL'};
+}
+function setupOf(r){
+  const x=String(r?.setup||r?.analysis?.breakType||'').trim();
+  if(x)return x;
+  const k=String(r?.status?.kind||'').toLowerCase();
+  if(k==='buy')return'Confirmación técnica';
+  if(k==='near')return'En zona técnica';
+  if(k==='sell')return'Estructura bajista';
+  return'Esperar confirmación';
+}
+function techScoreOf(r){
+  const n=num(r?.status?.oppScore??r?.plan?.score??r?.rfScore??r?.score);
+  if(Number.isFinite(n))return clamp(n,0,100);
+  const k=String(r?.status?.kind||'').toLowerCase();
+  return k==='buy'?82:k==='near'?68:k==='wait'?48:k==='sell'?22:35;
+}
+function volatilityRisk(type,bars){
+  const base={crypto:76,cedear:55,argstock:64,adr:54,stock:44,equity:52,argbond:60,bill:25}[type]??52;
+  const c=bars.slice(-31).map(x=>x.close).filter(Number.isFinite),rets=[];
+  for(let i=1;i<c.length;i++)if(c[i-1]>0)rets.push((c[i]/c[i-1]-1)*100);
+  if(rets.length<5)return base;
+  const mean=rets.reduce((a,b)=>a+b,0)/rets.length;
+  const sd=Math.sqrt(rets.reduce((a,b)=>a+(b-mean)*(b-mean),0)/rets.length);
+  return clamp(base+(sd-2)*5,15,92);
+}
+function contextScore(type){
+  const st=gst();if(!st?.markets)return 50;
+  const day=m=>{
+    if(Number.isFinite(num(m?.changePct)))return num(m.changePct);
+    const b=(m?.bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
+    return b.length>1&&b.at(-2)?(b.at(-1)/b.at(-2)-1)*100:NaN;
+  };
+  const vix=st.markets.get('^VIX'),tnx=st.markets.get('^TNX'),dxy=st.markets.get('DX-Y.NYB'),eem=st.markets.get('EEM'),merv=st.markets.get('^MERV');
+  let s=55;
+  const vc=day(vix),tc=day(tnx),dc=day(dxy),ec=day(eem),mc=day(merv);
+  if(Number.isFinite(vc))s-=clamp(vc*2.5,-10,10);
+  if(Number.isFinite(tc))s-=clamp(tc*1.8,-8,8);
+  if(Number.isFinite(dc))s-=clamp(dc*1.4,-6,6);
+  if(Number.isFinite(ec))s+=clamp(ec*2.2,-9,9);
+  if(['argstock','argbond','bill','cedear'].includes(type)&&Number.isFinite(mc))s+=clamp(mc*1.8,-10,10);
+  return clamp(s,20,88);
+}
+function metaOf(type,r){
+  const base=TYPE_META[type]||[type||'Activo','Mercado','s/d'];
+  const panel=r?.item?.panel||{};
+  const ccy=String(panel.denominationCcy||panel.currency||base[2]||'s/d').toUpperCase();
+  return{classLabel:base[0],market:base[1],currency:ccy};
+}
+function compactVolume(v){
+  if(!Number.isFinite(v))return's/d';
+  if(v>=1e9)return fmt(v/1e9,1)+'B';
+  if(v>=1e6)return fmt(v/1e6,1)+'M';
+  if(v>=1e3)return fmt(v/1e3,1)+'K';
+  return fmt(v,0);
+}
+function riskLabel(n){return n<40?['BAJO','low']:n<67?['MODERADO','mid']:['ALTO','high']}
+function horizonOf(type,kind){
+  if(type==='argbond'||type==='bill')return kind==='buy'?'MEDIO':'MEDIO / ESPERAR';
+  if(kind==='buy')return'CORTO';
+  if(kind==='near')return'CORTO / ESPERAR';
+  return'ESPERAR';
+}
+function statusOf(kind,score){
+  if(kind==='buy'&&score>=65)return{label:'OPORTUNIDAD',cls:'buy'};
+  if(kind==='near'||score>=64)return{label:'POSIBLE',cls:'near'};
+  if(kind==='sell')return{label:'EVITAR',cls:'avoid'};
+  return{label:'SEGUIMIENTO',cls:'watch'};
+}
+function labelOf(r,symbol){
+  return String(r?.item?.label||r?.item?.panel?.description||r?.item?.panel?.securityDescription||symbol);
+}
+function dedupeResults(){
+  const pool=[...(gst()?.opportunityLeaders||[]),...(daily()?.results||[]),...(daily()?.rf||[])].filter(r=>r?.item?.symbol);
+  const map=new Map();
+  for(const r of pool){
+    const s=symbolOf(r),t=typeOf(r),k=t+'|'+s,n=techScoreOf(r),old=map.get(k);
+    if(!old||n>techScoreOf(old))map.set(k,r);
+  }
+  return[...map.values()];
+}
+function normalize(){
+  let items=dedupeResults().map(r=>{
+    const symbol=symbolOf(r),type=typeOf(r),bars=barsOf(r),kind=String(r?.status?.kind||'wait').toLowerCase(),trend=trendOf(r,bars),tech=techScoreOf(r),risk=volatilityRisk(type,bars),context=contextScore(type),volume=volumeOf(r,bars),rv=relVolume(bars),meta=metaOf(type,r),change=changeOf(r,bars);
+    return{raw:r,key:type+'|'+symbol,symbol,type,label:labelOf(r,symbol),bars,kind,trend,tech,risk,context,volume,rv,meta,change,price:priceOf(r),setup:setupOf(r),why:String(r?.why||r?.reason||r?.status?.reason||'').replace(/\s+/g,' ').trim()};
+  });
+  const groups=new Map();
+  for(const x of items){if(!groups.has(x.type))groups.set(x.type,[]);groups.get(x.type).push(x)}
+  for(const group of groups.values()){
+    const valid=group.filter(x=>Number.isFinite(x.volume)).sort((a,b)=>b.volume-a.volume);
+    valid.forEach((x,i)=>{x.liquidity=valid.length===1?82:clamp(95-i*(50/Math.max(1,valid.length-1)),45,95)});
+    group.filter(x=>!Number.isFinite(x.volume)).forEach(x=>x.liquidity=45);
+  }
+  items.forEach(x=>{
+    const boost=x.kind==='buy'?8:x.kind==='near'?3:x.kind==='sell'?-28:x.kind==='none'?-16:-4;
+    const trendBoost=x.trend.key==='bull'?5:x.trend.key==='bear'?-10:0;
+    x.score=clamp(Math.round(x.tech*.56+x.liquidity*.12+(100-x.risk)*.14+x.context*.18+boost+trendBoost),0,100);
+    x.status=statusOf(x.kind,x.score);
+    x.riskMeta=riskLabel(x.risk);
+    x.horizon=horizonOf(x.type,x.kind);
+    x.reason=x.why||[x.setup,x.trend.label,'técnica '+Math.round(x.tech)+'/100','liquidez '+Math.round(x.liquidity)+'/100'].join(' · ');
+  });
+  return items.sort((a,b)=>b.score-a.score||b.tech-a.tech);
+}
+function visible(){
+  let out=rows.filter(x=>x.kind!=='sell');
+  if(typeFilter!=='all'){
+    if(typeFilter==='usa')out=out.filter(x=>x.type==='stock'||x.type==='adr');
+    else if(typeFilter==='bond')out=out.filter(x=>x.type==='argbond'||x.type==='bill');
+    else out=out.filter(x=>x.type===typeFilter);
+  }
+  if(signalFilter!=='all')out=out.filter(x=>x.status.cls===signalFilter);
+  if(search){const z=search.toLowerCase();out=out.filter(x=>[x.symbol,x.label,x.meta.classLabel,x.meta.market].some(v=>String(v).toLowerCase().includes(z)))}
+  return out.slice(0,20);
+}
+function summary(){
+  const invest=rows.filter(x=>x.kind!=='sell'),buy=invest.filter(x=>x.status.cls==='buy').length,near=invest.filter(x=>x.status.cls==='near').length,watch=invest.filter(x=>x.status.cls==='watch').length;
+  const avg=invest.length?Math.round(invest.reduce((a,b)=>a+b.risk,0)/invest.length):0;
+  return{invest,buy,near,watch,avg};
+}
+function mount(){
+  if($('rtTopOpportunities'))return;
+  installStyles();
+  const el=document.createElement('section');el.id='rtTopOpportunities';el.hidden=true;
+  el.innerHTML=
+'<header class="rto-topbar"><div id="rtoBrand" class="rto-brand"></div><nav class="rto-nav">'+
+'<button data-rto-nav="global">Visión Global</button><button data-rto-nav="europe">Europa</button><button data-rto-nav="northamerica">EE.UU.</button><button data-rto-nav="latam">LatAm</button><button data-rto-nav="markets">Mercados</button><button data-rto-nav="sectors">Sectores</button><button data-rto-nav="watchlist">Watchlist</button><button class="active">Oportunidades</button>'+
+'</nav><label class="rto-search"><span>⌕</span><input id="rtoSearch" placeholder="Buscar activo, ticker o mercado..."></label><div class="rto-live"><i></i>Ranking con datos reales</div><div class="rto-clock"><b id="rtoClock">--:--:--</b><small id="rtoDate">—</small></div></header>'+
+'<section class="rto-hero"><div class="rto-hero-copy"><div class="rto-hero-icon">◆</div><div><h1>Top de Oportunidades</h1><p>Activos donde el Radar detecta mejor combinación de <b>señal técnica, liquidez, riesgo y contexto</b>. Oportunidad no equivale a recomendación automática.</p></div></div><div class="rto-hero-actions"><button id="rtoRefresh" class="rto-btn primary">↻ Actualizar ranking</button><button id="rtoBack" class="rto-btn">← Volver a Watchlist</button></div></section>'+
+'<section id="rtoKpis" class="rto-kpis"></section>'+
+'<section class="rto-toolbar"><div id="rtoFilters" class="rto-filters"></div><div id="rtoSignalFilters" class="rto-signal-filters"></div><button id="rtoMethodBtn" class="rto-btn">Cómo se ordena</button></section>'+
+'<main class="rto-main"><section class="rto-panel"><div class="rto-table-wrap"><table class="rto-table"><thead><tr><th style="width:40px">#</th><th style="width:120px">ACTIVO</th><th style="width:82px">CLASE</th><th style="width:105px">MERCADO / MONEDA</th><th style="width:78px">PRECIO</th><th style="width:62px">VAR. 1D</th><th style="width:76px">TENDENCIA</th><th style="width:128px">SETUP</th><th style="width:72px">VOLUMEN</th><th style="width:78px">RIESGO</th><th style="width:88px">HORIZONTE</th><th style="width:112px">SCORE</th><th style="width:88px">ESTADO</th></tr></thead><tbody id="rtoRows"></tbody></table></div></section>'+
+'<aside class="rto-side"><section class="rto-card"><header><h2>Activo seleccionado</h2><span id="rtoSelectedRank">—</span></header><div id="rtoSelected" class="rto-selected"></div></section><section class="rto-card"><header><h2>Plan de decisión</h2><span>sin ejecución automática</span></header><div id="rtoPlan" class="rto-plan"></div></section><section class="rto-card"><header><h2>Qué significa “Top”</h2><span>metodología</span></header><div id="rtoMethod" class="rto-method"></div></section></aside></main>';
+  document.body.appendChild(el);
+  const src=q('#rtWatchlistWorkstation .rtw-brand-official');
+  if(src&&$('rtoBrand'))$('rtoBrand').style.backgroundImage=getComputedStyle(src).backgroundImage;
+  bind();
+}
+function bind(){
+  $('rtoBack')?.addEventListener('click',back);
+  $('rtoRefresh')?.addEventListener('click',()=>refresh(true));
+  $('rtoSearch')?.addEventListener('input',e=>{search=e.currentTarget.value.trim();renderTableAndDetail()});
+  $('rtoMethodBtn')?.addEventListener('click',()=>{const m=$('rtoMethod');if(m)m.scrollIntoView({behavior:'smooth',block:'center'})});
+  q('[data-rto-nav="watchlist"]')?.addEventListener('click',back);
+  for(const key of ['global','europe','northamerica','latam','markets','sectors']){
+    q('[data-rto-nav="'+key+'"]')?.addEventListener('click',()=>navigate(key));
+  }
+}
+function navigate(key){
+  close();
+  window.RadarWatchlistWorkstation?.close?.();
+  if(key==='global'){q('[data-rt-nav="global"]')?.click();return}
+  if(['europe','northamerica','latam'].includes(key)){global()?.selectRegion?.(key);setTimeout(()=>$('rtRegionOpen')?.click(),80);return}
+  if(key==='markets'){q('[data-rt-nav="markets"]')?.click();return}
+  if(key==='sectors'){q('[data-rt-nav="sectors"]')?.click();return}
+}
+function render(){
+  if($('rtTopOpportunities')?.hidden)return;
+  rows=normalize();
+  if(!selected||!rows.some(x=>x.key===selected))selected=rows.find(x=>x.kind!=='sell')?.key||rows[0]?.key||'';
+  renderKpis();renderFilters();renderTableAndDetail();tick();
+}
+function renderKpis(){
+  const s=summary(),tone=s.avg<40?'good':s.avg<67?'warn':'bad',risk=riskLabel(s.avg)[0];
+  $('rtoKpis').innerHTML=
+'<article class="rto-kpi good"><i>✓</i><div><small>OPORTUNIDADES FUERTES</small><strong>'+s.buy+'</strong><span>Señal confirmada y score suficiente</span></div></article>'+
+'<article class="rto-kpi warn"><i>◈</i><div><small>POSIBLES</small><strong>'+s.near+'</strong><span>Cerca de condición válida</span></div></article>'+
+'<article class="rto-kpi"><i>◎</i><div><small>EN SEGUIMIENTO</small><strong>'+s.watch+'</strong><span>Sin entrada limpia todavía</span></div></article>'+
+'<article class="rto-kpi '+tone+'"><i>◴</i><div><small>RIESGO PROMEDIO</small><strong>'+risk+'</strong><span>'+s.avg+'/100 sobre candidatos detectados</span></div></article>'+
+'<article class="rto-kpi"><i>▦</i><div><small>COBERTURA DEL RANKING</small><strong>'+s.invest.length+'</strong><span>Crypto · CEDEAR · AR · bonos · EE.UU.</span></div></article>';
+}
+function renderFilters(){
+  const defs=[['all','Todos'],['crypto','Crypto'],['cedear','CEDEAR'],['argstock','Acciones AR'],['usa','EE.UU. / ADR'],['bond','Bonos / Letras']];
+  $('rtoFilters').innerHTML=defs.map(x=>'<button data-rto-filter="'+x[0]+'" class="'+(typeFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
+  const sig=[['all','Todas'],['buy','Oportunidad'],['near','Posible'],['watch','Seguimiento']];
+  $('rtoSignalFilters').innerHTML=sig.map(x=>'<button data-rto-signal="'+x[0]+'" class="'+(signalFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
+  qa('[data-rto-filter]').forEach(b=>b.addEventListener('click',()=>{typeFilter=b.dataset.rtoFilter;renderFilters();renderTableAndDetail()}));
+  qa('[data-rto-signal]').forEach(b=>b.addEventListener('click',()=>{signalFilter=b.dataset.rtoSignal;renderFilters();renderTableAndDetail()}));
+}
+function priceText(x){
+  if(!Number.isFinite(x.price))return's/d';
+  const c=x.meta.currency;
+  const d=x.price>=1000?0:2;
+  if(c==='USD'||c==='USDT')return c+' '+fmt(x.price,d);
+  if(c==='ARS')return'$ '+fmt(x.price,d);
+  return fmt(x.price,d)+' '+(c==='S/D'?'':c);
+}
+function rowTypeClass(x){return x.type==='crypto'?'crypto':(x.type==='argbond'||x.type==='bill')?'bond':''}
+function renderTableAndDetail(){
+  const list=visible();
+  $('rtoRows').innerHTML=list.length?list.map((x,i)=>{
+    const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,trendCls=x.trend.key,risk=x.riskMeta;
+    return'<tr data-rto-key="'+esc(x.key)+'" class="'+(x.key===selected?'selected':'')+'">'+
+      '<td><span class="rto-rank">'+(rank>0?rank:i+1)+'</span></td>'+
+      '<td><span class="rto-asset"><b>'+esc(x.symbol)+'</b><small>'+esc(x.label)+'</small></span></td>'+
+      '<td><span class="rto-tag '+rowTypeClass(x)+'">'+esc(x.meta.classLabel)+'</span></td>'+
+      '<td>'+esc(x.meta.market)+' · '+esc(x.meta.currency)+'</td>'+
+      '<td>'+priceText(x)+'</td>'+
+      '<td class="'+(x.change>0?'rto-up':x.change<0?'rto-down':'rto-flat')+'">'+pct(x.change)+'</td>'+
+      '<td><span class="rto-trend '+trendCls+'">'+x.trend.label+'</span></td>'+
+      '<td title="'+esc(x.reason)+'">'+esc(x.setup)+'</td>'+
+      '<td>'+compactVolume(x.volume)+(Number.isFinite(x.rv)?' · '+fmt(x.rv,1)+'x':'')+'</td>'+
+      '<td><span class="rto-risk '+risk[1]+'">'+risk[0]+'</span></td>'+
+      '<td>'+x.horizon+'</td>'+
+      '<td><span class="rto-score '+(x.score<65?'mid':'')+'"><b>'+x.score+'</b><i><em style="width:'+x.score+'%"></em></i></span></td>'+
+      '<td><span class="rto-status '+x.status.cls+'">'+x.status.label+'</span></td></tr>';
+  }).join(''):'<tr><td colspan="13" class="rto-empty">No hay candidatos que cumplan estos filtros. El Radar no fuerza oportunidades si no aparecen.</td></tr>';
+  qa('[data-rto-key]').forEach(tr=>tr.addEventListener('click',()=>{selected=tr.dataset.rtoKey;renderTableAndDetail()}));
+  renderDetail();
+}
+function selectedRow(){return rows.find(x=>x.key===selected)||rows.find(x=>x.kind!=='sell')||rows[0]}
+function renderDetail(){
+  const x=selectedRow();if(!x){$('rtoSelected').innerHTML='<div class="rto-empty">Sin datos.</div>';$('rtoPlan').innerHTML='';return}
+  const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,risk=x.riskMeta;
+  $('rtoSelectedRank').textContent=rank>0?'#'+rank+' del ranking':'—';
+  $('rtoSelected').innerHTML=
+'<div class="rto-selected-top"><div><h3>'+esc(x.symbol)+'</h3><small>'+esc(x.label)+' · '+esc(x.meta.classLabel)+' · '+esc(x.meta.market)+'</small></div><span class="rto-big-score" style="--score:'+x.score+'"><b>'+x.score+'</b></span></div>'+
+'<div class="rto-reason">'+esc(x.reason)+'</div>'+
+'<div class="rto-metrics"><div class="rto-metric"><small>SEÑAL TÉCNICA</small><b>'+Math.round(x.tech)+'/100</b></div><div class="rto-metric"><small>LIQUIDEZ RELATIVA</small><b>'+Math.round(x.liquidity)+'/100</b></div><div class="rto-metric"><small>CONTEXTO</small><b>'+Math.round(x.context)+'/100</b></div><div class="rto-metric"><small>RIESGO</small><b class="'+(risk[1]==='high'?'rto-down':risk[1]==='low'?'rto-up':'')+'">'+risk[0]+'</b></div></div>';
+  let sentence='Todavía no hay una ventaja suficiente para una entrada. Conviene seguirlo y esperar confirmación.';
+  if(x.status.cls==='buy')sentence='Es uno de los candidatos con mejor combinación actual. Antes de entrar, abrir el análisis completo y validar soporte, invalidación y relación riesgo/beneficio.';
+  else if(x.status.cls==='near')sentence='Está cerca de convertirse en oportunidad, pero todavía falta confirmación. No conviene anticipar el trigger.';
+  $('rtoPlan').innerHTML='<div class="rto-plan-state '+x.status.cls+'">'+x.status.label+'</div><p>'+sentence+'</p><div class="rto-plan-actions"><button id="rtoAnalyze">Ver análisis completo</button><button id="rtoWatchBack">Volver a Watchlist</button></div>';
+  $('rtoAnalyze')?.addEventListener('click',()=>analyze(x));
+  $('rtoWatchBack')?.addEventListener('click',back);
+  $('rtoMethod').innerHTML='<b>El ranking prioriza calidad de oportunidad, no sólo volumen.</b> La puntuación combina señal técnica (56%), liquidez relativa dentro de su propia clase (12%), riesgo (14%) y contexto de mercado (18%), con ajustes por confirmación y tendencia. Las señales bajistas se excluyen del Top long.<span class="formula">Score final = técnica + liquidez + riesgo + contexto + confirmación. Si no hay señal clara, el activo queda en Seguimiento y no se fuerza una compra.</span>';
+}
+function analyze(x){
+  close();
+  window.RadarWatchlistWorkstation?.close?.();
+  if((x.type==='argbond'||x.type==='bill')&&typeof window.loadBondAnalysis==='function'){window.loadBondAnalysis(x.symbol,'argbond');return}
+  if(typeof window.openScanResult==='function'){window.openScanResult(x.symbol,x.type,'short');return}
+  const input=$('symbol');if(input)input.value=x.symbol;
+  const type=$('assetType');if(type)type.value=x.type||'auto';
+  $('analyzeBtn')?.click();
+}
+async function refresh(force){
+  if(refreshing)return;refreshing=true;
+  const b=$('rtoRefresh');if(b){b.disabled=true;b.textContent='Actualizando…'}
+  try{
+    await global()?.refresh?.(!!force);
+    if(window.RadarDailyRadar?.run)await window.RadarDailyRadar.run(!!force);
+  }catch(e){window.radarNotify?.('No se pudo actualizar el ranking: '+(e?.message||e),'warn')}
+  finally{refreshing=false;if(b){b.disabled=false;b.textContent='↻ Actualizar ranking'}render()}
+}
+function tick(){
+  const now=new Date();
+  if($('rtoClock'))$('rtoClock').textContent=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
+  if($('rtoDate'))$('rtoDate').textContent=new Intl.DateTimeFormat('es-AR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'America/Argentina/Buenos_Aires'}).format(now).replaceAll('.','');
+}
+function open(){
+  mount();
+  const el=$('rtTopOpportunities');if(!el)return;
+  window.RadarWatchlistWorkstation?.close?.();
+  el.hidden=false;document.body.classList.add('rto-open');render();tick();
+  const d=daily();if(!rows.length||!d?.lastRun)refresh(false);
+}
+function close(){
+  const el=$('rtTopOpportunities');if(el)el.hidden=true;
+  document.body.classList.remove('rto-open');
+}
+function back(){close();window.RadarWatchlistWorkstation?.open?.()}
+document.addEventListener('click',e=>{
+  const b=e.target.closest?.('[data-rtw-scroll="table"]');
+  if(!b)return;
+  e.preventDefault();e.stopImmediatePropagation();open();
+},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rtTopOpportunities')?.hidden)back()});
+setInterval(()=>{if(!$('rtTopOpportunities')?.hidden)tick()},1000);
+window.RadarTopOpportunities=Object.freeze({open,close,render,refresh});
+})();
