@@ -174,6 +174,30 @@ try{
     await page.waitForFunction(()=>document.getElementById('rtRegionalDecisionCenter')?.hidden===true);
   }
 
+
+  if(design.globalCommandCenter){
+    await page.evaluate(()=>window.RadarTopOpportunities?.open?.());
+    await page.waitForFunction(()=>{
+      const shell=document.getElementById('rtTopOpportunities');
+      const rows=document.querySelectorAll('#rtoRows tr[data-rto-key]').length;
+      return shell&&!shell.hidden&&rows>0;
+    },{timeout:20000});
+    const opportunitiesContract=await page.evaluate(()=>({
+      visible:!document.getElementById('rtTopOpportunities')?.hidden,
+      rows:document.querySelectorAll('#rtoRows tr[data-rto-key]').length,
+      coverage:document.querySelector('#rtoKpis article:last-child strong')?.textContent?.trim()||'',
+      selected:document.querySelector('#rtoSelected h3')?.textContent?.trim()||'',
+      brandAudit:window.RadarOfficialBrand?.audit?.()||[]
+    }));
+    await assert(opportunitiesContract.visible,'Top Oportunidades no abrió');
+    await assert(opportunitiesContract.rows>=5,'Top Oportunidades quedó vacío: '+opportunitiesContract.rows);
+    await assert(Number(opportunitiesContract.coverage)>0,'Top Oportunidades no reporta cobertura: '+opportunitiesContract.coverage);
+    await assert(!!opportunitiesContract.selected,'Top Oportunidades no selecciona un candidato');
+    await assert(opportunitiesContract.brandAudit.every(x=>x.official),'Hay una pantalla con logo distinto: '+JSON.stringify(opportunitiesContract.brandAudit));
+    await shot('03-top-opportunities');
+    await page.evaluate(()=>window.RadarTopOpportunities?.close?.());
+  }
+
   const finalContract=await page.evaluate(()=>{
     const required=[
       'dashboardView','decisionCenter','scannerView','startScanBtn','scanUniverse','scanTf',
