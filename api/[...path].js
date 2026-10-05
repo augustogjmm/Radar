@@ -437,7 +437,37 @@ async function bymaFixedIncome(url){
   if(currency!=='ALL')items=items.filter(x=>String(x.denominationCcy).toUpperCase()===currency);
   if(liquid)items=items.filter(x=>(x.volume||0)>0||(x.tradeVolume||0)>0||(x.volumeAmount||0)>0);
   items=uniqueBest(items).sort((a,b)=>(b.volumeAmount||0)-(a.volumeAmount||0)||a.symbol.localeCompare(b.symbol));
-  return {source:'Open BYMADATA public-bonds + negociable-obligations',updated:new Date().toISOString(),count:items.length,publicCount:publicItems.length,onCount:onItems.length,kind,currency,liquidOnly:liquid,errors:[...(pub.errors||[]),...(on.errors||[])],items};
+
+  let source='Open BYMADATA public-bonds + negociable-obligations',fallback=false,liquidityVerified=true;
+  if(!items.length&&['all','public','sovereign'].includes(kind)){
+    try{
+      const curve=await fixedIncomeCurve();
+      const fallbackItems=(curve.bonds||[]).map(b=>({
+        symbol:String(b.ticker||'').toUpperCase(),
+        type:'bond',
+        category:'Bono soberano',
+        securityType:'BOND',
+        denominationCcy:String(b.moneda||'USD').toUpperCase(),
+        settlementType:'2',
+        maturityDate:String(b.vencimiento||''),
+        daysToMaturity:null,
+        trade:Number.isFinite(num(b.precio))?num(b.precio):null,
+        closingPrice:Number.isFinite(num(b.precio))?num(b.precio):null,
+        volume:null,tradeVolume:null,volumeAmount:null,
+        tir:num(b.tir),duration:num(b.duration),paridad:num(b.paridad),
+        fallback:true,source:curve.source
+      })).filter(x=>x.symbol&&(currency==='ALL'||x.denominationCcy===currency));
+      if(fallbackItems.length){
+        items=fallbackItems;
+        source=curve.source+' · fallback del universo BYMA';
+        fallback=true;
+        liquidityVerified=false;
+      }
+    }catch(e){
+      (pub.errors||[]).push('fallback curva soberana '+String(e?.message||e).slice(0,180));
+    }
+  }
+  return {source,updated:new Date().toISOString(),count:items.length,publicCount:publicItems.length,onCount:onItems.length,kind,currency,liquidOnly:liquid,liquidityVerified,fallback,errors:[...(pub.errors||[]),...(on.errors||[])],items};
 }
 async function cedearPrograms(){
   const html=await request('https://www.comafi.com.ar/Programas-CEDEARs-2483.note.aspx',{timeout:18000,headers:{accept:'text/html,*/*'}});
@@ -581,9 +611,15 @@ async function fixedIncomeCurve(){
   const x=await getJson('https://compararfondos.com.ar/api/bonos',{timeout:18000});
   const rows=Array.isArray(x?.bonds)?x.bonds:arr(x),bonds=[];
   for(const b of rows){
-    const ticker=String(b?.ticker||'').trim().toUpperCase(),tir=num(b?.tir),duration=num(b?.duration),paridad=num(b?.paridad);
+    const ticker=String(b?.ticker||b?.simbolo||'').trim().toUpperCase(),tir=num(b?.tir),duration=num(b?.duration),paridad=num(b?.paridad);
     if(!/^(AL|GD|AE)/.test(ticker)||tir===null||duration===null||tir<=0||duration<=0)continue;
-    bonds.push({ticker,tir,duration,paridad});
+    bonds.push({
+      ticker,tir,duration,paridad,
+      precio:num(b?.precio??b?.price),
+      vencimiento:b?.vencimiento??b?.maturityDate??null,
+      tipo:b?.tipo??b?.type??'Bono soberano',
+      moneda:String(b?.moneda??b?.currency??'USD').toUpperCase()
+    });
   }
   bonds.sort((a,b)=>a.duration-b.duration);
   return {source:'CompararFondos · curva soberana',updated:new Date().toISOString(),bonds};
@@ -641,7 +677,7 @@ async function deepHealth(){
   await run('BYMA renta fija',true,async()=>{
     const u=new URL('https://radar.local/api/byma/fixed-income');u.searchParams.set('kind','all');u.searchParams.set('currency','ALL');u.searchParams.set('liquid','1');
     const x=await bymaFixedIncome(u);if(!Array.isArray(x.items)||!x.items.length)throw new Error('universo de renta fija vacío');
-    return {count:x.items.length,source:x.source};
+    return {count:x.items.length,source:x.source,fallback:!!x.fallback,liquidityVerified:x.liquidityVerified!==false};
   });
   await run('BYMA histórico GGAL',true,async()=>{
     const u=new URL('https://radar.local/api/byma/scan-history');u.searchParams.set('symbol','GGAL');u.searchParams.set('tf','short');
