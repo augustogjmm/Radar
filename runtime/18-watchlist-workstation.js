@@ -451,7 +451,7 @@ const global=()=>window.RadarGlobalCommandCenter;
 const gst=()=>global()?.state;
 const daily=()=>window.RadarDailyRadar?.state;
 
-let typeFilter='all',signalFilter='all',search='',selected='',rows=[],refreshing=false;
+let typeFilter='all',signalFilter='all',search='',selected='',rows=[],refreshing=false,directCandidates=[];
 
 const TYPE_META={
   crypto:['Crypto','Crypto','USDT'],
@@ -465,6 +465,101 @@ const TYPE_META={
   bill:['Letra','BYMA','ARS'],
   letra:['Letra','BYMA','ARS']
 };
+
+const DIRECT_UNIVERSE=[
+  {symbol:'BTC',quote:'BTC-USD',label:'Bitcoin',type:'crypto',currency:'USD'},
+  {symbol:'ETH',quote:'ETH-USD',label:'Ethereum',type:'crypto',currency:'USD'},
+  {symbol:'SOL',quote:'SOL-USD',label:'Solana',type:'crypto',currency:'USD'},
+  {symbol:'SPY',quote:'SPY',label:'S&P 500 ETF',type:'stock',currency:'USD'},
+  {symbol:'QQQ',quote:'QQQ',label:'Nasdaq 100 ETF',type:'stock',currency:'USD'},
+  {symbol:'AAPL',quote:'AAPL',label:'Apple',type:'stock',currency:'USD'},
+  {symbol:'NVDA',quote:'NVDA',label:'NVIDIA',type:'stock',currency:'USD'},
+  {symbol:'MELI',quote:'MELI',label:'MercadoLibre',type:'adr',currency:'USD'},
+  {symbol:'GGAL',quote:'GGAL',label:'Grupo Galicia ADR',type:'adr',currency:'USD'},
+  {symbol:'YPF',quote:'YPF',label:'YPF ADR',type:'adr',currency:'USD'},
+  {symbol:'PAM',quote:'PAM',label:'Pampa Energía ADR',type:'adr',currency:'USD'},
+  {symbol:'VIST',quote:'VIST',label:'Vista Energy ADR',type:'adr',currency:'USD'}
+];
+
+function directTech(bars){
+  const closes=(bars||[]).map(x=>num(x?.close)).filter(Number.isFinite);
+  if(closes.length<8)return{kind:'wait',label:'SEGUIMIENTO',oppScore:42,setup:'Histórico insuficiente',trend:'Lateral'};
+  const last=closes.at(-1);
+  const ma5=closes.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,closes.length);
+  const ma20=closes.slice(-20).reduce((a,b)=>a+b,0)/Math.min(20,closes.length);
+  const previous=closes.slice(-20,-1);
+  const hi20=previous.length?Math.max(...previous):last;
+  const lo20=previous.length?Math.min(...previous):last;
+  const mom5=closes.length>5&&closes.at(-6)?(last/closes.at(-6)-1)*100:0;
+  if(last>hi20&&ma5>ma20&&mom5>1)return{kind:'buy',label:'OPORTUNIDAD',oppScore:88,setup:'Ruptura con momentum',trend:'Alcista'};
+  if(ma5>ma20&&mom5>.25)return{kind:'near',label:'POSIBLE',oppScore:72,setup:'Tendencia alcista',trend:'Alcista'};
+  if(last<lo20||(ma5<ma20&&mom5<-1))return{kind:'sell',label:'EVITAR',oppScore:22,setup:'Presión bajista',trend:'Bajista'};
+  return{kind:'wait',label:'SEGUIMIENTO',oppScore:50,setup:'Esperar confirmación',trend:ma5>=ma20?'Alcista':'Lateral'};
+}
+function directRow(meta,market){
+  if(!meta||!market)return null;
+  const bars=(market.bars||[]).map(b=>({time:num(b?.time),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
+  const last=num(market.last??bars.at(-1)?.close),volume=num(market.volume??bars.at(-1)?.volume);
+  if(!Number.isFinite(last))return null;
+  const tech=directTech(bars);
+  return{
+    item:{symbol:meta.symbol,type:meta.type,requestedType:meta.type,label:meta.label,panel:{currency:meta.currency}},
+    status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},
+    trend:tech.trend,setup:tech.setup,marketOnly:true,bars,
+    marketData:{last,changePct:num(market.changePct),volume,bars,source:market.source||'Yahoo Finance'}
+  };
+}
+function globalMarketCandidates(){
+  const st=gst(),out=[];
+  if(!st?.markets)return out;
+  for(const meta of DIRECT_UNIVERSE){
+    const m=st.markets.get(meta.quote);
+    const row=directRow(meta,m);
+    if(row)out.push(row);
+  }
+  return out;
+}
+function universeCandidates(){
+  const st=gst(),out=[];
+  if(!st?.universes)return out;
+  const add=(panel,type)=>{
+    const symbol=String(panel?.symbol||'').toUpperCase();
+    const last=num(panel?.trade??panel?.closingPrice),volume=num(panel?.volumeAmount??panel?.tradeVolume??panel?.volume);
+    if(!symbol||!Number.isFinite(last))return;
+    const market={last,changePct:NaN,volume,bars:[],source:panel?.source||'BYMA'};
+    const currency=String(panel?.denominationCcy||panel?.currency||'ARS').toUpperCase();
+    const row=directRow({symbol,label:String(panel?.description||panel?.securityDescription||symbol),type,currency},market);
+    if(row){row.item.panel=panel;out.push(row)}
+  };
+  (st.universes.equities||[]).slice(0,10).forEach(x=>add(x,'argstock'));
+  (st.universes.cedears||[]).slice(0,10).forEach(x=>add(x,'cedear'));
+  (st.universes.fixed||[]).slice(0,10).forEach(x=>add(x,x?.category==='LECAP/BONCAP'?'bill':'argbond'));
+  return out;
+}
+async function refreshDirectCandidates(force=false){
+  const symbols=DIRECT_UNIVERSE.map(x=>x.quote);
+  try{
+    const r=await fetch('/api/yahoo-batch?symbols='+encodeURIComponent(symbols.join(','))+'&range=6mo&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw new Error('Yahoo HTTP '+r.status);
+    const j=await r.json(),bySymbol=new Map((j.items||[]).map(x=>[String(x.symbol||'').toUpperCase(),x]));
+    const next=[];
+    for(const meta of DIRECT_UNIVERSE){
+      const x=bySymbol.get(meta.quote.toUpperCase());
+      if(!x?.ok&&!Number.isFinite(num(x?.last)))continue;
+      const market={
+        last:num(x.last),changePct:num(x.changePct),volume:num(x.volume),source:x.source||j.source||'Yahoo Finance',
+        bars:(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.close))
+      };
+      const row=directRow(meta,market);if(row)next.push(row);
+    }
+    if(next.length)directCandidates=next;
+  }catch(e){
+    const fallback=globalMarketCandidates();
+    if(fallback.length)directCandidates=fallback;
+    console.warn('Top oportunidades: respaldo de mercado',e);
+  }
+  return directCandidates;
+}
 
 function installStyles(){
   if($('rtoStyles'))return;
@@ -628,11 +723,21 @@ function labelOf(r,symbol){
   return String(r?.item?.label||r?.item?.panel?.description||r?.item?.panel?.securityDescription||symbol);
 }
 function dedupeResults(){
-  const pool=[...(gst()?.opportunityLeaders||[]),...(daily()?.results||[]),...(daily()?.rf||[])].filter(r=>r?.item?.symbol);
+  const pool=[
+    ...(gst()?.opportunityLeaders||[]),
+    ...(daily()?.results||[]),
+    ...(daily()?.rf||[]),
+    ...directCandidates,
+    ...globalMarketCandidates(),
+    ...universeCandidates()
+  ].filter(r=>r?.item?.symbol);
   const map=new Map();
   for(const r of pool){
-    const s=symbolOf(r),t=typeOf(r),k=t+'|'+s,n=techScoreOf(r),old=map.get(k);
-    if(!old||n>techScoreOf(old))map.set(k,r);
+    const symbol=symbolOf(r),type=typeOf(r);
+    if(!symbol)continue;
+    const key=type+'|'+symbol,n=techScoreOf(r),old=map.get(key);
+    const oldHasBars=(barsOf(old||{}).length>7),newHasBars=(barsOf(r).length>7);
+    if(!old||n>techScoreOf(old)||(newHasBars&&!oldHasBars))map.set(key,r);
   }
   return[...map.values()];
 }
@@ -660,7 +765,7 @@ function normalize(){
   return items.sort((a,b)=>b.score-a.score||b.tech-a.tech);
 }
 function visible(){
-  let out=rows.filter(x=>x.kind!=='sell');
+  let out=[...rows];
   if(typeFilter!=='all'){
     if(typeFilter==='usa')out=out.filter(x=>x.type==='stock'||x.type==='adr');
     else if(typeFilter==='bond')out=out.filter(x=>x.type==='argbond'||x.type==='bill');
@@ -671,9 +776,9 @@ function visible(){
   return out.slice(0,20);
 }
 function summary(){
-  const invest=rows.filter(x=>x.kind!=='sell'),buy=invest.filter(x=>x.status.cls==='buy').length,near=invest.filter(x=>x.status.cls==='near').length,watch=invest.filter(x=>x.status.cls==='watch').length;
+  const invest=[...rows],buy=invest.filter(x=>x.status.cls==='buy').length,near=invest.filter(x=>x.status.cls==='near').length,watch=invest.filter(x=>x.status.cls==='watch').length,avoid=invest.filter(x=>x.status.cls==='avoid').length;
   const avg=invest.length?Math.round(invest.reduce((a,b)=>a+b.risk,0)/invest.length):0;
-  return{invest,buy,near,watch,avg};
+  return{invest,buy,near,watch,avoid,avg};
 }
 function mount(){
   if($('rtTopOpportunities'))return;
@@ -729,7 +834,7 @@ function renderKpis(){
 function renderFilters(){
   const defs=[['all','Todos'],['crypto','Crypto'],['cedear','CEDEAR'],['argstock','Acciones AR'],['usa','EE.UU. / ADR'],['bond','Bonos / Letras']];
   $('rtoFilters').innerHTML=defs.map(x=>'<button data-rto-filter="'+x[0]+'" class="'+(typeFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
-  const sig=[['all','Todas'],['buy','Oportunidad'],['near','Posible'],['watch','Seguimiento']];
+  const sig=[['all','Todas'],['buy','Oportunidad'],['near','Posible'],['watch','Seguimiento'],['avoid','Evitar']];
   $('rtoSignalFilters').innerHTML=sig.map(x=>'<button data-rto-signal="'+x[0]+'" class="'+(signalFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
   qa('[data-rto-filter]').forEach(b=>b.addEventListener('click',()=>{typeFilter=b.dataset.rtoFilter;renderFilters();renderTableAndDetail()}));
   qa('[data-rto-signal]').forEach(b=>b.addEventListener('click',()=>{signalFilter=b.dataset.rtoSignal;renderFilters();renderTableAndDetail()}));
@@ -796,8 +901,14 @@ async function refresh(force){
   const b=$('rtoRefresh');if(b){b.disabled=true;b.textContent='Actualizando…'}
   try{
     await global()?.refresh?.(!!force);
-    if(window.RadarDailyRadar?.run)await window.RadarDailyRadar.run(!!force);
-  }catch(e){window.radarNotify?.('No se pudo actualizar el ranking: '+(e?.message||e),'warn')}
+    await refreshDirectCandidates(!!force);
+    if(window.RadarDailyRadar?.run){
+      try{await window.RadarDailyRadar.run(!!force)}catch(e){console.warn('Daily Radar no disponible para ranking',e)}
+    }
+  }catch(e){
+    await refreshDirectCandidates(!!force).catch(()=>{});
+    window.radarNotify?.('Actualización parcial del ranking: '+(e?.message||e),'warn');
+  }
   finally{refreshing=false;if(b){b.disabled=false;b.textContent='↻ Actualizar ranking'}render()}
 }
 function tick(){
@@ -810,7 +921,7 @@ function open(){
   const el=$('rtTopOpportunities');if(!el)return;
   window.RadarWatchlistWorkstation?.close?.();
   el.hidden=false;document.body.classList.add('rto-open');render();tick();
-  const d=daily();if(!rows.length||!d?.lastRun)refresh(false);
+  const d=daily();if(!rows.length||!d?.lastRun||!directCandidates.length)refresh(false);
 }
 function close(){
   const el=$('rtTopOpportunities');if(el)el.hidden=true;
