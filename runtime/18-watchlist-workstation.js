@@ -826,3 +826,199 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rtTopOpportunit
 setInterval(()=>{if(!$('rtTopOpportunities')?.hidden)tick()},1000);
 window.RadarTopOpportunities=Object.freeze({open,close,render,refresh});
 })();
+
+/* Radar Técnico · Official Brand Invariant */
+(()=>{
+'use strict';
+if(window.RadarOfficialBrand?.version==='1.0.0')return;
+
+const VERSION='1.0.0';
+const TAGLINE='MERCADOS GLOBALES. SEÑALES REALES. MEJORES DECISIONES.';
+const MARKUP=`
+  <div class="rt-logo" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="20"/>
+      <circle cx="24" cy="24" r="14"/>
+      <circle cx="24" cy="24" r="7"/>
+      <path d="M24 1v46M1 24h46"/>
+      <path class="sweep" d="M24 24 40 8"/>
+      <circle class="dot" cx="24" cy="24" r="2.2"/>
+    </svg>
+  </div>
+  <div class="rt-brand-copy">
+    <b>Radar Técnico</b>
+    <small>${TAGLINE}</small>
+  </div>`;
+
+function installStyles(){
+  if(document.getElementById('rtOfficialBrandStyles'))return;
+  const style=document.createElement('style');
+  style.id='rtOfficialBrandStyles';
+  style.textContent=`
+    /* One brand identity everywhere: exact artwork/copy from Visión Global. */
+    .rt-brand-official-shell{
+      display:flex!important;
+      align-items:center!important;
+      gap:12px!important;
+      min-width:0!important;
+      background-image:none!important;
+      background-color:transparent!important;
+      box-shadow:none!important;
+      border:0!important;
+    }
+    .rt-brand-official-shell>.rt-logo{
+      width:46px!important;height:46px!important;min-width:46px!important;
+      display:grid!important;place-items:center!important;position:relative!important;
+      color:#2bb7ff!important;background:none!important;border:0!important;
+    }
+    .rt-brand-official-shell>.rt-logo svg{
+      width:46px!important;height:46px!important;overflow:visible!important;
+      fill:none!important;stroke:currentColor!important;stroke-width:1.35!important;
+      filter:drop-shadow(0 0 5px rgba(34,174,255,.38))!important;
+    }
+    .rt-brand-official-shell>.rt-logo svg circle:nth-child(1){stroke-width:1.8!important;fill:none!important}
+    .rt-brand-official-shell>.rt-logo svg circle:nth-child(2){opacity:.78!important;fill:none!important}
+    .rt-brand-official-shell>.rt-logo svg circle:nth-child(3){opacity:.9!important;fill:none!important}
+    .rt-brand-official-shell>.rt-logo svg path{opacity:.72!important}
+    .rt-brand-official-shell>.rt-logo svg .sweep{stroke:#68ceff!important;stroke-width:1.7!important;opacity:.85!important}
+    .rt-brand-official-shell>.rt-logo svg .dot{fill:#33baff!important;stroke:none!important;opacity:1!important}
+    .rt-brand-official-shell>.rt-brand-copy{
+      display:flex!important;flex-direction:column!important;justify-content:center!important;
+      min-width:0!important;line-height:1!important
+    }
+    .rt-brand-official-shell>.rt-brand-copy>b{
+      display:block!important;margin:0!important;padding:0!important;
+      font:770 27px/1 "Roboto Condensed","Arial Narrow","Segoe UI",Arial,sans-serif!important;
+      letter-spacing:-.025em!important;color:#e1edf7!important;white-space:nowrap!important;
+      text-shadow:none!important
+    }
+    .rt-brand-official-shell>.rt-brand-copy>small{
+      display:block!important;margin:5px 0 0!important;padding:0!important;
+      font:500 9px/1.2 "Roboto Condensed","Arial Narrow","Segoe UI",Arial,sans-serif!important;
+      letter-spacing:.05em!important;color:#9bb0c0!important;white-space:nowrap!important;
+      text-transform:none!important
+    }
+
+    /* Full-screen workstations use the same identity, slightly fitted to their header width. */
+    #rtRegionalDecisionCenter .rt-brand-official-shell,
+    #rtWatchlistWorkstation .rt-brand-official-shell,
+    #rtTopOpportunities .rt-brand-official-shell{
+      height:54px!important;width:auto!important;
+    }
+    #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-logo,
+    #rtWatchlistWorkstation .rt-brand-official-shell>.rt-logo,
+    #rtTopOpportunities .rt-brand-official-shell>.rt-logo{
+      width:42px!important;height:42px!important;min-width:42px!important
+    }
+    #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-logo svg,
+    #rtWatchlistWorkstation .rt-brand-official-shell>.rt-logo svg,
+    #rtTopOpportunities .rt-brand-official-shell>.rt-logo svg{
+      width:42px!important;height:42px!important
+    }
+    #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-brand-copy>b,
+    #rtWatchlistWorkstation .rt-brand-official-shell>.rt-brand-copy>b,
+    #rtTopOpportunities .rt-brand-official-shell>.rt-brand-copy>b{
+      font-size:23px!important
+    }
+    #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-brand-copy>small,
+    #rtWatchlistWorkstation .rt-brand-official-shell>.rt-brand-copy>small,
+    #rtTopOpportunities .rt-brand-official-shell>.rt-brand-copy>small{
+      font-size:7.5px!important;margin-top:4px!important;letter-spacing:.035em!important
+    }
+
+    /* Legacy/sidebar screens keep exactly the same artwork and wording in compact form. */
+    #appSidebar .sidebar-brand.rt-brand-official-shell{
+      height:auto!important;padding:12px 10px!important;gap:9px!important;
+      align-items:center!important
+    }
+    #appSidebar .sidebar-brand.rt-brand-official-shell>.rt-logo{
+      width:34px!important;height:34px!important;min-width:34px!important
+    }
+    #appSidebar .sidebar-brand.rt-brand-official-shell>.rt-logo svg{
+      width:34px!important;height:34px!important
+    }
+    #appSidebar .sidebar-brand.rt-brand-official-shell>.rt-brand-copy>b{
+      font-size:15px!important
+    }
+    #appSidebar .sidebar-brand.rt-brand-official-shell>.rt-brand-copy>small{
+      font-size:6px!important;margin-top:3px!important;letter-spacing:.02em!important
+    }
+
+    @media(max-width:1450px){
+      #rtRegionalDecisionCenter .rt-brand-official-shell,
+      #rtWatchlistWorkstation .rt-brand-official-shell,
+      #rtTopOpportunities .rt-brand-official-shell{gap:8px!important}
+      #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-logo,
+      #rtWatchlistWorkstation .rt-brand-official-shell>.rt-logo,
+      #rtTopOpportunities .rt-brand-official-shell>.rt-logo{
+        width:36px!important;height:36px!important;min-width:36px!important
+      }
+      #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-logo svg,
+      #rtWatchlistWorkstation .rt-brand-official-shell>.rt-logo svg,
+      #rtTopOpportunities .rt-brand-official-shell>.rt-logo svg{
+        width:36px!important;height:36px!important
+      }
+      #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-brand-copy>b,
+      #rtWatchlistWorkstation .rt-brand-official-shell>.rt-brand-copy>b,
+      #rtTopOpportunities .rt-brand-official-shell>.rt-brand-copy>b{
+        font-size:19px!important
+      }
+      #rtRegionalDecisionCenter .rt-brand-official-shell>.rt-brand-copy>small,
+      #rtWatchlistWorkstation .rt-brand-official-shell>.rt-brand-copy>small,
+      #rtTopOpportunities .rt-brand-official-shell>.rt-brand-copy>small{
+        font-size:6.2px!important
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function isOfficial(el){
+  if(!el)return false;
+  const title=el.querySelector(':scope > .rt-brand-copy > b')?.textContent?.trim();
+  const tagline=el.querySelector(':scope > .rt-brand-copy > small')?.textContent?.trim();
+  const logo=el.querySelector(':scope > .rt-logo svg .sweep');
+  return title==='Radar Técnico'&&tagline===TAGLINE&&!!logo;
+}
+function normalizeOne(el){
+  if(!el)return;
+  el.classList.add('rt-brand-official-shell');
+  el.setAttribute('aria-label','Radar Técnico · '+TAGLINE);
+  if(!isOfficial(el))el.innerHTML=MARKUP;
+  el.dataset.radarBrand='official-v1';
+}
+function normalizeAll(){
+  installStyles();
+  /* Global is the source of truth and already uses this exact markup. */
+  document.querySelectorAll(
+    '#rtGlobalAppbar .rt-brand, #rtRegionalDecisionCenter .rdc-brand, #rtWatchlistWorkstation .rtw-brand-official, #rtTopOpportunities .rto-brand, #appSidebar .sidebar-brand'
+  ).forEach(normalizeOne);
+}
+function audit(){
+  const targets=[
+    ['Visión Global','#rtGlobalAppbar .rt-brand'],
+    ['Regional','#rtRegionalDecisionCenter .rdc-brand'],
+    ['Watchlist','#rtWatchlistWorkstation .rtw-brand-official'],
+    ['Top Oportunidades','#rtTopOpportunities .rto-brand'],
+    ['Sistema clásico','#appSidebar .sidebar-brand']
+  ];
+  return targets.map(([screen,selector])=>{
+    const el=document.querySelector(selector);
+    return{screen,present:!!el,official:!el||isOfficial(el)};
+  });
+}
+function boot(){
+  normalizeAll();
+  let queued=false;
+  const observer=new MutationObserver(()=>{
+    if(queued)return;
+    queued=true;
+    queueMicrotask(()=>{queued=false;normalizeAll()});
+  });
+  observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  window.addEventListener('load',normalizeAll,{once:true});
+  setTimeout(normalizeAll,0);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+window.RadarOfficialBrand=Object.freeze({version:VERSION,normalize:normalizeAll,audit,markup:()=>MARKUP});
+})();
