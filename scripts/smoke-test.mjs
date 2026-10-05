@@ -182,18 +182,54 @@ try{
       const rows=document.querySelectorAll('#rtoRows tr[data-rto-key]').length;
       return shell&&!shell.hidden&&rows>0;
     },{timeout:20000});
-    const opportunitiesContract=await page.evaluate(()=>({
-      visible:!document.getElementById('rtTopOpportunities')?.hidden,
-      rows:document.querySelectorAll('#rtoRows tr[data-rto-key]').length,
-      coverage:document.querySelector('#rtoKpis article:last-child strong')?.textContent?.trim()||'',
-      selected:document.querySelector('#rtoSelected h3')?.textContent?.trim()||'',
-      brandAudit:window.RadarOfficialBrand?.audit?.()||[]
-    }));
+    const opportunitiesContract=await page.evaluate(()=>{
+      const px=sel=>parseFloat(getComputedStyle(document.querySelector(sel)).fontSize)||0;
+      const overflow=[...document.querySelectorAll('#rtTopOpportunities .rto-kpi,#rtTopOpportunities .rto-card,#rtTopOpportunities .rto-hero-copy')]
+        .filter(el=>el.scrollWidth>el.clientWidth+3)
+        .map(el=>({cls:el.className,client:el.clientWidth,scroll:el.scrollWidth}));
+      return{
+        visible:!document.getElementById('rtTopOpportunities')?.hidden,
+        rows:document.querySelectorAll('#rtoRows tr[data-rto-key]').length,
+        coverage:document.querySelector('#rtoKpis article:last-child strong')?.textContent?.trim()||'',
+        selected:document.querySelector('#rtoSelected h3')?.textContent?.trim()||'',
+        kpiCards:document.querySelectorAll('#rtoKpis [data-rto-kpi]').length,
+        fonts:{table:px('#rtoRows td'),kpi:px('#rtoKpis .rto-kpi small'),side:px('#rtoSelected .rto-reason')},
+        overflow,
+        brandAudit:window.RadarOfficialBrand?.audit?.()||[]
+      };
+    });
     await assert(opportunitiesContract.visible,'Top Oportunidades no abrió');
     await assert(opportunitiesContract.rows>=5,'Top Oportunidades quedó vacío: '+opportunitiesContract.rows);
     await assert(Number(opportunitiesContract.coverage)>0,'Top Oportunidades no reporta cobertura: '+opportunitiesContract.coverage);
     await assert(!!opportunitiesContract.selected,'Top Oportunidades no selecciona un candidato');
+    await assert(opportunitiesContract.kpiCards===5,'Top Oportunidades no tiene 5 KPI filtrables: '+opportunitiesContract.kpiCards);
+    await assert(opportunitiesContract.fonts.table>=9.5&&opportunitiesContract.fonts.kpi>=9&&opportunitiesContract.fonts.side>=9.5,'Tipografía de Top Oportunidades demasiado chica: '+JSON.stringify(opportunitiesContract.fonts));
+    await assert(opportunitiesContract.overflow.length===0,'Textos fuera de recuadro en Top Oportunidades: '+JSON.stringify(opportunitiesContract.overflow));
     await assert(opportunitiesContract.brandAudit.every(x=>x.official),'Hay una pantalla con logo distinto: '+JSON.stringify(opportunitiesContract.brandAudit));
+
+    await page.click('#rtoKpis [data-rto-kpi="buy"]');
+    const buyFilter=await page.evaluate(()=>({
+      signal:document.getElementById('rtTopOpportunities')?.dataset.signalFilter,
+      active:document.querySelector('[data-rto-signal="buy"]')?.classList.contains('active'),
+      card:document.querySelector('[data-rto-kpi="buy"]')?.classList.contains('active')
+    }));
+    await assert(buyFilter.signal==='buy'&&buyFilter.active&&buyFilter.card,'KPI Oportunidades no filtra: '+JSON.stringify(buyFilter));
+
+    await page.click('#rtoKpis [data-rto-kpi="risk"]');
+    const riskFilter=await page.evaluate(()=>({
+      risk:document.getElementById('rtTopOpportunities')?.dataset.riskFilter,
+      card:document.querySelector('[data-rto-kpi="risk"]')?.classList.contains('active')
+    }));
+    await assert(riskFilter.risk==='elevated'&&riskFilter.card,'KPI Riesgo no filtra: '+JSON.stringify(riskFilter));
+
+    await page.click('#rtoKpis [data-rto-kpi="all"]');
+    const resetFilter=await page.evaluate(()=>({
+      signal:document.getElementById('rtTopOpportunities')?.dataset.signalFilter,
+      risk:document.getElementById('rtTopOpportunities')?.dataset.riskFilter,
+      type:document.getElementById('rtTopOpportunities')?.dataset.typeFilter,
+      rows:document.querySelectorAll('#rtoRows tr[data-rto-key]').length
+    }));
+    await assert(resetFilter.signal==='all'&&resetFilter.risk==='all'&&resetFilter.type==='all'&&resetFilter.rows>=5,'KPI Cobertura no restablece ranking: '+JSON.stringify(resetFilter));
     await shot('03-top-opportunities');
     await page.evaluate(()=>window.RadarTopOpportunities?.close?.());
   }
