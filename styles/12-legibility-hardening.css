@@ -1,0 +1,195 @@
+/* Radar Técnico · Usability / legibility hardening
+   Goal: readable desktop UI, contained text, no loss of information. */
+
+/* ---------- Global command center ---------- */
+html body #rtGlobalRadar{font-size:12px!important}
+html body #rtGlobalRadar .rt-nav button{font-size:11px!important}
+html body #rtGlobalRadar .rt-section-title h2,
+html body #rtGlobalRadar .rt-section-title h3{font-size:17px!important}
+html body #rtGlobalRadar .rt-section-title p{font-size:10px!important;line-height:1.3!important}
+html body #rtGlobalRadar .rt-link-button{font-size:11px!important}
+html body #rtGlobalRadar .rt-watch-row,
+html body #rtGlobalRadar .rt-signal-row,
+html body #rtGlobalRadar .rt-market-line{font-size:10.5px!important}
+html body #rtGlobalRadar .rt-watch-symbol,
+html body #rtGlobalRadar .rt-signal-value{font-size:11px!important}
+html body #rtGlobalRadar .rt-signal-note,
+html body #rtGlobalRadar .rt-watch-row small,
+html body #rtGlobalRadar .rt-signal-row small{font-size:9px!important;line-height:1.25!important}
+html body #rtGlobalRadar .rt-opps-table th{font-size:9px!important}
+html body #rtGlobalRadar .rt-opps-table td{font-size:10px!important;line-height:1.25!important}
+html body #rtGlobalRadar .rt-opps-table td,
+html body #rtGlobalRadar .rt-opps-table th{overflow:hidden!important;text-overflow:ellipsis!important}
+html body #rtGlobalRadar :is(.rt-watch-card,.rt-opps-card,.rt-signals-card,.rt-risk-card,.rt-detail-card){min-width:0!important}
+html body #rtGlobalRadar :is(.rt-watch-row,.rt-signal-row,.rt-market-line)>*{min-width:0!important}
+html body #rtGlobalRadar .rt-map-label small{font-size:9px!important}
+html body #rtGlobalRadar .rt-map-tooltip small{font-size:9px!important}
+
+/* ---------- Regional center ---------- */
+html body #rtRegionalDecisionCenter{font-size:12px!important}
+html body #rtRegionalDecisionCenter .rdc-nav button{font-size:11px!important}
+html body #rtRegionalDecisionCenter .rdc-search input{font-size:10.5px!important}
+html body #rtRegionalDecisionCenter .rdc-live{font-size:10px!important}
+html body #rtRegionalDecisionCenter .rdc-city-clock small{font-size:8.5px!important}
+html body #rtRegionalDecisionCenter .rdc-city-clock b{font-size:13px!important}
+html body #rtRegionalDecisionCenter .rdc-kpi-copy>small{font-size:10px!important;line-height:1.2!important}
+html body #rtRegionalDecisionCenter .rdc-kpi-copy>strong{font-size:22px!important}
+html body #rtRegionalDecisionCenter .rdc-kpi-copy>span{font-size:9.5px!important;line-height:1.2!important}
+html body #rtRegionalDecisionCenter .rdc-driver-head,
+html body #rtRegionalDecisionCenter .rdc-index-head,
+html body #rtRegionalDecisionCenter .rdc-asset-head{font-size:8.5px!important}
+html body #rtRegionalDecisionCenter .rdc-driver-row,
+html body #rtRegionalDecisionCenter .rdc-index-row,
+html body #rtRegionalDecisionCenter .rdc-asset-row{font-size:10px!important;line-height:1.2!important}
+html body #rtRegionalDecisionCenter .rdc-driver-note,
+html body #rtRegionalDecisionCenter .rdc-comment{font-size:9px!important;line-height:1.2!important}
+html body #rtRegionalDecisionCenter .rdc-setup,
+html body #rtRegionalDecisionCenter .rdc-impact{font-size:8.5px!important}
+html body #rtRegionalDecisionCenter .rdc-more,
+html body #rtRegionalDecisionCenter .rdc-news-btn{font-size:10px!important}
+html body #rtRegionalDecisionCenter :is(.rdc-panel,.rdc-kpi-card,.rdc-breadth-card,.rdc-sector-wrap,.rdc-index-list,.rdc-map-card,.rdc-impact-card){min-width:0!important}
+html body #rtRegionalDecisionCenter :is(.rdc-driver-row,.rdc-index-row,.rdc-asset-row)>*{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important}
+html body #rtRegionalDecisionCenter .rdc-driver-note,
+html body #rtRegionalDecisionCenter .rdc-comment{white-space:normal!important;overflow-wrap:anywhere!important}
+
+/* ---------- Watchlist workstation ---------- */
+html body #rtWatchlistWorkstation .rtw-nav button{font-size:10.5px!important}
+html body #rtWatchlistWorkstation .rtw-search input{font-size:11px!important}
+html body #rtWatchlistWorkstation .rtw-live{font-size:10px!important}
+html body #rtWatchlistWorkstation .rtw-clock small{font-size:9px!important}
+html body #rtWatchlistWorkstation .rtw-kpi{min-width:0!important}
+html body #rtWatchlistWorkstation .rtw-kpi>div{min-width:0!important}
+html body #rtWatchlistWorkstation .rtw-kpi small{font-size:11px!important}
+html body #rtWatchlistWorkstation .rtw-kpi span{font-size:9.5px!important;line-height:1.25!important;white-space:normal!important;overflow-wrap:anywhere!important}
+html body #rtWatchlistWorkstation .rtw-filters button,
+html body #rtWatchlistWorkstation .rtw-actions button{font-size:9.5px!important}
+html body #rtWatchlistWorkstation .rtw-table th{font-size:8.5px!important}
+html body #rtWatchlistWorkstation .rtw-table td{height:34px!important;font-size:10px!important;line-height:1.2!important}
+html body #rtWatchlistWorkstation .rtw-asset b{font-size:10.5px!important}
+html body #rtWatchlistWorkstation .rtw-asset small{font-size:8.5px!important}
+html body #rtWatchlistWorkstation :is(.rtw-badge,.rtw-alert,.rtw-action){font-size:8px!important}
+html body #rtWatchlistWorkstation .rtw-table .comment{font-size:9px!important}
+html body #rtWatchlistWorkstation .rtw-side-card header h2,
+html body #rtWatchlistWorkstation .rtw-distribution header h2,
+html body #rtWatchlistWorkstation .rtw-next header h2{font-size:15px!important}
+html body #rtWatchlistWorkstation .rtw-side-card header button{font-size:9.5px!important}
+html body #rtWatchlistWorkstation .rtw-top-list button{font-size:9px!important}
+html body #rtWatchlistWorkstation .rtw-top-list b{font-size:9.5px!important}
+html body #rtWatchlistWorkstation .rtw-top-list b small,
+html body #rtWatchlistWorkstation .rtw-top-list .why{font-size:8px!important}
+html body #rtWatchlistWorkstation .rtw-alert-list b{font-size:9px!important}
+html body #rtWatchlistWorkstation .rtw-alert-list small{font-size:8px!important}
+html body #rtWatchlistWorkstation .rtw-analysis-card h3,
+html body #rtWatchlistWorkstation .rtw-thesis-card h3{font-size:10px!important}
+html body #rtWatchlistWorkstation .rtw-analysis-card #rtwQuick span,
+html body #rtWatchlistWorkstation .rtw-thesis-card p{font-size:9px!important;line-height:1.35!important}
+html body #rtWatchlistWorkstation #rtwNextAction li{font-size:9px!important;line-height:1.3!important}
+html body #rtWatchlistWorkstation :is(.rtw-panel,.rtw-side-card,.rtw-chart-card,.rtw-analysis-card,.rtw-thesis-card){min-width:0!important}
+html body #rtWatchlistWorkstation .rtw-thesis-card p,
+html body #rtWatchlistWorkstation #rtwNextAction li{overflow-wrap:anywhere!important}
+
+/* ---------- Top opportunities: readability + containment ---------- */
+html body #rtTopOpportunities{font-size:12px!important;overflow-x:hidden!important}
+html body #rtTopOpportunities .rto-topbar{grid-template-columns:300px minmax(610px,1fr) 260px 145px 115px!important}
+html body #rtTopOpportunities .rto-nav button{font-size:10.5px!important;padding:0 10px!important}
+html body #rtTopOpportunities .rto-search input{font-size:10.5px!important}
+html body #rtTopOpportunities .rto-live{font-size:9.5px!important;line-height:1.15!important;text-align:center!important;padding:0 8px!important}
+html body #rtTopOpportunities .rto-clock small{font-size:8.5px!important}
+html body #rtTopOpportunities .rto-hero{min-height:100px!important}
+html body #rtTopOpportunities .rto-hero-copy,
+html body #rtTopOpportunities .rto-hero-copy>div:last-child{min-width:0!important}
+html body #rtTopOpportunities .rto-hero h1{font-size:31px!important}
+html body #rtTopOpportunities .rto-hero p{font-size:12.5px!important;line-height:1.35!important;max-width:1050px!important;overflow-wrap:anywhere!important}
+html body #rtTopOpportunities .rto-btn{font-size:10px!important;white-space:nowrap!important}
+
+html body #rtTopOpportunities .rto-kpis{gap:9px!important}
+html body #rtTopOpportunities .rto-kpi{
+  min-height:90px!important;padding:11px 12px!important;grid-template-columns:46px minmax(0,1fr)!important;
+  cursor:pointer!important;min-width:0!important;transition:border-color .12s ease,background .12s ease,box-shadow .12s ease!important
+}
+html body #rtTopOpportunities .rto-kpi:hover{border-color:#1686ad!important;background:linear-gradient(135deg,#092941,#051a27)!important}
+html body #rtTopOpportunities .rto-kpi:focus-visible{outline:2px solid #2ed9ff!important;outline-offset:2px!important}
+html body #rtTopOpportunities .rto-kpi.active{border-color:#22cfee!important;box-shadow:inset 0 0 0 1px rgba(34,207,238,.28),0 0 18px rgba(34,207,238,.10)!important}
+html body #rtTopOpportunities .rto-kpi>div{min-width:0!important}
+html body #rtTopOpportunities .rto-kpi small{font-size:9.5px!important;line-height:1.2!important}
+html body #rtTopOpportunities .rto-kpi strong{font-size:24px!important}
+html body #rtTopOpportunities .rto-kpi span{
+  font-size:9.5px!important;line-height:1.25!important;color:#8ea5b2!important;
+  white-space:normal!important;overflow-wrap:anywhere!important
+}
+
+html body #rtTopOpportunities .rto-toolbar{
+  height:auto!important;min-height:52px!important;padding:7px 9px!important;
+  grid-template-columns:minmax(0,1fr) auto auto!important
+}
+html body #rtTopOpportunities .rto-filters,
+html body #rtTopOpportunities .rto-signal-filters{
+  min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;padding-bottom:1px!important;
+  scrollbar-width:thin!important;scrollbar-color:#19526c transparent!important
+}
+html body #rtTopOpportunities .rto-filters button,
+html body #rtTopOpportunities .rto-signal-filters button{height:30px!important;font-size:9.5px!important;white-space:nowrap!important}
+
+html body #rtTopOpportunities .rto-main{
+  grid-template-columns:minmax(0,1fr) 390px!important;align-items:start!important
+}
+html body #rtTopOpportunities .rto-panel,
+html body #rtTopOpportunities .rto-side,
+html body #rtTopOpportunities .rto-card{min-width:0!important}
+html body #rtTopOpportunities .rto-table-wrap{
+  height:560px!important;overflow:auto!important;scrollbar-width:thin!important;scrollbar-color:#17516b #04131e!important
+}
+html body #rtTopOpportunities .rto-table{min-width:1240px!important}
+html body #rtTopOpportunities .rto-table th{
+  height:34px!important;font-size:9px!important;line-height:1.15!important;padding:0 8px!important
+}
+html body #rtTopOpportunities .rto-table td{
+  height:46px!important;font-size:10px!important;line-height:1.25!important;padding:0 8px!important
+}
+html body #rtTopOpportunities .rto-asset{display:block!important;min-width:0!important}
+html body #rtTopOpportunities .rto-asset b{font-size:11px!important}
+html body #rtTopOpportunities .rto-asset small{font-size:8.5px!important;overflow:hidden!important;text-overflow:ellipsis!important}
+html body #rtTopOpportunities .rto-tag,
+html body #rtTopOpportunities .rto-trend,
+html body #rtTopOpportunities .rto-status,
+html body #rtTopOpportunities .rto-risk{font-size:8px!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+html body #rtTopOpportunities .rto-score b{font-size:10px!important}
+html body #rtTopOpportunities .rto-empty{font-size:10.5px!important;line-height:1.4!important;padding:28px 20px!important}
+
+html body #rtTopOpportunities .rto-side{grid-template-rows:auto auto minmax(180px,1fr)!important}
+html body #rtTopOpportunities .rto-card header{min-height:42px!important;height:auto!important;padding:7px 10px!important;gap:10px!important}
+html body #rtTopOpportunities .rto-card header h2{font-size:14px!important;line-height:1.15!important;min-width:0!important}
+html body #rtTopOpportunities .rto-card header span{font-size:9px!important;text-align:right!important;line-height:1.2!important;overflow-wrap:anywhere!important}
+html body #rtTopOpportunities .rto-selected{padding:12px!important}
+html body #rtTopOpportunities .rto-selected-top>div{min-width:0!important}
+html body #rtTopOpportunities .rto-selected-top h3{font-size:20px!important}
+html body #rtTopOpportunities .rto-selected-top small{font-size:9.5px!important;line-height:1.3!important;white-space:normal!important;overflow-wrap:anywhere!important}
+html body #rtTopOpportunities .rto-reason{font-size:10px!important;line-height:1.4!important;white-space:normal!important;overflow-wrap:anywhere!important}
+html body #rtTopOpportunities .rto-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html body #rtTopOpportunities .rto-metric{min-width:0!important}
+html body #rtTopOpportunities .rto-metric small{font-size:8.5px!important;line-height:1.2!important;white-space:normal!important}
+html body #rtTopOpportunities .rto-metric b{font-size:12.5px!important}
+html body #rtTopOpportunities .rto-plan{padding:12px!important}
+html body #rtTopOpportunities .rto-plan-state{font-size:11px!important}
+html body #rtTopOpportunities .rto-plan p{font-size:10px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+html body #rtTopOpportunities .rto-plan-actions button{height:32px!important;font-size:9.5px!important;white-space:normal!important;line-height:1.15!important;padding:0 6px!important}
+html body #rtTopOpportunities .rto-method{font-size:10px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+html body #rtTopOpportunities .rto-method .formula{font-size:9.5px!important;line-height:1.45!important;overflow-wrap:anywhere!important}
+
+@media(max-width:1450px){
+  html body #rtTopOpportunities .rto-topbar{grid-template-columns:250px minmax(520px,1fr) 210px 125px 100px!important}
+  html body #rtTopOpportunities .rto-nav button{font-size:9.5px!important;padding:0 7px!important}
+  html body #rtTopOpportunities .rto-main{grid-template-columns:minmax(0,1fr) 330px!important}
+  html body #rtTopOpportunities .rto-kpi small{font-size:8.8px!important}
+  html body #rtTopOpportunities .rto-kpi span{font-size:8.7px!important}
+}
+
+/* ---------- Legacy/product shell ---------- */
+html body.radar-product-reset .side-nav-item .nav-copy b{font-size:13px!important}
+html body.radar-product-reset .side-nav-item .nav-copy small{font-size:10px!important}
+html body.radar-product-reset .top input,
+html body.radar-product-reset .top select,
+html body.radar-product-reset .top button{font-size:11px!important}
+html body.radar-product-reset .card p,
+html body.radar-product-reset .panel p,
+html body.radar-product-reset .muted{font-size:10.5px!important;line-height:1.4!important}
