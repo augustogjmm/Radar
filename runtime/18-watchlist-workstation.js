@@ -451,7 +451,7 @@ const global=()=>window.RadarGlobalCommandCenter;
 const gst=()=>global()?.state;
 const daily=()=>window.RadarDailyRadar?.state;
 
-let typeFilter='all',signalFilter='all',search='',selected='',rows=[],refreshing=false,directCandidates=[];
+let typeFilter='all',signalFilter='all',riskFilter='all',search='',selected='',rows=[],refreshing=false,directCandidates=[];
 
 const TYPE_META={
   crypto:['Crypto','Crypto','USDT'],
@@ -772,6 +772,7 @@ function visible(){
     else out=out.filter(x=>x.type===typeFilter);
   }
   if(signalFilter!=='all')out=out.filter(x=>x.status.cls===signalFilter);
+  if(riskFilter==='elevated')out=out.filter(x=>x.risk>=50);
   if(search){const z=search.toLowerCase();out=out.filter(x=>[x.symbol,x.label,x.meta.classLabel,x.meta.market].some(v=>String(v).toLowerCase().includes(z)))}
   return out.slice(0,20);
 }
@@ -801,7 +802,7 @@ function mount(){
 function bind(){
   $('rtoBack')?.addEventListener('click',back);
   $('rtoRefresh')?.addEventListener('click',()=>refresh(true));
-  $('rtoSearch')?.addEventListener('input',e=>{search=e.currentTarget.value.trim();renderTableAndDetail()});
+  $('rtoSearch')?.addEventListener('input',e=>{search=e.currentTarget.value.trim();riskFilter='all';renderKpis();renderTableAndDetail()});
   $('rtoMethodBtn')?.addEventListener('click',()=>{const m=$('rtoMethod');if(m)m.scrollIntoView({behavior:'smooth',block:'center'})});
   q('[data-rto-nav="watchlist"]')?.addEventListener('click',back);
   for(const key of ['global','europe','northamerica','latam','markets','sectors']){
@@ -824,20 +825,44 @@ function render(){
 }
 function renderKpis(){
   const s=summary(),tone=s.avg<40?'good':s.avg<67?'warn':'bad',risk=riskLabel(s.avg)[0];
+  const active=k=>k==='risk'?riskFilter==='elevated':k==='all'?(signalFilter==='all'&&riskFilter==='all'&&typeFilter==='all'&&!search):signalFilter===k;
   $('rtoKpis').innerHTML=
-'<article class="rto-kpi good"><i>✓</i><div><small>OPORTUNIDADES FUERTES</small><strong>'+s.buy+'</strong><span>Señal confirmada y score suficiente</span></div></article>'+
-'<article class="rto-kpi warn"><i>◈</i><div><small>POSIBLES</small><strong>'+s.near+'</strong><span>Cerca de condición válida</span></div></article>'+
-'<article class="rto-kpi"><i>◎</i><div><small>EN SEGUIMIENTO</small><strong>'+s.watch+'</strong><span>Sin entrada limpia todavía</span></div></article>'+
-'<article class="rto-kpi '+tone+'"><i>◴</i><div><small>RIESGO PROMEDIO</small><strong>'+risk+'</strong><span>'+s.avg+'/100 sobre candidatos detectados</span></div></article>'+
-'<article class="rto-kpi"><i>▦</i><div><small>COBERTURA DEL RANKING</small><strong>'+s.invest.length+'</strong><span>Crypto · CEDEAR · AR · bonos · EE.UU.</span></div></article>';
+'<article tabindex="0" role="button" data-rto-kpi="buy" class="rto-kpi good '+(active('buy')?'active':'')+'"><i>✓</i><div><small>OPORTUNIDADES FUERTES</small><strong>'+s.buy+'</strong><span>Ver señales confirmadas con score suficiente</span></div></article>'+
+'<article tabindex="0" role="button" data-rto-kpi="near" class="rto-kpi warn '+(active('near')?'active':'')+'"><i>◈</i><div><small>POSIBLES</small><strong>'+s.near+'</strong><span>Ver activos cerca de condición válida</span></div></article>'+
+'<article tabindex="0" role="button" data-rto-kpi="watch" class="rto-kpi '+(active('watch')?'active':'')+'"><i>◎</i><div><small>EN SEGUIMIENTO</small><strong>'+s.watch+'</strong><span>Ver activos que esperan confirmación</span></div></article>'+
+'<article tabindex="0" role="button" data-rto-kpi="risk" class="rto-kpi '+tone+' '+(active('risk')?'active':'')+'"><i>◴</i><div><small>RIESGO PROMEDIO</small><strong>'+risk+'</strong><span>Ver candidatos con riesgo moderado/alto · '+s.avg+'/100</span></div></article>'+
+'<article tabindex="0" role="button" data-rto-kpi="all" class="rto-kpi '+(active('all')?'active':'')+'"><i>▦</i><div><small>COBERTURA DEL RANKING</small><strong>'+s.invest.length+'</strong><span>Mostrar nuevamente todo el universo cubierto</span></div></article>';
+  qa('[data-rto-kpi]').forEach(card=>{
+    const apply=()=>applyKpiFilter(card.dataset.rtoKpi);
+    card.addEventListener('click',apply);
+    card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();apply()}});
+  });
+}
+function applyKpiFilter(kind){
+  typeFilter='all';
+  search='';
+  if($('rtoSearch'))$('rtoSearch').value='';
+  if(kind==='risk'){
+    signalFilter='all';
+    riskFilter='elevated';
+  }else if(kind==='all'){
+    signalFilter='all';
+    riskFilter='all';
+  }else{
+    signalFilter=kind;
+    riskFilter='all';
+  }
+  renderKpis();
+  renderFilters();
+  renderTableAndDetail();
 }
 function renderFilters(){
   const defs=[['all','Todos'],['crypto','Crypto'],['cedear','CEDEAR'],['argstock','Acciones AR'],['usa','EE.UU. / ADR'],['bond','Bonos / Letras']];
   $('rtoFilters').innerHTML=defs.map(x=>'<button data-rto-filter="'+x[0]+'" class="'+(typeFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
   const sig=[['all','Todas'],['buy','Oportunidad'],['near','Posible'],['watch','Seguimiento'],['avoid','Evitar']];
   $('rtoSignalFilters').innerHTML=sig.map(x=>'<button data-rto-signal="'+x[0]+'" class="'+(signalFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
-  qa('[data-rto-filter]').forEach(b=>b.addEventListener('click',()=>{typeFilter=b.dataset.rtoFilter;renderFilters();renderTableAndDetail()}));
-  qa('[data-rto-signal]').forEach(b=>b.addEventListener('click',()=>{signalFilter=b.dataset.rtoSignal;renderFilters();renderTableAndDetail()}));
+  qa('[data-rto-filter]').forEach(b=>b.addEventListener('click',()=>{typeFilter=b.dataset.rtoFilter;riskFilter='all';renderKpis();renderFilters();renderTableAndDetail()}));
+  qa('[data-rto-signal]').forEach(b=>b.addEventListener('click',()=>{signalFilter=b.dataset.rtoSignal;riskFilter='all';renderKpis();renderFilters();renderTableAndDetail()}));
 }
 function priceText(x){
   if(!Number.isFinite(x.price))return's/d';
@@ -850,6 +875,15 @@ function priceText(x){
 function rowTypeClass(x){return x.type==='crypto'?'crypto':(x.type==='argbond'||x.type==='bill')?'bond':''}
 function renderTableAndDetail(){
   const list=visible();
+  if(list.length&&!list.some(x=>x.key===selected))selected=list[0].key;
+  if(!list.length)selected='';
+  const shell=$('rtTopOpportunities');
+  if(shell){
+    shell.dataset.signalFilter=signalFilter;
+    shell.dataset.typeFilter=typeFilter;
+    shell.dataset.riskFilter=riskFilter;
+    shell.dataset.visibleRows=String(list.length);
+  }
   $('rtoRows').innerHTML=list.length?list.map((x,i)=>{
     const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,trendCls=x.trend.key,risk=x.riskMeta;
     return'<tr data-rto-key="'+esc(x.key)+'" class="'+(x.key===selected?'selected':'')+'">'+
@@ -870,7 +904,7 @@ function renderTableAndDetail(){
   qa('[data-rto-key]').forEach(tr=>tr.addEventListener('click',()=>{selected=tr.dataset.rtoKey;renderTableAndDetail()}));
   renderDetail();
 }
-function selectedRow(){return rows.find(x=>x.key===selected)||rows.find(x=>x.kind!=='sell')||rows[0]}
+function selectedRow(){const list=visible();return list.find(x=>x.key===selected)||list[0]||null}
 function renderDetail(){
   const x=selectedRow();if(!x){$('rtoSelected').innerHTML='<div class="rto-empty">Sin datos.</div>';$('rtoPlan').innerHTML='';return}
   const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,risk=x.riskMeta;
