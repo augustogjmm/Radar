@@ -899,7 +899,7 @@ function barsOf(r){
   const m=marketFor(r);
   const candidates=[m?.bars,r?.bars,r?.data,r?.dataset,r?.datasets?.short,r?.result?.bars];
   for(const a of candidates){
-    if(Array.isArray(a)&&a.length>1)return a.map(x=>({close:num(x?.close??x?.c),volume:num(x?.volume??x?.v),time:num(x?.time??x?.t)})).filter(x=>Number.isFinite(x.close));
+    if(Array.isArray(a)&&a.length>1)return a.map(x=>({open:num(x?.open??x?.o),high:num(x?.high??x?.h),low:num(x?.low??x?.l),close:num(x?.close??x?.c),volume:num(x?.volume??x?.v),time:num(x?.time??x?.t)})).filter(x=>Number.isFinite(x.close));
   }
   return[];
 }
@@ -999,8 +999,8 @@ function horizonOf(type,kind){
   return'ESPERAR';
 }
 function statusOf(kind,score){
-  if(kind==='buy'&&score>=65)return{label:'OPORTUNIDAD',cls:'buy'};
-  if(kind==='near'||score>=64)return{label:'POSIBLE',cls:'near'};
+  if(kind==='buy')return{label:'OPORTUNIDAD',cls:'buy'};
+  if(kind==='near')return{label:'POSIBLE',cls:'near'};
   if(kind==='sell')return{label:'EVITAR',cls:'avoid'};
   return{label:'SEGUIMIENTO',cls:'watch'};
 }
@@ -1029,8 +1029,15 @@ function dedupeResults(){
 }
 function normalize(){
   let items=dedupeResults().map(r=>{
-    const symbol=symbolOf(r),type=typeOf(r),bars=barsOf(r),kind=String(r?.status?.kind||'wait').toLowerCase(),trend=trendOf(r,bars),tech=techScoreOf(r),risk=volatilityRisk(type,bars),context=contextScore(type),volume=volumeOf(r,bars),rv=relVolume(bars),meta=metaOf(type,r),change=changeOf(r,bars);
-    return{raw:r,key:type+'|'+symbol,symbol,type,label:labelOf(r,symbol),bars,kind,trend,tech,risk,context,volume,rv,meta,change,price:priceOf(r),setup:setupOf(r),why:String(r?.why||r?.reason||r?.status?.reason||'').replace(/\s+/g,' ').trim()};
+    const symbol=symbolOf(r),type=typeOf(r),bars=barsOf(r),context=contextScore(type),risk=volatilityRisk(type,bars),volume=volumeOf(r,bars),rv=relVolume(bars),meta=metaOf(type,r),change=changeOf(r,bars);
+    const equityLike=!['argbond','bill','bond'].includes(type);
+    const advanced=equityLike&&bars.length>=55?technicalEngine(bars,context):null;
+    const kind=advanced?.kind||String(r?.status?.kind||'wait').toLowerCase();
+    const trend=advanced?{key:advanced.trend==='ALCISTA'?'bull':advanced.trend==='BAJISTA'?'bear':'neutral',label:advanced.trend}:trendOf(r,bars);
+    const tech=advanced?.analysis?.technicalScore??techScoreOf(r);
+    const setup=advanced?.setup||setupOf(r);
+    const why=String(advanced?.reason||r?.why||r?.reason||r?.status?.reason||'').replace(/\s+/g,' ').trim();
+    return{raw:r,key:type+'|'+symbol,symbol,type,label:labelOf(r,symbol),bars,kind,trend,tech,risk,context,volume,rv,meta,change,price:priceOf(r),setup,why,advanced:advanced?.analysis||r?.analysis||null};
   });
   const groups=new Map();
   for(const x of items){if(!groups.has(x.type))groups.set(x.type,[]);groups.get(x.type).push(x)}
@@ -1040,9 +1047,14 @@ function normalize(){
     group.filter(x=>!Number.isFinite(x.volume)).forEach(x=>x.liquidity=45);
   }
   items.forEach(x=>{
-    const boost=x.kind==='buy'?8:x.kind==='near'?3:x.kind==='sell'?-28:x.kind==='none'?-16:-4;
-    const trendBoost=x.trend.key==='bull'?5:x.trend.key==='bear'?-10:0;
-    x.score=clamp(Math.round(x.tech*.56+x.liquidity*.12+(100-x.risk)*.14+x.context*.18+boost+trendBoost),0,100);
+    if(x.advanced?.engine==='TA-v2'){
+      x.score=clamp(Math.round(x.advanced.total),0,100);
+      x.kind=x.advanced.gates?.trend&&x.advanced.gates?.setup&&x.advanced.gates?.momentum&&x.advanced.gates?.volume&&x.advanced.gates?.rr&&x.advanced.gates?.notExtended&&x.score>=72?'buy':x.kind;
+    }else{
+      const boost=x.kind==='buy'?8:x.kind==='near'?3:x.kind==='sell'?-28:x.kind==='none'?-16:-4;
+      const trendBoost=x.trend.key==='bull'?5:x.trend.key==='bear'?-10:0;
+      x.score=clamp(Math.round(x.tech*.56+x.liquidity*.12+(100-x.risk)*.14+x.context*.18+boost+trendBoost),0,100);
+    }
     x.status=statusOf(x.kind,x.score);
     x.riskMeta=riskLabel(x.risk);
     x.horizon=horizonOf(x.type,x.kind);
@@ -1182,15 +1194,25 @@ function rtoSetupClass(x){
 }
 function actionFor(x){
   if(x.status.cls==='buy')return['COMPRAR','buy'];
-  if(x.status.cls==='near')return['VIGILAR','watch'];
+  if(x.status.cls==='near')return['ESPERAR','watch'];
   if(x.status.cls==='avoid')return['EVITAR','sell'];
-  return['MANTENER','hold'];
+  return['SEGUIR','hold'];
 }
 function commentFor(x){
+  if(x.advanced?.engine==='TA-v2'){
+    const i=x.advanced.indicators||{};
+    return x.status.cls==='buy'
+      ?'Compra válida: tendencia D/W, setup, momentum, volumen y R/R confirmados.'
+      :x.status.cls==='near'
+        ?'Candidato técnico, pero todavía falta una confirmación para comprar.'
+        :x.status.cls==='avoid'
+          ?'No comprar: estructura/R/R o tendencia invalidan el long.'
+          :'Seguimiento: '+(x.advanced.failures||[]).slice(0,2).join(' · ');
+  }
   if(x.status.cls==='buy')return'Cumple condiciones técnicas y de liquidez; validar entrada y riesgo.';
   if(x.status.cls==='near')return'Cerca de condición válida; esperar confirmación.';
   if(x.status.cls==='avoid')return'Estructura desfavorable; no priorizar mientras no revierta.';
-  return x.reason||'Sin ventaja suficiente todavía; mantener en seguimiento.';
+  return x.reason||'Sin ventaja suficiente todavía; seguir en observación.';
 }
 function priceText(x){
   if(!Number.isFinite(x.price))return's/d';
@@ -1233,19 +1255,24 @@ function renderTableAndDetail(){
 function selectedRow(){const list=visible();return list.find(x=>x.key===selected)||list[0]||null}
 function renderDetail(){
   const x=selectedRow();if(!x){$('rtoSelected').innerHTML='<div class="rto-empty">Sin datos.</div>';$('rtoPlan').innerHTML='';return}
-  const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,risk=x.riskMeta;
+  const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,risk=x.riskMeta,a=x.advanced?.engine==='TA-v2'?x.advanced:null,c=a?.components||{},i=a?.indicators||{};
   $('rtoSelectedRank').textContent=rank>0?'#'+rank+' del ranking':'—';
+  const metrics=a
+    ?'<div class="rto-metrics rto-metrics-ta"><div class="rto-metric"><small>TENDENCIA</small><b>'+Math.round(c.trend||0)+'/25</b></div><div class="rto-metric"><small>ESTRUCTURA</small><b>'+Math.round(c.structure||0)+'/25</b></div><div class="rto-metric"><small>MOMENTUM</small><b>'+Math.round(c.momentum||0)+'/15</b></div><div class="rto-metric"><small>VOLUMEN</small><b>'+Math.round(c.volume||0)+'/15</b></div><div class="rto-metric"><small>RIESGO / BENEFICIO</small><b>'+Math.round(c.rr||0)+'/15</b></div><div class="rto-metric"><small>CONTEXTO</small><b>'+Math.round(c.context||0)+'/5</b></div></div>'
+    :'<div class="rto-metrics"><div class="rto-metric"><small>SEÑAL TÉCNICA</small><b>'+Math.round(x.tech)+'/100</b></div><div class="rto-metric"><small>LIQUIDEZ RELATIVA</small><b>'+Math.round(x.liquidity)+'/100</b></div><div class="rto-metric"><small>CONTEXTO</small><b>'+Math.round(x.context)+'/100</b></div><div class="rto-metric"><small>RIESGO</small><b class="'+(risk[1]==='high'?'rto-down':risk[1]==='low'?'rto-up':'')+'">'+risk[0]+'</b></div></div>';
+  const indicators=a?'<div class="rto-indicator-strip"><span>EMA 10 <b>'+fmt(i.ema10,2)+'</b></span><span>EMA 55 <b>'+fmt(i.ema55,2)+'</b></span><span>EMA 200 <b>'+fmt(i.ema200,2)+'</b></span><span>Semanal <b>'+esc(i.weeklyTrend||'s/d')+'</b></span><span>RSI 14 <b>'+fmt(i.rsi,1)+'</b></span><span>MACD hist <b>'+fmt(i.macdHist,2)+'</b></span><span>RVOL <b>'+fmt(i.relVolume,2)+'x</b></span><span>R/R <b>'+fmt(i.rr,2)+'</b></span></div>':'';
   $('rtoSelected').innerHTML=
 '<div class="rto-selected-top"><div><h3>'+esc(x.symbol)+'</h3><small>'+esc(x.label)+' · '+esc(x.meta.classLabel)+' · '+esc(x.meta.market)+'</small></div><span class="rto-big-score" style="--score:'+x.score+'"><b>'+x.score+'</b></span></div>'+
-'<div class="rto-reason">'+esc(x.reason)+'</div>'+
-'<div class="rto-metrics"><div class="rto-metric"><small>SEÑAL TÉCNICA</small><b>'+Math.round(x.tech)+'/100</b></div><div class="rto-metric"><small>LIQUIDEZ RELATIVA</small><b>'+Math.round(x.liquidity)+'/100</b></div><div class="rto-metric"><small>CONTEXTO</small><b>'+Math.round(x.context)+'/100</b></div><div class="rto-metric"><small>RIESGO</small><b class="'+(risk[1]==='high'?'rto-down':risk[1]==='low'?'rto-up':'')+'">'+risk[0]+'</b></div></div>';
-  let sentence='Todavía no hay una ventaja suficiente para una entrada. Conviene seguirlo y esperar confirmación.';
-  if(x.status.cls==='buy')sentence='Es uno de los candidatos con mejor combinación actual. Antes de entrar, abrir el análisis completo y validar soporte, invalidación y relación riesgo/beneficio.';
-  else if(x.status.cls==='near')sentence='Está cerca de convertirse en oportunidad, pero todavía falta confirmación. No conviene anticipar el trigger.';
-  $('rtoPlan').innerHTML='<div class="rto-plan-state '+x.status.cls+'">'+x.status.label+'</div><p>'+sentence+'</p><div class="rto-plan-actions"><button id="rtoAnalyze">Ver análisis completo</button><button id="rtoWatchBack">Volver a Watchlist</button></div>';
+'<div class="rto-reason">'+esc(x.reason)+'</div>'+metrics+indicators;
+  let sentence='No hay una compra válida todavía. El activo queda en seguimiento hasta que confirme tendencia, setup, momentum, volumen y R/R.';
+  if(x.status.cls==='buy')sentence='OPORTUNIDAD significa compra técnicamente válida: tendencia diaria/semanal, setup, momentum, volumen y relación riesgo/beneficio están confirmados. Igual debe respetarse el stop técnico.';
+  else if(x.status.cls==='near')sentence='POSIBLE significa que el activo está cerca de una compra, pero falta al menos una condición obligatoria. No conviene anticiparse.';
+  else if(x.status.cls==='avoid')sentence='EVITAR significa que el long no cumple las condiciones mínimas. No es una oportunidad de compra mientras no revierta la estructura.';
+  const levels=a?'<span class="rto-levels">Entrada ref. '+fmt(x.price,2)+' · Stop '+fmt(i.stop,2)+' · Objetivo '+fmt(i.target,2)+' · R/R '+fmt(i.rr,2)+'</span>':'';
+  $('rtoPlan').innerHTML='<div class="rto-plan-state '+x.status.cls+'">'+x.status.label+'</div><p>'+sentence+'</p>'+levels+'<div class="rto-plan-actions"><button id="rtoAnalyze">Ver análisis completo</button><button id="rtoWatchBack">Volver a Watchlist</button></div>';
   $('rtoAnalyze')?.addEventListener('click',()=>analyze(x));
   $('rtoWatchBack')?.addEventListener('click',back);
-  $('rtoMethod').innerHTML='<b>El ranking prioriza calidad de oportunidad, no sólo volumen.</b> La puntuación combina señal técnica (56%), liquidez relativa dentro de su propia clase (12%), riesgo (14%) y contexto de mercado (18%), con ajustes por confirmación y tendencia. Las señales bajistas se excluyen del Top long.<span class="formula">Score final = técnica + liquidez + riesgo + contexto + confirmación. Si no hay señal clara, el activo queda en Seguimiento y no se fuerza una compra.</span>';
+  $('rtoMethod').innerHTML='<b>Motor técnico TA-v2.</b> OPORTUNIDAD equivale a candidato de compra y no se obtiene sólo por score. Deben pasar simultáneamente los filtros obligatorios de tendencia diaria/semanal, setup, momentum, volumen, R/R ≥ 1,5 y no estar sobreextendido.<span class="formula">Score 100 = Tendencia 25 + Estructura/Setup 25 + Momentum 15 + Volumen 15 + Riesgo/Beneficio 15 + Contexto 5. EMA 10/55/200 define tendencia; MACD + RSI validan momentum; RVOL confirma participación; soporte/objetivo determinan el R/R. POSIBLE = falta una confirmación. SEGUIMIENTO = sin trigger. EVITAR = long invalidado.</span>';
 }
 function analyze(x){
   close();
