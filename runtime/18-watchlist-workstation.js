@@ -774,7 +774,7 @@ function dedupeResults(){
     if(!symbol)continue;
     const key=type+'|'+symbol,n=techScoreOf(r),old=map.get(key);
     const oldHasBars=(barsOf(old||{}).length>7),newHasBars=(barsOf(r).length>7);
-    if(!old||n>techScoreOf(old)||(newHasBars&&!oldHasBars))map.set(key,r);
+    if(!old||(newHasBars&&!oldHasBars)||(newHasBars===oldHasBars&&n>techScoreOf(old)))map.set(key,r);
   }
   return[...map.values()];
 }
