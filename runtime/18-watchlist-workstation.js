@@ -529,20 +529,39 @@ function relativeVolumeFromBars(bars){
   const avg=v.slice(0,-1).reduce((a,b)=>a+b,0)/Math.max(1,v.length-1);
   return avg>0?v.at(-1)/avg:NaN;
 }
+function atrLast(bars,period=14){
+  const b=(bars||[]).filter(x=>Number.isFinite(num(x?.close)));
+  if(b.length<period+1)return NaN;
+  const tr=[];
+  for(let i=1;i<b.length;i++){
+    const h=Number.isFinite(num(b[i].high))?num(b[i].high):num(b[i].close);
+    const l=Number.isFinite(num(b[i].low))?num(b[i].low):num(b[i].close);
+    const pc=num(b[i-1].close);
+    tr.push(Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc)));
+  }
+  let a=tr.slice(0,period).reduce((x,y)=>x+y,0)/period;
+  for(let i=period;i<tr.length;i++)a=(a*(period-1)+tr[i])/period;
+  return a;
+}
 function technicalEngine(bars,context=50){
   const clean=(bars||[]).map(b=>({time:num(b?.time),open:num(b?.open),high:num(b?.high),low:num(b?.low),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
-  const closes=clean.map(x=>x.close),last=closes.at(-1);
+  const closes=clean.map(x=>x.close),last=closes.at(-1),prev=closes.at(-2);
   if(closes.length<55||!Number.isFinite(last)){
-    return{kind:'wait',label:'SEGUIMIENTO',oppScore:25,setup:'Histórico insuficiente',trend:'NEUTRAL',reason:'No hay histórico suficiente para EMA 55/200 y confirmación semanal.',analysis:{engine:'TA-v2',sufficient:false,total:25,components:{trend:5,structure:5,momentum:5,volume:5,rr:3,context:2},indicators:{bars:closes.length}}};
+    return{kind:'wait',label:'SEGUIMIENTO',oppScore:20,setup:'Histórico insuficiente',trend:'NEUTRAL',reason:'No hay histórico suficiente para validar tendencia y timing.',analysis:{engine:'TA-v3',sufficient:false,total:20,components:{trend:4,structure:4,momentum:3,volume:2,timing:2,rr:3,context:2},indicators:{bars:closes.length},gates:{trend:false,setup:false,momentum:false,volume:false,timing:false,rr:false,notExtended:false},failures:['histórico insuficiente']}};
   }
+
   const ema10=emaLast(closes,10),ema55=emaLast(closes,55),ema200=emaLast(closes,200);
   const weekly=weeklyCloses(clean),w10=emaLast(weekly,10),w20=emaLast(weekly,20),weeklyLast=weekly.at(-1);
-  const rsi=rsiLast(closes,14),macd=macdLast(closes),rvol=relativeVolumeFromBars(clean),absRet=avgAbsReturnPct(closes,14);
-  const prev20=closes.slice(-21,-1),prev55=closes.slice(-56,-1),prev120=closes.slice(-121,-1);
-  const hi20=prev20.length?Math.max(...prev20):NaN,lo20=prev20.length?Math.min(...prev20):NaN;
-  const hi55=prev55.length?Math.max(...prev55):NaN,hi120=prev120.length?Math.max(...prev120):NaN;
+  const rsi=rsiLast(closes,14),macd=macdLast(closes),rvol=relativeVolumeFromBars(clean);
+  const atr=atrLast(clean,14),atrPct=Number.isFinite(atr)&&last>0?atr/last*100:NaN;
+
+  const beforeBreakout=closes.slice(-22,-2),recent20=closes.slice(-21,-1),recent55=closes.slice(-56,-1),recent120=closes.slice(-121,-1);
+  const trigger20=beforeBreakout.length?Math.max(...beforeBreakout):NaN;
+  const lo20=recent20.length?Math.min(...recent20):NaN;
+  const hi55=recent55.length?Math.max(...recent55):NaN,hi120=recent120.length?Math.max(...recent120):NaN;
   const mom5=closes.length>5&&closes.at(-6)>0?(last/closes.at(-6)-1)*100:NaN;
-  const half1=prev20.slice(0,10),half2=prev20.slice(10);
+
+  const half1=recent20.slice(0,10),half2=recent20.slice(10);
   const higherHighs=half1.length&&half2.length&&Math.max(...half2)>Math.max(...half1);
   const higherLows=half1.length&&half2.length&&Math.min(...half2)>Math.min(...half1);
   const weeklyBull=Number.isFinite(w10)&&Number.isFinite(w20)&&Number.isFinite(weeklyLast)&&weeklyLast>w20&&w10>w20;
@@ -550,49 +569,69 @@ function technicalEngine(bars,context=50){
   const dailyBull=Number.isFinite(ema10)&&Number.isFinite(ema55)&&last>ema55&&ema10>ema55;
   const fullBull=dailyBull&&Number.isFinite(ema200)&&ema55>ema200;
   const dailyBear=Number.isFinite(ema10)&&Number.isFinite(ema55)&&last<ema55&&ema10<ema55;
-  const breakout=Number.isFinite(hi20)&&last>hi20*1.002;
-  const near10=Number.isFinite(ema10)?Math.abs(last-ema10)/last<=.025:false;
-  const near55=Number.isFinite(ema55)?Math.abs(last-ema55)/last<=.025:false;
-  const pullback=dailyBull&&(near10||near55)&&Number.isFinite(rsi)&&rsi>=44&&rsi<=68&&!breakout;
-  const continuation=dailyBull&&Number.isFinite(ema10)&&last>ema10&&Number.isFinite(mom5)&&mom5>.35&&!breakout&&!pullback;
-  const overextended=(Number.isFinite(rsi)&&rsi>74)||(Number.isFinite(ema10)&&(last/ema10-1)>.08);
+
+  const breakoutNow=Number.isFinite(trigger20)&&Number.isFinite(prev)&&prev<=trigger20*1.002&&last>trigger20*1.002;
+  const breakoutDistancePct=breakoutNow?Math.max(0,(last/trigger20-1)*100):NaN;
+  const maxBreakoutDistancePct=Number.isFinite(atrPct)?clamp(atrPct*.75,1.0,2.8):1.8;
+  const freshBreakout=breakoutNow&&breakoutDistancePct<=maxBreakoutDistancePct;
+
+  const distEma10Pct=Number.isFinite(ema10)?Math.max(0,(last/ema10-1)*100):NaN;
+  const distEma55Pct=Number.isFinite(ema55)?Math.abs(last/ema55-1)*100:NaN;
+  const pullbackZone=dailyBull&&((Number.isFinite(distEma10Pct)&&distEma10Pct<=Math.max(2.2,(atrPct||1.5)*.9))||(Number.isFinite(distEma55Pct)&&distEma55Pct<=Math.max(2.5,(atrPct||1.5))));
+  const lastBar=clean.at(-1)||{},bullishReaction=(Number.isFinite(lastBar.open)&&last>lastBar.open)||(Number.isFinite(prev)&&last>prev);
+  const pullbackReady=pullbackZone&&bullishReaction&&Number.isFinite(rsi)&&rsi>=44&&rsi<=66&&!breakoutNow;
+
+  const nearBreakout=Number.isFinite(trigger20)&&last<trigger20&&trigger20>0&&((trigger20-last)/last*100)<=Math.max(1.8,(atrPct||1.5)*.8)&&dailyBull;
+  const tooFarFromEma10=Number.isFinite(distEma10Pct)&&distEma10Pct>Math.max(4.0,(atrPct||2)*1.25);
+  const breakoutChased=Number.isFinite(trigger20)&&last>trigger20&& !freshBreakout && ((last/trigger20-1)*100)>maxBreakoutDistancePct;
+  const lateEntry=dailyBull&&(tooFarFromEma10||breakoutChased);
+  const overextended=lateEntry||(Number.isFinite(rsi)&&rsi>72);
 
   let trendScore=0;
-  if(last>ema55)trendScore+=5;
-  if(ema10>ema55)trendScore+=7;
-  if(Number.isFinite(ema200)&&ema55>ema200)trendScore+=7;
-  if(weeklyBull)trendScore+=6;
-  if(weeklyBear)trendScore=Math.max(0,trendScore-6);
+  if(last>ema55)trendScore+=4;
+  if(ema10>ema55)trendScore+=6;
+  if(Number.isFinite(ema200)&&ema55>ema200)trendScore+=5;
+  if(weeklyBull)trendScore+=5;
+  if(weeklyBear)trendScore=Math.max(0,trendScore-5);
 
-  let structureScore=5,setup='ESPERAR';
-  if(breakout){structureScore=25;setup='RUPTURA'}
-  else if(pullback){structureScore=22;setup='PULLBACK'}
-  else if(continuation){structureScore=18;setup='CONTINUIDAD'}
-  else if(higherHighs&&higherLows&&dailyBull){structureScore=16;setup='ESTRUCTURA ALCISTA'}
-  else if(dailyBear){structureScore=3;setup='ESTRUCTURA BAJISTA'}
-  else if(higherHighs||higherLows){structureScore=11;setup='EN DESARROLLO'}
+  let structureScore=4,setup='ESPERAR';
+  if(freshBreakout){structureScore=20;setup='RUPTURA FRESCA'}
+  else if(pullbackReady){structureScore=19;setup='PULLBACK CONFIRMADO'}
+  else if(nearBreakout){structureScore=15;setup='CERCA DE RUPTURA'}
+  else if(lateEntry){structureScore=8;setup='TARDE / ESPERAR PULLBACK'}
+  else if(higherHighs&&higherLows&&dailyBull){structureScore=13;setup='ESTRUCTURA ALCISTA'}
+  else if(dailyBear){structureScore=2;setup='ESTRUCTURA BAJISTA'}
+  else if(higherHighs||higherLows){structureScore=9;setup='EN DESARROLLO'}
 
   let momentumScore=0;
   if(Number.isFinite(macd.line)&&Number.isFinite(macd.signal)&&macd.line>macd.signal)momentumScore+=6;
   if(Number.isFinite(macd.hist)&&macd.hist>0)momentumScore+=3;
   if(Number.isFinite(macd.hist)&&Number.isFinite(macd.histPrev)&&macd.hist>macd.histPrev)momentumScore+=1;
   if(Number.isFinite(rsi)){
-    if(rsi>=52&&rsi<=68)momentumScore+=5;
-    else if(rsi>=47&&rsi<52)momentumScore+=3;
-    else if(rsi>68&&rsi<=74)momentumScore+=2;
+    if(rsi>=50&&rsi<=64)momentumScore+=5;
+    else if(rsi>=46&&rsi<50)momentumScore+=3;
+    else if(rsi>64&&rsi<=70)momentumScore+=2;
   }
   momentumScore=clamp(momentumScore,0,15);
 
-  let volumeScore=5;
+  let volumeScore=4;
   if(Number.isFinite(rvol)){
-    volumeScore=rvol>=1.5?15:rvol>=1.2?13:rvol>=1?10:rvol>=.8?7:3;
-    if(pullback&&rvol<1)volumeScore=Math.max(volumeScore,9);
+    volumeScore=rvol>=1.5?10:rvol>=1.2?9:rvol>=1?7:rvol>=.8?5:2;
+    if(pullbackReady&&rvol<1)volumeScore=Math.max(volumeScore,6);
   }
 
-  const supports=[lo20,ema55,breakout?hi20:NaN].filter(v=>Number.isFinite(v)&&v<last*.998);
-  const nearestSupport=supports.length?Math.max(...supports):NaN;
-  const minRiskPct=Math.max(Number.isFinite(absRet)?absRet*1.35:1.5,1.5)/100;
-  const structuralDistance=Number.isFinite(nearestSupport)?(last-nearestSupport):last*minRiskPct;
+  let timingScore=3;
+  if(freshBreakout)timingScore=15;
+  else if(pullbackReady)timingScore=15;
+  else if(nearBreakout)timingScore=11;
+  else if(lateEntry)timingScore=0;
+  else if(pullbackZone)timingScore=8;
+
+  const entryReference=freshBreakout?trigger20:pullbackReady?(Math.abs(last-ema10)<=Math.abs(last-ema55)?ema10:ema55):nearBreakout?trigger20:ema10;
+  const supportCandidates=[lo20,ema55,freshBreakout?trigger20:NaN].filter(v=>Number.isFinite(v)&&v<last*.998);
+  const nearestSupport=supportCandidates.length?Math.max(...supportCandidates):NaN;
+  const minRiskPct=Math.max(Number.isFinite(atrPct)?atrPct*.9:1.5,1.5)/100;
+  const structuralDistance=Number.isFinite(nearestSupport)?last-nearestSupport:last*minRiskPct;
   const riskDistance=Math.max(structuralDistance,last*minRiskPct);
   const stop=last-riskDistance;
   const resistances=[hi55,hi120].filter(v=>Number.isFinite(v)&&v>last*1.005).sort((a,b)=>a-b);
@@ -600,37 +639,42 @@ function technicalEngine(bars,context=50){
   const rr=riskDistance>0&&target>last?(target-last)/riskDistance:0;
   const rrScore=rr>=2.2?15:rr>=1.8?13:rr>=1.5?10:rr>=1.2?6:2;
   const contextScore5=clamp(Math.round(clamp(context,0,100)*.05),0,5);
-  const total=clamp(Math.round(trendScore+structureScore+momentumScore+volumeScore+rrScore+contextScore5),0,100);
-  const technicalScore=clamp(Math.round((trendScore+structureScore+momentumScore+volumeScore+rrScore)/.95),0,100);
+  const total=clamp(Math.round(trendScore+structureScore+momentumScore+volumeScore+timingScore+rrScore+contextScore5),0,100);
+  const technicalScore=clamp(Math.round((trendScore+structureScore+momentumScore+volumeScore+timingScore+rrScore)/.95),0,100);
 
   const historyOk=closes.length>=200&&weekly.length>=20&&Number.isFinite(ema200);
   const trendGate=historyOk&&fullBull&&!weeklyBear;
-  const setupGate=structureScore>=18&&(breakout||pullback||continuation);
-  const momentumGate=momentumScore>=9&&Number.isFinite(rsi)&&rsi>=47&&rsi<=74&&Number.isFinite(macd.line)&&macd.line>macd.signal;
-  const volumeGate=Number.isFinite(rvol)&&(breakout?rvol>=1.05:rvol>=.75);
+  const setupGate=freshBreakout||pullbackReady;
+  const momentumGate=momentumScore>=9&&Number.isFinite(rsi)&&rsi>=46&&rsi<=70&&Number.isFinite(macd.line)&&macd.line>macd.signal;
+  const volumeGate=Number.isFinite(rvol)&&(freshBreakout?rvol>=1.0:pullbackReady?rvol>=.7:rvol>=.8);
+  const timingGate=(freshBreakout||pullbackReady)&&!lateEntry;
   const rrGate=rr>=1.5;
-  const buy=trendGate&&setupGate&&momentumGate&&volumeGate&&rrGate&&!overextended&&total>=72;
-  const possible=!buy&&historyOk&&dailyBull&&!weeklyBear&&rr>=1.2&&total>=60&&(setupGate||momentumScore>=8);
-  const avoid=(historyOk&&dailyBear&&weeklyBear)||(rr>0&&rr<1)||(total<38);
+  const buy=trendGate&&setupGate&&momentumGate&&volumeGate&&timingGate&&rrGate&&!overextended&&total>=70;
+  const possible=!buy&&historyOk&&dailyBull&&!weeklyBear&&!lateEntry&&rr>=1.2&&total>=56&&(nearBreakout||pullbackZone||momentumScore>=9);
+  const avoid=(historyOk&&dailyBear&&weeklyBear)||(rr>0&&rr<1)||(total<34);
   const kind=buy?'buy':possible?'near':avoid?'sell':'wait';
   const label=kind==='buy'?'OPORTUNIDAD':kind==='near'?'POSIBLE':kind==='sell'?'EVITAR':'SEGUIMIENTO';
   const trend=fullBull&&weeklyBull?'ALCISTA':dailyBear&&weeklyBear?'BAJISTA':dailyBull?'ALCISTA':'NEUTRAL';
+
   const failures=[];
   if(!historyOk)failures.push('histórico < 200 ruedas');
   if(!trendGate)failures.push('tendencia no confirmada D/W');
   if(!setupGate)failures.push('sin setup de entrada');
   if(!momentumGate)failures.push('momentum sin confirmar');
   if(!volumeGate)failures.push('volumen insuficiente');
+  if(!timingGate)failures.push(lateEntry?'entrada tardía':'timing sin confirmar');
   if(!rrGate)failures.push('R/R < 1,5');
-  if(overextended)failures.push('precio extendido');
-  const reason='EMA10 '+(Number.isFinite(ema10)?fmt(ema10,2):'s/d')+' · EMA55 '+(Number.isFinite(ema55)?fmt(ema55,2):'s/d')+' · EMA200 '+(Number.isFinite(ema200)?fmt(ema200,2):'s/d')+' · RSI '+(Number.isFinite(rsi)?fmt(rsi,1):'s/d')+' · MACD '+(Number.isFinite(macd.hist)?(macd.hist>=0?'+':'')+fmt(macd.hist,2):'s/d')+' · RVOL '+(Number.isFinite(rvol)?fmt(rvol,2)+'x':'s/d')+' · R/R '+(Number.isFinite(rr)?fmt(rr,2):'s/d')+(failures.length?' · Falta: '+failures.slice(0,3).join(', '):'');
+  if(overextended&&!lateEntry)failures.push('precio extendido');
+
+  const reason='EMA10 '+(Number.isFinite(ema10)?fmt(ema10,2):'s/d')+' · EMA55 '+(Number.isFinite(ema55)?fmt(ema55,2):'s/d')+' · EMA200 '+(Number.isFinite(ema200)?fmt(ema200,2):'s/d')+' · RSI '+(Number.isFinite(rsi)?fmt(rsi,1):'s/d')+' · MACD '+(Number.isFinite(macd.hist)?(macd.hist>=0?'+':'')+fmt(macd.hist,2):'s/d')+' · RVOL '+(Number.isFinite(rvol)?fmt(rvol,2)+'x':'s/d')+' · Timing '+(lateEntry?'TARDE':freshBreakout?'RUPTURA FRESCA':pullbackReady?'PULLBACK':'ESPERAR')+' · R/R '+(Number.isFinite(rr)?fmt(rr,2):'s/d')+(failures.length?' · Falta: '+failures.slice(0,3).join(', '):'');
+
   return{
     kind,label,oppScore:total,setup,trend,reason,
     analysis:{
-      engine:'TA-v2',sufficient:historyOk,total,technicalScore,
-      components:{trend:trendScore,structure:structureScore,momentum:momentumScore,volume:volumeScore,rr:rrScore,context:contextScore5},
-      indicators:{bars:closes.length,ema10,ema55,ema200,weeklyEma10:w10,weeklyEma20:w20,weeklyTrend:weeklyBull?'ALCISTA':weeklyBear?'BAJISTA':'NEUTRAL',rsi,macd:macd.line,macdSignal:macd.signal,macdHist:macd.hist,relVolume:rvol,momentum5:mom5,support:nearestSupport,resistance:resistances[0]??hi20,stop,target,rr,overextended},
-      gates:{trend:trendGate,setup:setupGate,momentum:momentumGate,volume:volumeGate,rr:rrGate,notExtended:!overextended},
+      engine:'TA-v3',sufficient:historyOk,total,technicalScore,
+      components:{trend:trendScore,structure:structureScore,momentum:momentumScore,volume:volumeScore,timing:timingScore,rr:rrScore,context:contextScore5},
+      indicators:{bars:closes.length,ema10,ema55,ema200,weeklyEma10:w10,weeklyEma20:w20,weeklyTrend:weeklyBull?'ALCISTA':weeklyBear?'BAJISTA':'NEUTRAL',rsi,macd:macd.line,macdSignal:macd.signal,macdHist:macd.hist,relVolume:rvol,momentum5:mom5,atr,atrPct,entryReference,entryDistancePct:Number.isFinite(entryReference)?Math.abs(last/entryReference-1)*100:NaN,breakoutTrigger:trigger20,breakoutDistancePct,support:nearestSupport,resistance:resistances[0]??trigger20,stop,target,rr,lateEntry,overextended},
+      gates:{trend:trendGate,setup:setupGate,momentum:momentumGate,volume:volumeGate,timing:timingGate,rr:rrGate,notExtended:!overextended},
       failures
     }
   };
@@ -1048,7 +1092,7 @@ function normalize(){
     group.filter(x=>!Number.isFinite(x.volume)).forEach(x=>x.liquidity=45);
   }
   items.forEach(x=>{
-    if(x.advanced?.engine==='TA-v2'){
+    if(x.advanced?.engine==='TA-v3'){
       x.score=clamp(Math.round(x.advanced.total),0,100);
       x.kind=x.advanced.gates?.trend&&x.advanced.gates?.setup&&x.advanced.gates?.momentum&&x.advanced.gates?.volume&&x.advanced.gates?.rr&&x.advanced.gates?.notExtended&&x.score>=72?'buy':x.kind;
     }else{
@@ -1200,7 +1244,7 @@ function actionFor(x){
   return['SEGUIR','hold'];
 }
 function commentFor(x){
-  if(x.advanced?.engine==='TA-v2'){
+  if(x.advanced?.engine==='TA-v3'){
     const i=x.advanced.indicators||{};
     return x.status.cls==='buy'
       ?'Compra válida: tendencia D/W, setup, momentum, volumen y R/R confirmados.'
@@ -1256,10 +1300,10 @@ function renderTableAndDetail(){
 function selectedRow(){const list=visible();return list.find(x=>x.key===selected)||list[0]||null}
 function renderDetail(){
   const x=selectedRow();if(!x){$('rtoSelected').innerHTML='<div class="rto-empty">Sin datos.</div>';$('rtoPlan').innerHTML='';return}
-  const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,risk=x.riskMeta,a=x.advanced?.engine==='TA-v2'?x.advanced:null,c=a?.components||{},i=a?.indicators||{};
+  const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,risk=x.riskMeta,a=x.advanced?.engine==='TA-v3'?x.advanced:null,c=a?.components||{},i=a?.indicators||{};
   $('rtoSelectedRank').textContent=rank>0?'#'+rank+' del ranking':'—';
   const metrics=a
-    ?'<div class="rto-metrics rto-metrics-ta"><div class="rto-metric"><small>TENDENCIA</small><b>'+Math.round(c.trend||0)+'/25</b></div><div class="rto-metric"><small>ESTRUCTURA</small><b>'+Math.round(c.structure||0)+'/25</b></div><div class="rto-metric"><small>MOMENTUM</small><b>'+Math.round(c.momentum||0)+'/15</b></div><div class="rto-metric"><small>VOLUMEN</small><b>'+Math.round(c.volume||0)+'/15</b></div><div class="rto-metric"><small>RIESGO / BENEFICIO</small><b>'+Math.round(c.rr||0)+'/15</b></div><div class="rto-metric"><small>CONTEXTO</small><b>'+Math.round(c.context||0)+'/5</b></div></div>'
+    ?'<div class="rto-metrics rto-metrics-ta"><div class="rto-metric"><small>TENDENCIA</small><b>'+Math.round(c.trend||0)+'/20</b></div><div class="rto-metric"><small>ESTRUCTURA</small><b>'+Math.round(c.structure||0)+'/20</b></div><div class="rto-metric"><small>MOMENTUM</small><b>'+Math.round(c.momentum||0)+'/15</b></div><div class="rto-metric"><small>VOLUMEN</small><b>'+Math.round(c.volume||0)+'/10</b></div><div class="rto-metric"><small>TIMING</small><b>'+Math.round(c.timing||0)+'/15</b></div><div class="rto-metric"><small>RIESGO / BENEFICIO</small><b>'+Math.round(c.rr||0)+'/15</b></div><div class="rto-metric"><small>CONTEXTO</small><b>'+Math.round(c.context||0)+'/5</b></div></div>'
     :'<div class="rto-metrics"><div class="rto-metric"><small>SEÑAL TÉCNICA</small><b>'+Math.round(x.tech)+'/100</b></div><div class="rto-metric"><small>LIQUIDEZ RELATIVA</small><b>'+Math.round(x.liquidity)+'/100</b></div><div class="rto-metric"><small>CONTEXTO</small><b>'+Math.round(x.context)+'/100</b></div><div class="rto-metric"><small>RIESGO</small><b class="'+(risk[1]==='high'?'rto-down':risk[1]==='low'?'rto-up':'')+'">'+risk[0]+'</b></div></div>';
   const indicators=a?'<div class="rto-indicator-strip"><span>EMA 10 <b>'+fmt(i.ema10,2)+'</b></span><span>EMA 55 <b>'+fmt(i.ema55,2)+'</b></span><span>EMA 200 <b>'+fmt(i.ema200,2)+'</b></span><span>Semanal <b>'+esc(i.weeklyTrend||'s/d')+'</b></span><span>RSI 14 <b>'+fmt(i.rsi,1)+'</b></span><span>MACD hist <b>'+fmt(i.macdHist,2)+'</b></span><span>RVOL <b>'+fmt(i.relVolume,2)+'x</b></span><span>R/R <b>'+fmt(i.rr,2)+'</b></span></div>':'';
   $('rtoSelected').innerHTML=
@@ -1273,7 +1317,7 @@ function renderDetail(){
   $('rtoPlan').innerHTML='<div class="rto-plan-state '+x.status.cls+'">'+x.status.label+'</div><p>'+sentence+'</p>'+levels+'<div class="rto-plan-actions"><button id="rtoAnalyze">Ver análisis completo</button><button id="rtoWatchBack">Volver a Watchlist</button></div>';
   $('rtoAnalyze')?.addEventListener('click',()=>analyze(x));
   $('rtoWatchBack')?.addEventListener('click',back);
-  $('rtoMethod').innerHTML='<b>Motor técnico TA-v2.</b> OPORTUNIDAD equivale a candidato de compra y no se obtiene sólo por score. Deben pasar simultáneamente los filtros obligatorios de tendencia diaria/semanal, setup, momentum, volumen, R/R ≥ 1,5 y no estar sobreextendido.<span class="formula">Score 100 = Tendencia 25 + Estructura/Setup 25 + Momentum 15 + Volumen 15 + Riesgo/Beneficio 15 + Contexto 5. EMA 10/55/200 define tendencia; MACD + RSI validan momentum; RVOL confirma participación; soporte/objetivo determinan el R/R. POSIBLE = falta una confirmación. SEGUIMIENTO = sin trigger. EVITAR = long invalidado.</span>';
+  $('rtoMethod').innerHTML='<b>Motor técnico TA-v3.</b> OPORTUNIDAD equivale a candidato de compra y no se obtiene sólo por score. Deben pasar simultáneamente los filtros obligatorios de tendencia diaria/semanal, setup, momentum, volumen, R/R ≥ 1,5 y no estar sobreextendido.<span class="formula">Score 100 = Tendencia 20 + Estructura/Setup 20 + Momentum 15 + Volumen 10 + Timing de entrada 15 + Riesgo/Beneficio 15 + Contexto 5. OPORTUNIDAD sólo existe en ruptura fresca o pullback confirmado; si el precio ya se alejó del trigger/EMA, queda en SEGUIMIENTO como entrada tardía. EMA 10/55/200 define tendencia; MACD + RSI validan momentum; RVOL confirma participación; soporte/objetivo determinan el R/R.</span>';
 }
 function analyze(x){
   close();
@@ -1325,7 +1369,7 @@ document.addEventListener('click',e=>{
 },true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rtTopOpportunities')?.hidden)back()});
 setInterval(()=>{if(!$('rtTopOpportunities')?.hidden)tick()},1000);
-window.RadarTopOpportunities=Object.freeze({open,close,render,refresh});
+window.RadarTopOpportunities=Object.freeze({open,close,render,refresh,evaluateTechnical:(bars,context=50)=>technicalEngine(bars,context)});
 })();
 
 /* Radar Técnico · Official Brand Invariant */
