@@ -926,6 +926,10 @@ function rtoScoreRing(n){
   const v=clamp(Math.round(num(n)||0),0,100),cls=v>=70?'good':v>=50?'mid':'bad';
   return'<span class="rto-score-ring '+cls+'" style="--score:'+v+'"><b>'+v+'</b></span>';
 }
+function rtoSetupClass(x){
+  const z=String(x||'').toUpperCase();
+  return z==='ALCISTA'||z.includes('RUPTURA')||z.includes('TENDENCIA ALCISTA')?'good':z.includes('BAJISTA')||z.includes('PRESIÓN')||z.includes('PÉRDIDA')?'bad':'neutral';
+}
 function actionFor(x){
   if(x.status.cls==='buy')return['COMPRAR','buy'];
   if(x.status.cls==='near')return['VIGILAR','watch'];
@@ -967,7 +971,7 @@ function renderTableAndDetail(){
       '<td class="rto-num">'+priceText(x)+'</td>'+
       '<td class="rto-num '+(x.change>0?'rto-up':x.change<0?'rto-down':'rto-flat')+'">'+pct(x.change)+'</td>'+
       '<td class="rto-spark-cell">'+rtoSpark(x)+'</td>'+
-      '<td><span class="rto-setup '+setupClass(String(x.setup||'').toUpperCase())+'">'+esc(x.setup)+'</span></td>'+
+      '<td><span class="rto-setup '+rtoSetupClass(x.setup)+'">'+esc(x.setup)+'</span></td>'+
       '<td>'+rtoScoreRing(x.score)+'</td>'+
       '<td><span class="rto-status '+x.status.cls+'">'+x.status.label+'</span></td>'+
       '<td><span class="rto-action '+action[1]+'">'+action[0]+'</span></td>'+
