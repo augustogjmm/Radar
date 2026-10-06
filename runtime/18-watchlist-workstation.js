@@ -964,7 +964,7 @@ function renderTableAndDetail(){
   }
   $('rtoRows').innerHTML=list.length?list.map((x,i)=>{
     const rank=rows.findIndex(r=>r.key===x.key)+1,trendCls=x.trend.key,action=actionFor(x);
-    return'<tr data-rto-key="'+esc(x.key)+'" data-rto-type="'+esc(x.type)+'" class="'+(x.key===selected?'selected':'')+'">'+
+    return'<tr data-rto-key="'+esc(x.key)+'" data-rto-type="'+esc(x.type)+'" data-rto-volume="'+(Number.isFinite(x.volume)?x.volume:0)+'" class="'+(x.key===selected?'selected':'')+'">'+
       '<td><span class="rto-rank">'+(rank>0?rank:i+1)+'</span></td>'+
       '<td><span class="rto-asset rto-asset-watch"><i>'+rtoFlag(x)+'</i><b>'+esc(x.symbol)+'</b><small>'+esc(x.label)+'</small></span></td>'+
       '<td><span class="rto-market-cell"><b>'+esc(x.meta.classLabel)+'</b><small>'+esc(x.meta.market)+' · '+esc(x.meta.currency)+'</small></span></td>'+
