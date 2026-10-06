@@ -232,6 +232,18 @@ try{
     await assert(opportunitiesContract.fonts.table>=9.5&&opportunitiesContract.fonts.kpi>=9&&opportunitiesContract.fonts.side>=9.5,'Tipografía de Top Oportunidades demasiado chica: '+JSON.stringify(opportunitiesContract.fonts));
     await assert(opportunitiesContract.overflow.length===0,'Textos fuera de recuadro en Top Oportunidades: '+JSON.stringify(opportunitiesContract.overflow));
     await assert(opportunitiesContract.brandAudit.every(x=>x.official),'Hay una pantalla con logo distinto: '+JSON.stringify(opportunitiesContract.brandAudit));
+    const taContract=await page.evaluate(()=>({
+      advanced:[...document.querySelectorAll('#rtoRows tr[data-rto-engine="TA-v2"]')].length,
+      opportunities:[...document.querySelectorAll('#rtoRows tr[data-rto-key]')].filter(tr=>tr.querySelector('.rto-status')?.textContent?.trim()==='OPORTUNIDAD').map(tr=>({buyValid:tr.dataset.rtoBuyValid,action:tr.querySelector('.rto-action')?.textContent?.trim()})),
+      defaultMaintain:[...document.querySelectorAll('#rtoRows .rto-action')].filter(x=>x.textContent.trim()==='MANTENER').length,
+      metricCount:document.querySelectorAll('#rtoSelected .rto-metrics-ta .rto-metric').length,
+      method:document.getElementById('rtoMethod')?.textContent||''
+    }));
+    await assert(taContract.advanced>=5,'El motor TA-v2 no está alimentando el ranking: '+JSON.stringify(taContract));
+    await assert(taContract.opportunities.every(x=>x.buyValid==='true'&&x.action==='COMPRAR'),'Existe OPORTUNIDAD sin gates técnicos completos: '+JSON.stringify(taContract.opportunities));
+    await assert(taContract.defaultMaintain===0,'Top Oportunidades usa MANTENER como acción por defecto');
+    await assert(taContract.metricCount===6,'El detalle no muestra los 6 componentes del score técnico: '+taContract.metricCount);
+    await assert(/EMA 10\/55\/200/.test(taContract.method)&&/R\/R/.test(taContract.method),'La metodología TA-v2 no es explicable: '+taContract.method);
 
     await page.click('#rtoKpis [data-rto-kpi="buy"]');
     const buyFilter=await page.evaluate(()=>({
@@ -282,6 +294,13 @@ try{
     await assert(cedearContract.volumes.every(v=>v>0),'Filtro CEDEAR incluyó activos sin volumen: '+JSON.stringify(cedearContract.volumes));
     await assert(cedearContract.statuses.every(x=>['OPORTUNIDAD','POSIBLE','SEGUIMIENTO','EVITAR'].includes(x)),'CEDEAR sin análisis de oportunidad: '+JSON.stringify(cedearContract.statuses));
     await assert(cedearContract.zeroPrices===0,'CEDEAR muestra precios falsos en cero: '+JSON.stringify(cedearContract));
+    const cedearTa=await page.evaluate(()=>({
+      advanced:[...document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"]')].filter(tr=>tr.dataset.rtoEngine==='TA-v2').length,
+      visible:document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"]').length,
+      invalidBuys:[...document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"]')].filter(tr=>tr.querySelector('.rto-status')?.textContent?.trim()==='OPORTUNIDAD'&&tr.dataset.rtoBuyValid!=='true').length
+    }));
+    await assert(cedearTa.advanced===cedearTa.visible,'Hay CEDEARs sin motor TA-v2: '+JSON.stringify(cedearTa));
+    await assert(cedearTa.invalidBuys===0,'Hay CEDEARs marcados OPORTUNIDAD sin gates completos: '+JSON.stringify(cedearTa));
     await assert(/100%/.test(cedearContract.progressText),'La interfaz no informa finalización del análisis CEDEAR: '+cedearContract.progressText);
     await shot('03-top-opportunities');
     await page.evaluate(()=>window.RadarTopOpportunities?.close?.());
