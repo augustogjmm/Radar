@@ -153,7 +153,8 @@ try{
   await assert(design.bodyOverflow<=4,'Overflow horizontal global: '+design.bodyOverflow);
 
   if(design.globalCommandCenter){
-    await page.click('#rtRegionOpen');
+    const regionOpenInvoked=await page.evaluate(()=>{const b=document.getElementById('rtRegionOpen');if(!b)return false;b.click();return true});
+    await assert(regionOpenInvoked,'Control Abrir vista completa ausente');
     await page.waitForFunction(()=>{const x=document.getElementById('rtRegionalDecisionCenter');return x&&!x.hidden&&x.getBoundingClientRect().width>900&&x.getBoundingClientRect().height>500});
     const regionalCenter=await page.evaluate(()=>({
       visible:!document.getElementById('rtRegionalDecisionCenter')?.hidden,
