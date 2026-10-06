@@ -29,6 +29,13 @@ const binancePayload=bars=>bars.map(x=>[x.time*1000,String(x.open),String(x.high
 const listItem=(symbol,price,volume,extra={})=>({symbol,trade:price,closingPrice:price,volume,tradeVolume:volume,volumeAmount:price*volume,settlementType:'2',denominationCcy:'ARS',source:'QA fixture',...extra});
 const bymaEquitiesFixture={source:'QA fixture',items:[listItem('GGAL',7200,250000),listItem('YPFD',58200,180000),listItem('PAMP',5100,160000),listItem('VIST',18900,140000),listItem('TGSU2',6400,120000)]};
 const bymaCedearsFixture={source:'QA fixture',items:[listItem('AAPL',42000,350000),listItem('NVDA',39800,330000),listItem('MELI',29800,210000),listItem('MSFT',36000,190000),listItem('AMZN',31000,170000)]};
+const cedearProgramsFixture={source:'Banco Comafi · QA fixture',count:5,items:[
+  {symbol:'AAPL',underlying:'AAPL',program:'Apple Inc.',ratioText:'10:1'},
+  {symbol:'NVDA',underlying:'NVDA',program:'NVIDIA Corp.',ratioText:'24:1'},
+  {symbol:'MELI',underlying:'MELI',program:'MercadoLibre',ratioText:'60:1'},
+  {symbol:'MSFT',underlying:'MSFT',program:'Microsoft',ratioText:'30:1'},
+  {symbol:'AMZN',underlying:'AMZN',program:'Amazon',ratioText:'144:1'}
+]};
 const bymaFixedFixture={source:'QA fixture',items:[listItem('AL30',78.4,900000,{type:'bond',category:'Soberano'}),listItem('AE38',73.2,780000,{type:'bond',category:'Soberano'}),listItem('GD30',79.1,760000,{type:'bond',category:'Soberano'}),listItem('S31O6',101.5,650000,{type:'bond',category:'LECAP/BONCAP'})]};
 const cedearAnalysisFixture={
   source:'QA fixture · liquid CEDEAR analysis',
@@ -65,6 +72,7 @@ await page.route('**/*',async route=>{
   if(u.pathname==='/api/yahoo-batch')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(yahooBatchPayload(u))});
   if(u.pathname==='/api/byma/equities')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaEquitiesFixture)});
   if(u.pathname==='/api/byma/cedears')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaCedearsFixture)});
+  if(u.pathname==='/api/cedear/programs')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(cedearProgramsFixture)});
   if(u.pathname==='/api/byma/cedears-analysis')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(cedearAnalysisFixture)});
   if(u.pathname==='/api/byma/fixed-income')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaFixedFixture)});
   if(u.pathname==='/api/byma/scan-history'||u.pathname==='/api/byma/history')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(bymaPayload(daily))});
@@ -251,19 +259,30 @@ try{
     await page.click('#rtoFilters [data-rto-filter="cedear"]');
     await page.waitForFunction(()=>{
       const shell=document.getElementById('rtTopOpportunities');
-      return shell?.dataset.cedearLoading==='false'&&Number(shell?.dataset.cedearUniverseCount||0)>0;
-    },{timeout:10000});
+      return shell?.dataset.cedearLoading==='false'&&shell?.dataset.cedearPhase==='complete'&&Number(shell?.dataset.cedearUniverseCount||0)>0;
+    },{timeout:15000});
     const cedearContract=await page.evaluate(()=>({
+      official:Number(document.getElementById('rtTopOpportunities')?.dataset.cedearUniverseTotal||0),
       universe:Number(document.getElementById('rtTopOpportunities')?.dataset.cedearUniverseCount||0),
+      analyzed:Number(document.getElementById('rtTopOpportunities')?.dataset.cedearAnalyzed||0),
+      progress:Number(document.getElementById('rtTopOpportunities')?.dataset.cedearProgress||0),
+      phase:document.getElementById('rtTopOpportunities')?.dataset.cedearPhase||'',
       visible:document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"]').length,
       foreign:[...document.querySelectorAll('#rtoRows tr[data-rto-key]')].filter(x=>x.dataset.rtoType!=='cedear').length,
       volumes:[...document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"]')].map(x=>Number(x.dataset.rtoVolume||0)),
-      statuses:[...document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"] .rto-status')].map(x=>x.textContent.trim())
+      statuses:[...document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"] .rto-status')].map(x=>x.textContent.trim()),
+      zeroPrices:[...document.querySelectorAll('#rtoRows tr[data-rto-type="cedear"] td:nth-child(4)')].filter(x=>/\$\s*0(?:[.,]0+)?$/.test(x.textContent.trim())).length,
+      progressText:document.getElementById('rtoProgress')?.textContent||''
     }));
+    await assert(cedearContract.official===5,'Universo CEDEAR no viene del padrón oficial: '+JSON.stringify(cedearContract));
+    await assert(cedearContract.analyzed===cedearContract.official,'CEDEAR no terminó de analizar todo el universo: '+JSON.stringify(cedearContract));
+    await assert(cedearContract.progress===100&&cedearContract.phase==='complete','Progreso CEDEAR no llega a 100%: '+JSON.stringify(cedearContract));
     await assert(cedearContract.visible===cedearContract.universe,'CEDEAR no muestra todo el universo líquido: '+JSON.stringify(cedearContract));
     await assert(cedearContract.foreign===0,'Filtro CEDEAR mezcló otros activos: '+JSON.stringify(cedearContract));
     await assert(cedearContract.volumes.every(v=>v>0),'Filtro CEDEAR incluyó activos sin volumen: '+JSON.stringify(cedearContract.volumes));
     await assert(cedearContract.statuses.every(x=>['OPORTUNIDAD','POSIBLE','SEGUIMIENTO','EVITAR'].includes(x)),'CEDEAR sin análisis de oportunidad: '+JSON.stringify(cedearContract.statuses));
+    await assert(cedearContract.zeroPrices===0,'CEDEAR muestra precios falsos en cero: '+JSON.stringify(cedearContract));
+    await assert(/100%/.test(cedearContract.progressText),'La interfaz no informa finalización del análisis CEDEAR: '+cedearContract.progressText);
     await shot('03-top-opportunities');
     await page.evaluate(()=>window.RadarTopOpportunities?.close?.());
   }
