@@ -451,7 +451,7 @@ const global=()=>window.RadarGlobalCommandCenter;
 const gst=()=>global()?.state;
 const daily=()=>window.RadarDailyRadar?.state;
 
-let typeFilter='all',signalFilter='all',riskFilter='all',search='',selected='',rows=[],refreshing=false,directCandidates=[];
+let typeFilter='all',signalFilter='all',riskFilter='all',search='',selected='',rows=[],refreshing=false,directCandidates=[],cedearCandidates=[],cedearLoading=false,cedearLoadedAt=0,cedearMeta={count:0,analyzedCount:0,source:''};
 
 const TYPE_META={
   crypto:['Crypto','Crypto','USDT'],
@@ -526,15 +526,51 @@ function universeCandidates(){
     const symbol=String(panel?.symbol||'').toUpperCase();
     const last=num(panel?.trade??panel?.closingPrice),volume=num(panel?.volumeAmount??panel?.tradeVolume??panel?.volume);
     if(!symbol||!Number.isFinite(last))return;
-    const market={last,changePct:NaN,volume,bars:[],source:panel?.source||'BYMA'};
+    const market={last,changePct:num(panel?.changePct),volume,bars:[],source:panel?.source||'BYMA'};
     const currency=String(panel?.denominationCcy||panel?.currency||'ARS').toUpperCase();
     const row=directRow({symbol,label:String(panel?.description||panel?.securityDescription||symbol),type,currency},market);
     if(row){row.item.panel=panel;out.push(row)}
   };
-  (st.universes.equities||[]).slice(0,10).forEach(x=>add(x,'argstock'));
-  (st.universes.cedears||[]).slice(0,10).forEach(x=>add(x,'cedear'));
-  (st.universes.fixed||[]).slice(0,10).forEach(x=>add(x,x?.category==='LECAP/BONCAP'?'bill':'argbond'));
+  (st.universes.equities||[]).slice(0,40).forEach(x=>add(x,'argstock'));
+  (st.universes.cedears||[])
+    .filter(x=>(num(x?.volume)||0)>0||(num(x?.tradeVolume)||0)>0||(num(x?.volumeAmount)||0)>0)
+    .forEach(x=>add(x,'cedear'));
+  (st.universes.fixed||[]).slice(0,40).forEach(x=>add(x,x?.category==='LECAP/BONCAP'?'bill':'argbond'));
   return out;
+}
+function cedearCandidateFromApi(x){
+  const symbol=String(x?.symbol||'').toUpperCase(),a=x?.analysis||{},bars=(x?.bars||[]).map(b=>({time:num(b?.time),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
+  const last=num(x?.trade??x?.closingPrice),volume=num(x?.volumeAmount??x?.tradeVolume??x?.volume);
+  if(!symbol||!Number.isFinite(last)||!(volume>0))return null;
+  return{
+    item:{symbol,type:'cedear',requestedType:'cedear',label:String(x?.description||x?.securityDescription||symbol),panel:x},
+    status:{kind:String(a.kind||'wait'),label:String(a.label||'SEGUIMIENTO'),oppScore:num(a.oppScore)},
+    trend:String(a.trend||'Lateral'),setup:String(a.setup||'Esperar confirmación'),bars,marketOnly:true,cedearUniverse:true,
+    marketData:{last,changePct:num(x?.changePct),volume,bars,source:x?.historySource||x?.source||'BYMA'}
+  };
+}
+async function refreshCedearCandidates(force=false){
+  if(cedearLoading)return cedearCandidates;
+  if(!force&&cedearCandidates.length&&Date.now()-cedearLoadedAt<5*60*1000)return cedearCandidates;
+  cedearLoading=true;
+  const shell=$('rtTopOpportunities');if(shell)shell.dataset.cedearLoading='true';
+  try{
+    const r=await fetch('/api/byma/cedears-analysis?fresh='+(force?'1':'0')+'&_='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw new Error('CEDEAR HTTP '+r.status);
+    const j=await r.json(),next=(j.items||[]).map(cedearCandidateFromApi).filter(Boolean);
+    if(next.length){
+      cedearCandidates=next;cedearLoadedAt=Date.now();
+      cedearMeta={count:num(j.count)||next.length,analyzedCount:num(j.analyzedCount)||0,source:String(j.source||'BYMA')};
+    }
+  }catch(e){
+    console.warn('Top oportunidades CEDEAR',e);
+    const fallback=universeCandidates().filter(x=>typeOf(x)==='cedear');
+    if(fallback.length)cedearCandidates=fallback;
+  }finally{
+    cedearLoading=false;
+    const sh=$('rtTopOpportunities');if(sh){sh.dataset.cedearLoading='false';sh.dataset.cedearUniverseCount=String(cedearCandidates.length)}
+  }
+  return cedearCandidates;
 }
 async function refreshDirectCandidates(force=false){
   const symbols=DIRECT_UNIVERSE.map(x=>x.quote);
@@ -728,6 +764,7 @@ function dedupeResults(){
     ...(daily()?.results||[]),
     ...(daily()?.rf||[]),
     ...directCandidates,
+    ...cedearCandidates,
     ...globalMarketCandidates(),
     ...universeCandidates()
   ].filter(r=>r?.item?.symbol);
@@ -774,7 +811,7 @@ function visible(){
   if(signalFilter!=='all')out=out.filter(x=>x.status.cls===signalFilter);
   if(riskFilter==='elevated')out=out.filter(x=>x.risk>=50);
   if(search){const z=search.toLowerCase();out=out.filter(x=>[x.symbol,x.label,x.meta.classLabel,x.meta.market].some(v=>String(v).toLowerCase().includes(z)))}
-  return out.slice(0,20);
+  return out;
 }
 function summary(){
   const invest=[...rows],buy=invest.filter(x=>x.status.cls==='buy').length,near=invest.filter(x=>x.status.cls==='near').length,watch=invest.filter(x=>x.status.cls==='watch').length,avoid=invest.filter(x=>x.status.cls==='avoid').length;
@@ -792,7 +829,7 @@ function mount(){
 '<section class="rto-hero"><div class="rto-hero-copy"><div class="rto-hero-icon">◆</div><div><h1>Top de Oportunidades</h1><p>Activos donde el Radar detecta mejor combinación de <b>señal técnica, liquidez, riesgo y contexto</b>. Oportunidad no equivale a recomendación automática.</p></div></div><div class="rto-hero-actions"><button id="rtoRefresh" class="rto-btn primary">↻ Actualizar ranking</button><button id="rtoBack" class="rto-btn">← Volver a Watchlist</button></div></section>'+
 '<section id="rtoKpis" class="rto-kpis"></section>'+
 '<section class="rto-toolbar"><div id="rtoFilters" class="rto-filters"></div><div id="rtoSignalFilters" class="rto-signal-filters"></div><button id="rtoMethodBtn" class="rto-btn">Cómo se ordena</button></section>'+
-'<main class="rto-main"><section class="rto-panel"><div class="rto-table-wrap"><table class="rto-table"><thead><tr><th style="width:40px">#</th><th style="width:120px">ACTIVO</th><th style="width:82px">CLASE</th><th style="width:105px">MERCADO / MONEDA</th><th style="width:78px">PRECIO</th><th style="width:62px">VAR. 1D</th><th style="width:76px">TENDENCIA</th><th style="width:128px">SETUP</th><th style="width:72px">VOLUMEN</th><th style="width:78px">RIESGO</th><th style="width:88px">HORIZONTE</th><th style="width:112px">SCORE</th><th style="width:88px">ESTADO</th></tr></thead><tbody id="rtoRows"></tbody></table></div></section>'+
+'<main class="rto-main"><section class="rto-panel"><div class="rto-table-wrap"><table class="rto-table"><thead><tr><th style="width:42px">#</th><th style="width:170px">ACTIVO / TICKER</th><th style="width:120px">MERCADO</th><th style="width:92px">ÚLTIMO</th><th style="width:74px">VAR. %</th><th style="width:120px">TENDENCIA (1D)</th><th style="width:120px">SETUP</th><th style="width:92px">CONVICCIÓN</th><th style="width:98px">ESTADO</th><th style="width:110px">ACCIÓN SUGERIDA</th><th>COMENTARIO</th></tr></thead><tbody id="rtoRows"></tbody></table></div></section>'+
 '<aside class="rto-side"><section class="rto-card"><header><h2>Activo seleccionado</h2><span id="rtoSelectedRank">—</span></header><div id="rtoSelected" class="rto-selected"></div></section><section class="rto-card"><header><h2>Plan de decisión</h2><span>sin ejecución automática</span></header><div id="rtoPlan" class="rto-plan"></div></section><section class="rto-card"><header><h2>Qué significa “Top”</h2><span>metodología</span></header><div id="rtoMethod" class="rto-method"></div></section></aside></main>';
   document.body.appendChild(el);
   const src=q('#rtWatchlistWorkstation .rtw-brand-official');
@@ -857,12 +894,49 @@ function applyKpiFilter(kind){
   renderTableAndDetail();
 }
 function renderFilters(){
-  const defs=[['all','Todos'],['crypto','Crypto'],['cedear','CEDEAR'],['argstock','Acciones AR'],['usa','EE.UU. / ADR'],['bond','Bonos / Letras']];
-  $('rtoFilters').innerHTML=defs.map(x=>'<button data-rto-filter="'+x[0]+'" class="'+(typeFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
+  const count=t=>rows.filter(x=>t==='usa'?(x.type==='stock'||x.type==='adr'):t==='bond'?(x.type==='argbond'||x.type==='bill'):x.type===t).length;
+  const defs=[['all','Todos',rows.length],['crypto','Crypto',count('crypto')],['cedear','CEDEAR',cedearLoading?'…':count('cedear')],['argstock','Acciones AR',count('argstock')],['usa','EE.UU. / ADR',count('usa')],['bond','Bonos / Letras',count('bond')]];
+  $('rtoFilters').innerHTML=defs.map(x=>'<button data-rto-filter="'+x[0]+'" class="'+(typeFilter===x[0]?'active':'')+'">'+x[1]+' <span>('+x[2]+')</span></button>').join('');
   const sig=[['all','Todas'],['buy','Oportunidad'],['near','Posible'],['watch','Seguimiento'],['avoid','Evitar']];
   $('rtoSignalFilters').innerHTML=sig.map(x=>'<button data-rto-signal="'+x[0]+'" class="'+(signalFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
-  qa('[data-rto-filter]').forEach(b=>b.addEventListener('click',()=>{typeFilter=b.dataset.rtoFilter;riskFilter='all';renderKpis();renderFilters();renderTableAndDetail()}));
+  qa('[data-rto-filter]').forEach(b=>b.addEventListener('click',async()=>{
+    typeFilter=b.dataset.rtoFilter;riskFilter='all';renderKpis();renderFilters();renderTableAndDetail();
+    if(typeFilter==='cedear'){
+      await refreshCedearCandidates(false);
+      rows=normalize();renderKpis();renderFilters();renderTableAndDetail();
+    }
+  }));
   qa('[data-rto-signal]').forEach(b=>b.addEventListener('click',()=>{signalFilter=b.dataset.rtoSignal;riskFilter='all';renderKpis();renderFilters();renderTableAndDetail()}));
+}
+function rtoFlag(x){
+  const c=['cedear','argstock','argbond','bill'].includes(x.type)?'AR':['stock','adr'].includes(x.type)?'US':'GL';
+  if(c==='AR')return '<svg viewBox="0 0 28 18"><rect width="28" height="18" fill="#74acdf"/><rect y="6" width="28" height="6" fill="#fff"/><circle cx="14" cy="9" r="2" fill="#f6b40e"/></svg>';
+  if(c==='US')return '<svg viewBox="0 0 28 18"><rect width="28" height="18" fill="#fff"/><g fill="#b22234"><rect y="0" width="28" height="2"/><rect y="4" width="28" height="2"/><rect y="8" width="28" height="2"/><rect y="12" width="28" height="2"/><rect y="16" width="28" height="2"/></g><rect width="12" height="10" fill="#3c3b6e"/></svg>';
+  return '<svg viewBox="0 0 28 18"><rect width="28" height="18" rx="2" fill="#0b3950"/><circle cx="14" cy="9" r="5" fill="none" stroke="#36d8ff"/><path d="M5 9h18M14 2v14" stroke="#36d8ff"/></svg>';
+}
+function rtoSpark(x,w=95,h=25){
+  const v=(x.bars||[]).slice(-20).map(b=>num(b.close)).filter(Number.isFinite);
+  if(v.length<2)return'<span class="rto-nodata">s/d</span>';
+  const lo=Math.min(...v),hi=Math.max(...v),span=hi-lo||1,p=2;
+  const d=v.map((n,i)=>{const xx=p+i*(w-2*p)/(v.length-1),yy=h-p-(n-lo)*(h-2*p)/span;return(i?'L':'M')+xx.toFixed(1)+','+yy.toFixed(1)}).join(' ');
+  const down=v.at(-1)<v[0];
+  return'<svg class="rto-spark '+(down?'down':'')+'" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><path class="area" d="'+d+' L'+(w-2)+','+(h-2)+' L2,'+(h-2)+'Z"/><path class="line" d="'+d+'"/></svg>';
+}
+function rtoScoreRing(n){
+  const v=clamp(Math.round(num(n)||0),0,100),cls=v>=70?'good':v>=50?'mid':'bad';
+  return'<span class="rto-score-ring '+cls+'" style="--score:'+v+'"><b>'+v+'</b></span>';
+}
+function actionFor(x){
+  if(x.status.cls==='buy')return['COMPRAR','buy'];
+  if(x.status.cls==='near')return['VIGILAR','watch'];
+  if(x.status.cls==='avoid')return['EVITAR','sell'];
+  return['MANTENER','hold'];
+}
+function commentFor(x){
+  if(x.status.cls==='buy')return'Cumple condiciones técnicas y de liquidez; validar entrada y riesgo.';
+  if(x.status.cls==='near')return'Cerca de condición válida; esperar confirmación.';
+  if(x.status.cls==='avoid')return'Estructura desfavorable; no priorizar mientras no revierta.';
+  return x.reason||'Sin ventaja suficiente todavía; mantener en seguimiento.';
 }
 function priceText(x){
   if(!Number.isFinite(x.price))return's/d';
@@ -885,22 +959,20 @@ function renderTableAndDetail(){
     shell.dataset.visibleRows=String(list.length);
   }
   $('rtoRows').innerHTML=list.length?list.map((x,i)=>{
-    const rank=rows.filter(r=>r.kind!=='sell').findIndex(r=>r.key===x.key)+1,trendCls=x.trend.key,risk=x.riskMeta;
-    return'<tr data-rto-key="'+esc(x.key)+'" class="'+(x.key===selected?'selected':'')+'">'+
+    const rank=rows.findIndex(r=>r.key===x.key)+1,trendCls=x.trend.key,action=actionFor(x);
+    return'<tr data-rto-key="'+esc(x.key)+'" data-rto-type="'+esc(x.type)+'" class="'+(x.key===selected?'selected':'')+'">'+
       '<td><span class="rto-rank">'+(rank>0?rank:i+1)+'</span></td>'+
-      '<td><span class="rto-asset"><b>'+esc(x.symbol)+'</b><small>'+esc(x.label)+'</small></span></td>'+
-      '<td><span class="rto-tag '+rowTypeClass(x)+'">'+esc(x.meta.classLabel)+'</span></td>'+
-      '<td>'+esc(x.meta.market)+' · '+esc(x.meta.currency)+'</td>'+
-      '<td>'+priceText(x)+'</td>'+
-      '<td class="'+(x.change>0?'rto-up':x.change<0?'rto-down':'rto-flat')+'">'+pct(x.change)+'</td>'+
-      '<td><span class="rto-trend '+trendCls+'">'+x.trend.label+'</span></td>'+
-      '<td title="'+esc(x.reason)+'">'+esc(x.setup)+'</td>'+
-      '<td>'+compactVolume(x.volume)+(Number.isFinite(x.rv)?' · '+fmt(x.rv,1)+'x':'')+'</td>'+
-      '<td><span class="rto-risk '+risk[1]+'">'+risk[0]+'</span></td>'+
-      '<td>'+x.horizon+'</td>'+
-      '<td><span class="rto-score '+(x.score<65?'mid':'')+'"><b>'+x.score+'</b><i><em style="width:'+x.score+'%"></em></i></span></td>'+
-      '<td><span class="rto-status '+x.status.cls+'">'+x.status.label+'</span></td></tr>';
-  }).join(''):'<tr><td colspan="13" class="rto-empty">No hay candidatos que cumplan estos filtros. El Radar no fuerza oportunidades si no aparecen.</td></tr>';
+      '<td><span class="rto-asset rto-asset-watch"><i>'+rtoFlag(x)+'</i><b>'+esc(x.symbol)+'</b><small>'+esc(x.label)+'</small></span></td>'+
+      '<td><span class="rto-market-cell"><b>'+esc(x.meta.classLabel)+'</b><small>'+esc(x.meta.market)+' · '+esc(x.meta.currency)+'</small></span></td>'+
+      '<td class="rto-num">'+priceText(x)+'</td>'+
+      '<td class="rto-num '+(x.change>0?'rto-up':x.change<0?'rto-down':'rto-flat')+'">'+pct(x.change)+'</td>'+
+      '<td class="rto-spark-cell">'+rtoSpark(x)+'</td>'+
+      '<td><span class="rto-setup '+setupClass(String(x.setup||'').toUpperCase())+'">'+esc(x.setup)+'</span></td>'+
+      '<td>'+rtoScoreRing(x.score)+'</td>'+
+      '<td><span class="rto-status '+x.status.cls+'">'+x.status.label+'</span></td>'+
+      '<td><span class="rto-action '+action[1]+'">'+action[0]+'</span></td>'+
+      '<td class="rto-comment" title="'+esc(x.reason)+'">'+esc(commentFor(x))+'</td></tr>';
+  }).join(''):'<tr><td colspan="11" class="rto-empty">'+(cedearLoading&&typeFilter==='cedear'?'Analizando universo completo de CEDEARs con volumen…':'No hay activos que cumplan estos filtros.')+'</td></tr>';
   qa('[data-rto-key]').forEach(tr=>tr.addEventListener('click',()=>{selected=tr.dataset.rtoKey;renderTableAndDetail()}));
   renderDetail();
 }
@@ -936,6 +1008,7 @@ async function refresh(force){
   try{
     await global()?.refresh?.(!!force);
     await refreshDirectCandidates(!!force);
+    if(typeFilter==='cedear'||force)await refreshCedearCandidates(!!force);
     if(window.RadarDailyRadar?.run){
       try{await window.RadarDailyRadar.run(!!force)}catch(e){console.warn('Daily Radar no disponible para ranking',e)}
     }
