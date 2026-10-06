@@ -273,7 +273,7 @@ async function addCustom(){
   const clean=symbol.trim().toUpperCase();if(!clean)return;
   const name=(prompt('Nombre para mostrar:',clean)||clean).trim();
   try{
-    const res=await fetch(`/api/yahoo-batch?symbols=${encodeURIComponent(clean)}&range=6mo&interval=1d&fresh=1&_=${Date.now()}`,{cache:'no-store'});
+    const res=await fetch(`/api/yahoo-batch?symbols=${encodeURIComponent(clean)}&range=1y&interval=1d&fresh=1&_=${Date.now()}`,{cache:'no-store'});
     const j=await res.json(),x=j?.items?.[0];
     if(!res.ok||!x?.ok)throw new Error(x?.error||'Sin datos');
     const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.close));
@@ -481,31 +481,171 @@ const DIRECT_UNIVERSE=[
   {symbol:'VIST',quote:'VIST',label:'Vista Energy ADR',type:'adr',currency:'USD'}
 ];
 
-function directTech(bars){
-  const closes=(bars||[]).map(x=>num(x?.close)).filter(Number.isFinite);
-  if(closes.length<8)return{kind:'wait',label:'SEGUIMIENTO',oppScore:42,setup:'Histórico insuficiente',trend:'Lateral'};
-  const last=closes.at(-1);
-  const ma5=closes.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,closes.length);
-  const ma20=closes.slice(-20).reduce((a,b)=>a+b,0)/Math.min(20,closes.length);
-  const previous=closes.slice(-20,-1);
-  const hi20=previous.length?Math.max(...previous):last;
-  const lo20=previous.length?Math.min(...previous):last;
-  const mom5=closes.length>5&&closes.at(-6)?(last/closes.at(-6)-1)*100:0;
-  if(last>hi20&&ma5>ma20&&mom5>1)return{kind:'buy',label:'OPORTUNIDAD',oppScore:88,setup:'Ruptura con momentum',trend:'Alcista'};
-  if(ma5>ma20&&mom5>.25)return{kind:'near',label:'POSIBLE',oppScore:72,setup:'Tendencia alcista',trend:'Alcista'};
-  if(last<lo20||(ma5<ma20&&mom5<-1))return{kind:'sell',label:'EVITAR',oppScore:22,setup:'Presión bajista',trend:'Bajista'};
-  return{kind:'wait',label:'SEGUIMIENTO',oppScore:50,setup:'Esperar confirmación',trend:ma5>=ma20?'Alcista':'Lateral'};
+function emaSeries(values,period){
+  const v=(values||[]).filter(Number.isFinite);if(!v.length)return[];
+  const k=2/(period+1),out=[v[0]];
+  for(let i=1;i<v.length;i++)out.push(v[i]*k+out[i-1]*(1-k));
+  return out;
 }
+function emaLast(values,period){
+  if((values||[]).filter(Number.isFinite).length<period)return NaN;
+  return emaSeries(values,period).at(-1);
+}
+function rsiLast(values,period=14){
+  const v=(values||[]).filter(Number.isFinite);if(v.length<=period)return NaN;
+  let gains=0,losses=0;
+  for(let i=1;i<=period;i++){const d=v[i]-v[i-1];if(d>=0)gains+=d;else losses-=d}
+  let avgGain=gains/period,avgLoss=losses/period;
+  for(let i=period+1;i<v.length;i++){const d=v[i]-v[i-1],g=d>0?d:0,l=d<0?-d:0;avgGain=(avgGain*(period-1)+g)/period;avgLoss=(avgLoss*(period-1)+l)/period}
+  if(avgLoss===0)return 100;
+  const rs=avgGain/avgLoss;return 100-(100/(1+rs));
+}
+function macdLast(values){
+  const v=(values||[]).filter(Number.isFinite);if(v.length<35)return{line:NaN,signal:NaN,hist:NaN,histPrev:NaN};
+  const e12=emaSeries(v,12),e26=emaSeries(v,26),offset=e12.length-e26.length;
+  const line=e26.map((x,i)=>e12[i+offset]-x),sig=emaSeries(line,9);
+  const hist=line.at(-1)-sig.at(-1),histPrev=line.at(-2)-sig.at(-2);
+  return{line:line.at(-1),signal:sig.at(-1),hist,histPrev};
+}
+function weeklyCloses(bars){
+  const groups=new Map();
+  for(const b of (bars||[])){
+    const t=num(b?.time),c=num(b?.close);if(!Number.isFinite(t)||!Number.isFinite(c))continue;
+    const d=new Date(t*1000),day=d.getUTCDay()||7;
+    const monday=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-day+1));
+    const key=monday.toISOString().slice(0,10);
+    groups.set(key,c);
+  }
+  return[...groups.values()];
+}
+function avgAbsReturnPct(values,n=14){
+  const v=(values||[]).filter(Number.isFinite).slice(-(n+1));if(v.length<5)return NaN;
+  const r=[];for(let i=1;i<v.length;i++)if(v[i-1]>0)r.push(Math.abs(v[i]/v[i-1]-1)*100);
+  return r.length?r.reduce((a,b)=>a+b,0)/r.length:NaN;
+}
+function relativeVolumeFromBars(bars){
+  const v=(bars||[]).slice(-21).map(x=>num(x?.volume)).filter(x=>Number.isFinite(x)&&x>0);
+  if(v.length<6)return NaN;
+  const avg=v.slice(0,-1).reduce((a,b)=>a+b,0)/Math.max(1,v.length-1);
+  return avg>0?v.at(-1)/avg:NaN;
+}
+function technicalEngine(bars,context=50){
+  const clean=(bars||[]).map(b=>({time:num(b?.time),open:num(b?.open),high:num(b?.high),low:num(b?.low),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
+  const closes=clean.map(x=>x.close),last=closes.at(-1);
+  if(closes.length<55||!Number.isFinite(last)){
+    return{kind:'wait',label:'SEGUIMIENTO',oppScore:25,setup:'Histórico insuficiente',trend:'NEUTRAL',reason:'No hay histórico suficiente para EMA 55/200 y confirmación semanal.',analysis:{engine:'TA-v2',sufficient:false,total:25,components:{trend:5,structure:5,momentum:5,volume:5,rr:3,context:2},indicators:{bars:closes.length}}};
+  }
+  const ema10=emaLast(closes,10),ema55=emaLast(closes,55),ema200=emaLast(closes,200);
+  const weekly=weeklyCloses(clean),w10=emaLast(weekly,10),w20=emaLast(weekly,20),weeklyLast=weekly.at(-1);
+  const rsi=rsiLast(closes,14),macd=macdLast(closes),rvol=relativeVolumeFromBars(clean),absRet=avgAbsReturnPct(closes,14);
+  const prev20=closes.slice(-21,-1),prev55=closes.slice(-56,-1),prev120=closes.slice(-121,-1);
+  const hi20=prev20.length?Math.max(...prev20):NaN,lo20=prev20.length?Math.min(...prev20):NaN;
+  const hi55=prev55.length?Math.max(...prev55):NaN,hi120=prev120.length?Math.max(...prev120):NaN;
+  const mom5=closes.length>5&&closes.at(-6)>0?(last/closes.at(-6)-1)*100:NaN;
+  const half1=prev20.slice(0,10),half2=prev20.slice(10);
+  const higherHighs=half1.length&&half2.length&&Math.max(...half2)>Math.max(...half1);
+  const higherLows=half1.length&&half2.length&&Math.min(...half2)>Math.min(...half1);
+  const weeklyBull=Number.isFinite(w10)&&Number.isFinite(w20)&&Number.isFinite(weeklyLast)&&weeklyLast>w20&&w10>w20;
+  const weeklyBear=Number.isFinite(w10)&&Number.isFinite(w20)&&Number.isFinite(weeklyLast)&&weeklyLast<w20&&w10<w20;
+  const dailyBull=Number.isFinite(ema10)&&Number.isFinite(ema55)&&last>ema55&&ema10>ema55;
+  const fullBull=dailyBull&&Number.isFinite(ema200)&&ema55>ema200;
+  const dailyBear=Number.isFinite(ema10)&&Number.isFinite(ema55)&&last<ema55&&ema10<ema55;
+  const breakout=Number.isFinite(hi20)&&last>hi20*1.002;
+  const near10=Number.isFinite(ema10)?Math.abs(last-ema10)/last<=.025:false;
+  const near55=Number.isFinite(ema55)?Math.abs(last-ema55)/last<=.025:false;
+  const pullback=dailyBull&&(near10||near55)&&Number.isFinite(rsi)&&rsi>=44&&rsi<=68&&!breakout;
+  const continuation=dailyBull&&Number.isFinite(ema10)&&last>ema10&&Number.isFinite(mom5)&&mom5>.35&&!breakout&&!pullback;
+  const overextended=(Number.isFinite(rsi)&&rsi>74)||(Number.isFinite(ema10)&&(last/ema10-1)>.08);
+
+  let trendScore=0;
+  if(last>ema55)trendScore+=5;
+  if(ema10>ema55)trendScore+=7;
+  if(Number.isFinite(ema200)&&ema55>ema200)trendScore+=7;
+  if(weeklyBull)trendScore+=6;
+  if(weeklyBear)trendScore=Math.max(0,trendScore-6);
+
+  let structureScore=5,setup='ESPERAR';
+  if(breakout){structureScore=25;setup='RUPTURA'}
+  else if(pullback){structureScore=22;setup='PULLBACK'}
+  else if(continuation){structureScore=18;setup='CONTINUIDAD'}
+  else if(higherHighs&&higherLows&&dailyBull){structureScore=16;setup='ESTRUCTURA ALCISTA'}
+  else if(dailyBear){structureScore=3;setup='ESTRUCTURA BAJISTA'}
+  else if(higherHighs||higherLows){structureScore=11;setup='EN DESARROLLO'}
+
+  let momentumScore=0;
+  if(Number.isFinite(macd.line)&&Number.isFinite(macd.signal)&&macd.line>macd.signal)momentumScore+=6;
+  if(Number.isFinite(macd.hist)&&macd.hist>0)momentumScore+=3;
+  if(Number.isFinite(macd.hist)&&Number.isFinite(macd.histPrev)&&macd.hist>macd.histPrev)momentumScore+=1;
+  if(Number.isFinite(rsi)){
+    if(rsi>=52&&rsi<=68)momentumScore+=5;
+    else if(rsi>=47&&rsi<52)momentumScore+=3;
+    else if(rsi>68&&rsi<=74)momentumScore+=2;
+  }
+  momentumScore=clamp(momentumScore,0,15);
+
+  let volumeScore=5;
+  if(Number.isFinite(rvol)){
+    volumeScore=rvol>=1.5?15:rvol>=1.2?13:rvol>=1?10:rvol>=.8?7:3;
+    if(pullback&&rvol<1)volumeScore=Math.max(volumeScore,9);
+  }
+
+  const supports=[lo20,ema55,breakout?hi20:NaN].filter(v=>Number.isFinite(v)&&v<last*.998);
+  const nearestSupport=supports.length?Math.max(...supports):NaN;
+  const minRiskPct=Math.max(Number.isFinite(absRet)?absRet*1.35:1.5,1.5)/100;
+  const structuralDistance=Number.isFinite(nearestSupport)?(last-nearestSupport):last*minRiskPct;
+  const riskDistance=Math.max(structuralDistance,last*minRiskPct);
+  const stop=last-riskDistance;
+  const resistances=[hi55,hi120].filter(v=>Number.isFinite(v)&&v>last*1.005).sort((a,b)=>a-b);
+  const target=resistances[0]??(last+riskDistance*2);
+  const rr=riskDistance>0&&target>last?(target-last)/riskDistance:0;
+  const rrScore=rr>=2.2?15:rr>=1.8?13:rr>=1.5?10:rr>=1.2?6:2;
+  const contextScore5=clamp(Math.round(clamp(context,0,100)*.05),0,5);
+  const total=clamp(Math.round(trendScore+structureScore+momentumScore+volumeScore+rrScore+contextScore5),0,100);
+  const technicalScore=clamp(Math.round((trendScore+structureScore+momentumScore+volumeScore+rrScore)/.95),0,100);
+
+  const historyOk=closes.length>=200&&weekly.length>=20&&Number.isFinite(ema200);
+  const trendGate=historyOk&&fullBull&&!weeklyBear;
+  const setupGate=structureScore>=18&&(breakout||pullback||continuation);
+  const momentumGate=momentumScore>=9&&Number.isFinite(rsi)&&rsi>=47&&rsi<=74&&Number.isFinite(macd.line)&&macd.line>macd.signal;
+  const volumeGate=Number.isFinite(rvol)&&(breakout?rvol>=1.05:rvol>=.75);
+  const rrGate=rr>=1.5;
+  const buy=trendGate&&setupGate&&momentumGate&&volumeGate&&rrGate&&!overextended&&total>=72;
+  const possible=!buy&&historyOk&&dailyBull&&!weeklyBear&&rr>=1.2&&total>=60&&(setupGate||momentumScore>=8);
+  const avoid=(historyOk&&dailyBear&&weeklyBear)||(rr>0&&rr<1)||(total<38);
+  const kind=buy?'buy':possible?'near':avoid?'sell':'wait';
+  const label=kind==='buy'?'OPORTUNIDAD':kind==='near'?'POSIBLE':kind==='sell'?'EVITAR':'SEGUIMIENTO';
+  const trend=fullBull&&weeklyBull?'ALCISTA':dailyBear&&weeklyBear?'BAJISTA':dailyBull?'ALCISTA':'NEUTRAL';
+  const failures=[];
+  if(!historyOk)failures.push('histórico < 200 ruedas');
+  if(!trendGate)failures.push('tendencia no confirmada D/W');
+  if(!setupGate)failures.push('sin setup de entrada');
+  if(!momentumGate)failures.push('momentum sin confirmar');
+  if(!volumeGate)failures.push('volumen insuficiente');
+  if(!rrGate)failures.push('R/R < 1,5');
+  if(overextended)failures.push('precio extendido');
+  const reason='EMA10 '+(Number.isFinite(ema10)?fmt(ema10,2):'s/d')+' · EMA55 '+(Number.isFinite(ema55)?fmt(ema55,2):'s/d')+' · EMA200 '+(Number.isFinite(ema200)?fmt(ema200,2):'s/d')+' · RSI '+(Number.isFinite(rsi)?fmt(rsi,1):'s/d')+' · MACD '+(Number.isFinite(macd.hist)?(macd.hist>=0?'+':'')+fmt(macd.hist,2):'s/d')+' · RVOL '+(Number.isFinite(rvol)?fmt(rvol,2)+'x':'s/d')+' · R/R '+(Number.isFinite(rr)?fmt(rr,2):'s/d')+(failures.length?' · Falta: '+failures.slice(0,3).join(', '):'');
+  return{
+    kind,label,oppScore:total,setup,trend,reason,
+    analysis:{
+      engine:'TA-v2',sufficient:historyOk,total,technicalScore,
+      components:{trend:trendScore,structure:structureScore,momentum:momentumScore,volume:volumeScore,rr:rrScore,context:contextScore5},
+      indicators:{bars:closes.length,ema10,ema55,ema200,weeklyEma10:w10,weeklyEma20:w20,weeklyTrend:weeklyBull?'ALCISTA':weeklyBear?'BAJISTA':'NEUTRAL',rsi,macd:macd.line,macdSignal:macd.signal,macdHist:macd.hist,relVolume:rvol,momentum5:mom5,support:nearestSupport,resistance:resistances[0]??hi20,stop,target,rr,overextended},
+      gates:{trend:trendGate,setup:setupGate,momentum:momentumGate,volume:volumeGate,rr:rrGate,notExtended:!overextended},
+      failures
+    }
+  };
+}
+function directTech(bars,context=50){return technicalEngine(bars,context)}
 function directRow(meta,market){
   if(!meta||!market)return null;
-  const bars=(market.bars||[]).map(b=>({time:num(b?.time),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
+  const bars=(market.bars||[]).map(b=>({time:num(b?.time),open:num(b?.open),high:num(b?.high),low:num(b?.low),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
   const last=num(market.last??bars.at(-1)?.close),volume=num(market.volume??bars.at(-1)?.volume);
   if(!Number.isFinite(last))return null;
-  const tech=directTech(bars);
+  const tech=directTech(bars,contextScore(meta.type));
   return{
     item:{symbol:meta.symbol,type:meta.type,requestedType:meta.type,label:meta.label,panel:{currency:meta.currency}},
-    status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},
-    trend:tech.trend,setup:tech.setup,marketOnly:true,bars,
+    status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore,reason:tech.reason},
+    trend:tech.trend,setup:tech.setup,analysis:tech.analysis,why:tech.reason,marketOnly:true,bars,
     marketData:{last,changePct:num(market.changePct),volume,bars,source:market.source||'Yahoo Finance'}
   };
 }
@@ -587,18 +727,18 @@ function liquidityFrom(panel,q,bars){
 function cedearCandidateFromMarket(program,panel,q){
   const symbol=String(program?.symbol||panel?.symbol||q?.symbol||'').toUpperCase().replace(/\.BA$/,'');
   if(!symbol||!q?.ok)return null;
-  const bars=(q?.bars||[]).map(b=>({time:num(b?.time),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
+  const bars=(q?.bars||[]).map(b=>({time:num(b?.time),open:num(b?.open),high:num(b?.high),low:num(b?.low),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
   const last=num(q?.last??panel?.trade??panel?.closingPrice);
   if(!Number.isFinite(last)||last<=0)return null;
   const liq=liquidityFrom(panel,q,bars);
   if(!(liq.metric>0))return null;
-  const tech=directTech(bars);
+  const tech=directTech(bars,contextScore('cedear'));
   const label=String(program?.underlying||program?.program||panel?.description||panel?.securityDescription||symbol);
   const panelOut={...(panel||{}),symbol,denominationCcy:'ARS',volumeAmount:liq.metric,program:program?.program||'',underlying:program?.underlying||'',ratioText:program?.ratioText||'',liquidityMetric:liq.metric,liquidityMedian20:liq.median20,tradedDays:liq.tradedDays};
   return{
     item:{symbol,type:'cedear',requestedType:'cedear',label,panel:panelOut},
-    status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},
-    trend:tech.trend,setup:tech.setup,bars,marketOnly:true,cedearUniverse:true,
+    status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore,reason:tech.reason},
+    trend:tech.trend,setup:tech.setup,analysis:tech.analysis,why:tech.reason,bars,marketOnly:true,cedearUniverse:true,
     _liquidityMetric:liq.metric,_tradedDays:liq.tradedDays,_bymaTurnover:liq.bymaTurnover,
     marketData:{last,changePct:num(q?.changePct),volume:liq.metric,bars,source:q?.source||panel?.source||'Yahoo Finance / BYMA'}
   };
@@ -633,7 +773,7 @@ async function refreshCedearCandidates(force=false){
     for(let ci=0;ci<chunks.length;ci++){
       const chunk=chunks[ci];
       try{
-        const q=await fetchJsonNoStore('/api/yahoo-batch?symbols='+encodeURIComponent(chunk.map(x=>x+'.BA').join(','))+'&range=6mo&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now());
+        const q=await fetchJsonNoStore('/api/yahoo-batch?symbols='+encodeURIComponent(chunk.map(x=>x+'.BA').join(','))+'&range=1y&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now());
         const quotes=new Map((q.items||[]).map(x=>[String(x.symbol||'').toUpperCase().replace(/\.BA$/,''),x]));
         for(const symbol of chunk){
           const row=cedearCandidateFromMarket(officialMap.get(symbol),bymaMap.get(symbol),quotes.get(symbol));
@@ -684,7 +824,7 @@ async function refreshCedearCandidates(force=false){
 async function refreshDirectCandidates(force=false){
   const symbols=DIRECT_UNIVERSE.map(x=>x.quote);
   try{
-    const r=await fetch('/api/yahoo-batch?symbols='+encodeURIComponent(symbols.join(','))+'&range=6mo&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now(),{cache:'no-store'});
+    const r=await fetch('/api/yahoo-batch?symbols='+encodeURIComponent(symbols.join(','))+'&range=1y&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now(),{cache:'no-store'});
     if(!r.ok)throw new Error('Yahoo HTTP '+r.status);
     const j=await r.json(),bySymbol=new Map((j.items||[]).map(x=>[String(x.symbol||'').toUpperCase(),x]));
     const next=[];
@@ -693,7 +833,7 @@ async function refreshDirectCandidates(force=false){
       if(!x?.ok&&!Number.isFinite(num(x?.last)))continue;
       const market={
         last:num(x.last),changePct:num(x.changePct),volume:num(x.volume),source:x.source||j.source||'Yahoo Finance',
-        bars:(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.close))
+        bars:(x.bars||[]).map(b=>({time:num(b.time),open:num(b.open),high:num(b.high),low:num(b.low),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.close))
       };
       const row=directRow(meta,market);if(row)next.push(row);
     }
