@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const num=v=>{const n=Number(v);return Number.isFinite(n)?n:NaN};
+const num=v=>{if(v===null||v===undefined||v==='')return NaN;const n=Number(v);return Number.isFinite(n)?n:NaN};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const fmt=(v,d=2)=>Number.isFinite(num(v))?new Intl.NumberFormat('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(num(v)):'s/d';
 const pct=v=>Number.isFinite(num(v))?`${num(v)>=0?'+':''}${fmt(v,2)}%`:'—';
@@ -442,7 +442,7 @@ if(window.RadarTopOpportunities)return;
 const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
-const num=v=>{const n=Number(v);return Number.isFinite(n)?n:NaN};
+const num=v=>{if(v===null||v===undefined||v==='')return NaN;const n=Number(v);return Number.isFinite(n)?n:NaN};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,d=2)=>Number.isFinite(num(v))?new Intl.NumberFormat('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(num(v)):'s/d';
@@ -451,7 +451,7 @@ const global=()=>window.RadarGlobalCommandCenter;
 const gst=()=>global()?.state;
 const daily=()=>window.RadarDailyRadar?.state;
 
-let typeFilter='all',signalFilter='all',riskFilter='all',search='',selected='',rows=[],refreshing=false,directCandidates=[],cedearCandidates=[],cedearLoading=false,cedearLoadedAt=0,cedearMeta={count:0,analyzedCount:0,source:''};
+let typeFilter='all',signalFilter='all',riskFilter='all',search='',selected='',rows=[],refreshing=false,directCandidates=[],cedearCandidates=[],cedearLoading=false,cedearLoadedAt=0,cedearRefreshPromise=null,cedearMeta={count:0,analyzedCount:0,source:'',officialCount:0,liquidityFloor:0},cedearProgress={phase:'idle',total:0,done:0,eligible:0,pct:0,message:'',error:''};
 
 const TYPE_META={
   crypto:['Crypto','Crypto','USDT'],
@@ -532,45 +532,154 @@ function universeCandidates(){
     if(row){row.item.panel=panel;out.push(row)}
   };
   (st.universes.equities||[]).slice(0,40).forEach(x=>add(x,'argstock'));
-  (st.universes.cedears||[])
-    .filter(x=>(num(x?.volume)||0)>0||(num(x?.tradeVolume)||0)>0||(num(x?.volumeAmount)||0)>0)
-    .forEach(x=>add(x,'cedear'));
   (st.universes.fixed||[]).slice(0,40).forEach(x=>add(x,x?.category==='LECAP/BONCAP'?'bill':'argbond'));
   return out;
 }
-function cedearCandidateFromApi(x){
-  const symbol=String(x?.symbol||'').toUpperCase(),a=x?.analysis||{},bars=(x?.bars||[]).map(b=>({time:num(b?.time),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
-  const last=num(x?.trade??x?.closingPrice),volume=num(x?.volumeAmount??x?.tradeVolume??x?.volume);
-  if(!symbol||!Number.isFinite(last)||!(volume>0))return null;
+function median(values){
+  const a=(values||[]).filter(Number.isFinite).sort((x,y)=>x-y);
+  if(!a.length)return NaN;
+  const m=Math.floor(a.length/2);
+  return a.length%2?a[m]:(a[m-1]+a[m])/2;
+}
+function setCedearProgress(patch={}){
+  cedearProgress={...cedearProgress,...patch};
+  if(cedearProgress.total>0)cedearProgress.pct=Math.min(100,Math.round((cedearProgress.done/cedearProgress.total)*100));
+  const shell=$('rtTopOpportunities');
+  if(shell){
+    shell.dataset.cedearLoading=String(cedearLoading);
+    shell.dataset.cedearProgress=String(cedearProgress.pct||0);
+    shell.dataset.cedearAnalyzed=String(cedearProgress.done||0);
+    shell.dataset.cedearUniverseTotal=String(cedearProgress.total||0);
+    shell.dataset.cedearUniverseCount=String(cedearCandidates.length);
+    shell.dataset.cedearPhase=cedearProgress.phase||'idle';
+  }
+  renderCedearProgress();
+}
+function renderCedearProgress(){
+  const el=$('rtoProgress');if(!el)return;
+  const p=cedearProgress,total=p.total||0,done=p.done||0,left=Math.max(0,total-done);
+  const show=cedearLoading||p.phase==='complete'||p.phase==='error';
+  el.hidden=!show;
+  if(!show)return;
+  const title=p.phase==='complete'?'CEDEARs listos':p.phase==='error'?'CEDEARs con error':p.phase==='universe'?'Cargando universo oficial de CEDEARs':'Analizando CEDEARs líquidos';
+  const detail=p.phase==='complete'
+    ?(cedearCandidates.length+' líquidos analizados de '+total+' programas oficiales')
+    :p.phase==='error'
+      ?(p.error||'No se pudo completar el universo')
+      :(done+' / '+total+' analizados · faltan '+left+' · '+(p.eligible||0)+' con liquidez verificada');
+  const floor=cedearMeta.liquidityFloor>0?' · piso liquidez '+compactVolume(cedearMeta.liquidityFloor):'';
+  el.innerHTML='<div class="rto-progress-copy"><b>'+esc(title)+'</b><span>'+esc(detail)+(p.phase==='complete'?esc(floor):'')+'</span></div><div class="rto-progress-track"><i style="width:'+(p.phase==='complete'?100:(p.pct||0))+'%"></i></div><strong>'+(p.phase==='complete'?'100%':(p.pct||0)+'%')+'</strong>';
+  const b=$('rtoRefresh');
+  if(b&&cedearLoading)b.textContent='Analizando '+(p.pct||0)+'%';
+}
+function liquidityFrom(panel,q,bars){
+  const bymaTurnover=num(panel?.volumeAmount);
+  const currentVolume=num(q?.volume),last=num(q?.last);
+  const yahooTurnover=Number.isFinite(currentVolume)&&Number.isFinite(last)&&currentVolume>0&&last>0?currentVolume*last:NaN;
+  const daily=(bars||[]).slice(-20).map(b=>{
+    const c=num(b?.close),v=num(b?.volume);
+    return Number.isFinite(c)&&Number.isFinite(v)&&c>0&&v>0?c*v:NaN;
+  }).filter(Number.isFinite);
+  const med=median(daily);
+  const metric=Math.max(Number.isFinite(bymaTurnover)?bymaTurnover:0,Number.isFinite(yahooTurnover)?yahooTurnover:0,Number.isFinite(med)?med:0);
+  return{metric,bymaTurnover,yahooTurnover,median20:med,tradedDays:daily.length};
+}
+function cedearCandidateFromMarket(program,panel,q){
+  const symbol=String(program?.symbol||panel?.symbol||q?.symbol||'').toUpperCase().replace(/\.BA$/,'');
+  if(!symbol||!q?.ok)return null;
+  const bars=(q?.bars||[]).map(b=>({time:num(b?.time),close:num(b?.close),volume:num(b?.volume)})).filter(b=>Number.isFinite(b.close));
+  const last=num(q?.last??panel?.trade??panel?.closingPrice);
+  if(!Number.isFinite(last)||last<=0)return null;
+  const liq=liquidityFrom(panel,q,bars);
+  if(!(liq.metric>0))return null;
+  const tech=directTech(bars);
+  const label=String(program?.underlying||program?.program||panel?.description||panel?.securityDescription||symbol);
+  const panelOut={...(panel||{}),symbol,denominationCcy:'ARS',volumeAmount:liq.metric,program:program?.program||'',underlying:program?.underlying||'',ratioText:program?.ratioText||'',liquidityMetric:liq.metric,liquidityMedian20:liq.median20,tradedDays:liq.tradedDays};
   return{
-    item:{symbol,type:'cedear',requestedType:'cedear',label:String(x?.description||x?.securityDescription||symbol),panel:x},
-    status:{kind:String(a.kind||'wait'),label:String(a.label||'SEGUIMIENTO'),oppScore:num(a.oppScore)},
-    trend:String(a.trend||'Lateral'),setup:String(a.setup||'Esperar confirmación'),bars,marketOnly:true,cedearUniverse:true,
-    marketData:{last,changePct:num(x?.changePct),volume,bars,source:x?.historySource||x?.source||'BYMA'}
+    item:{symbol,type:'cedear',requestedType:'cedear',label,panel:panelOut},
+    status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},
+    trend:tech.trend,setup:tech.setup,bars,marketOnly:true,cedearUniverse:true,
+    _liquidityMetric:liq.metric,_tradedDays:liq.tradedDays,_bymaTurnover:liq.bymaTurnover,
+    marketData:{last,changePct:num(q?.changePct),volume:liq.metric,bars,source:q?.source||panel?.source||'Yahoo Finance / BYMA'}
   };
 }
+async function fetchJsonNoStore(url){
+  const r=await fetch(url,{cache:'no-store'});
+  if(!r.ok)throw new Error('HTTP '+r.status+' '+url);
+  return r.json();
+}
 async function refreshCedearCandidates(force=false){
-  if(cedearLoading)return cedearCandidates;
+  if(cedearLoading&&cedearRefreshPromise)return cedearRefreshPromise;
   if(!force&&cedearCandidates.length&&Date.now()-cedearLoadedAt<5*60*1000)return cedearCandidates;
   cedearLoading=true;
-  const shell=$('rtTopOpportunities');if(shell)shell.dataset.cedearLoading='true';
-  try{
-    const r=await fetch('/api/byma/cedears-analysis?fresh='+(force?'1':'0')+'&_='+Date.now(),{cache:'no-store'});
-    if(!r.ok)throw new Error('CEDEAR HTTP '+r.status);
-    const j=await r.json(),next=(j.items||[]).map(cedearCandidateFromApi).filter(Boolean);
-    if(next.length){
-      cedearCandidates=next;cedearLoadedAt=Date.now();
-      cedearMeta={count:num(j.count)||next.length,analyzedCount:num(j.analyzedCount)||0,source:String(j.source||'BYMA')};
+  setCedearProgress({phase:'universe',total:0,done:0,eligible:0,pct:0,message:'',error:''});
+  cedearRefreshPromise=(async()=>{
+    const [programResult,bymaResult]=await Promise.allSettled([
+      fetchJsonNoStore('/api/cedear/programs?_='+Date.now()),
+      fetchJsonNoStore('/api/byma/cedears?liquid=0&_='+Date.now())
+    ]);
+    const programs=programResult.status==='fulfilled'&&Array.isArray(programResult.value?.items)?programResult.value.items:[];
+    const bymaItems=bymaResult.status==='fulfilled'&&Array.isArray(bymaResult.value?.items)?bymaResult.value.items:[];
+    const officialMap=new Map(programs.map(x=>[String(x.symbol||'').toUpperCase(),x]).filter(x=>x[0]));
+    const bymaMap=new Map(bymaItems.map(x=>[String(x.symbol||'').toUpperCase(),x]).filter(x=>x[0]));
+    let symbols=officialMap.size?[...officialMap.keys()]:[...bymaMap.keys()];
+    symbols=[...new Set(symbols)].filter(x=>/^[A-Z0-9.\-]{1,12}$/.test(x)).sort();
+    if(!symbols.length)throw new Error('No se pudo obtener el universo oficial de CEDEARs');
+    cedearMeta={...cedearMeta,officialCount:symbols.length,source:officialMap.size?'Banco Comafi + BYMA + Yahoo':'BYMA + Yahoo'};
+    setCedearProgress({phase:'analysis',total:symbols.length,done:0,eligible:0});
+
+    const chunks=[];for(let i=0;i<symbols.length;i+=40)chunks.push(symbols.slice(i,i+40));
+    const provisional=[];
+    for(let ci=0;ci<chunks.length;ci++){
+      const chunk=chunks[ci];
+      try{
+        const q=await fetchJsonNoStore('/api/yahoo-batch?symbols='+encodeURIComponent(chunk.map(x=>x+'.BA').join(','))+'&range=6mo&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now());
+        const quotes=new Map((q.items||[]).map(x=>[String(x.symbol||'').toUpperCase().replace(/\.BA$/,''),x]));
+        for(const symbol of chunk){
+          const row=cedearCandidateFromMarket(officialMap.get(symbol),bymaMap.get(symbol),quotes.get(symbol));
+          if(row)provisional.push(row);
+        }
+      }catch(e){console.warn('CEDEAR batch '+(ci+1),e)}
+      const done=Math.min(symbols.length,(ci+1)*40);
+      const positive=provisional.filter(x=>x._liquidityMetric>0);
+      cedearCandidates=[...positive];
+      setCedearProgress({phase:'analysis',total:symbols.length,done,eligible:positive.length});
+      if(!$('rtTopOpportunities')?.hidden){
+        rows=normalize();renderKpis();renderFilters();renderTableAndDetail();
+      }
     }
-  }catch(e){
-    console.warn('Top oportunidades CEDEAR',e);
-    const fallback=universeCandidates().filter(x=>typeOf(x)==='cedear');
-    if(fallback.length)cedearCandidates=fallback;
-  }finally{
-    cedearLoading=false;
-    const sh=$('rtTopOpportunities');if(sh){sh.dataset.cedearLoading='false';sh.dataset.cedearUniverseCount=String(cedearCandidates.length)}
-  }
-  return cedearCandidates;
+
+    const metrics=provisional.map(x=>x._liquidityMetric).filter(x=>Number.isFinite(x)&&x>0);
+    const med=median(metrics);
+    let floor=Number.isFinite(med)?Math.max(1000000,med*.08):1000000;
+    let eligible=provisional.filter(x=>x._liquidityMetric>=floor&&(x._tradedDays>=5||x._bymaTurnover>=floor));
+    if(eligible.length<Math.min(20,provisional.length)){
+      const sorted=[...provisional].sort((a,b)=>b._liquidityMetric-a._liquidityMetric);
+      const fallbackFloor=sorted[Math.min(sorted.length-1,Math.max(0,Math.min(19,sorted.length-1)))]?._liquidityMetric;
+      if(Number.isFinite(fallbackFloor)&&fallbackFloor>0){
+        floor=Math.min(floor,fallbackFloor);
+        eligible=provisional.filter(x=>x._liquidityMetric>=floor);
+      }
+    }
+    cedearCandidates=eligible.sort((a,b)=>b._liquidityMetric-a._liquidityMetric);
+    cedearLoadedAt=Date.now();
+    cedearMeta={...cedearMeta,count:cedearCandidates.length,analyzedCount:provisional.length,liquidityFloor:floor};
+    setCedearProgress({phase:'complete',total:symbols.length,done:symbols.length,eligible:cedearCandidates.length,pct:100});
+    return cedearCandidates;
+  })().catch(e=>{
+    console.error('Top oportunidades CEDEAR',e);
+    cedearCandidates=[];
+    setCedearProgress({phase:'error',error:String(e?.message||e),done:0,eligible:0});
+    return cedearCandidates;
+  }).finally(()=>{
+    cedearLoading=false;cedearRefreshPromise=null;
+    const sh=$('rtTopOpportunities');if(sh)sh.dataset.cedearLoading='false';
+    if(!$('rtTopOpportunities')?.hidden){
+      rows=normalize();renderKpis();renderFilters();renderTableAndDetail();renderCedearProgress();
+    }
+    const b=$('rtoRefresh');if(b&&!refreshing){b.disabled=false;b.textContent='↻ Actualizar ranking'}
+  });
+  return cedearRefreshPromise;
 }
 async function refreshDirectCandidates(force=false){
   const symbols=DIRECT_UNIVERSE.map(x=>x.quote);
@@ -759,15 +868,15 @@ function labelOf(r,symbol){
   return String(r?.item?.label||r?.item?.panel?.description||r?.item?.panel?.securityDescription||symbol);
 }
 function dedupeResults(){
-  const pool=[
+  const legacy=[
     ...(gst()?.opportunityLeaders||[]),
     ...(daily()?.results||[]),
     ...(daily()?.rf||[]),
     ...directCandidates,
-    ...cedearCandidates,
     ...globalMarketCandidates(),
     ...universeCandidates()
-  ].filter(r=>r?.item?.symbol);
+  ].filter(r=>r?.item?.symbol&&typeOf(r)!=='cedear');
+  const pool=[...legacy,...cedearCandidates].filter(r=>r?.item?.symbol);
   const map=new Map();
   for(const r of pool){
     const symbol=symbolOf(r),type=typeOf(r);
@@ -829,6 +938,7 @@ function mount(){
 '<section class="rto-hero"><div class="rto-hero-copy"><div class="rto-hero-icon">◆</div><div><h1>Top de Oportunidades</h1><p>Activos donde el Radar detecta mejor combinación de <b>señal técnica, liquidez, riesgo y contexto</b>. Oportunidad no equivale a recomendación automática.</p></div></div><div class="rto-hero-actions"><button id="rtoRefresh" class="rto-btn primary">↻ Actualizar ranking</button><button id="rtoBack" class="rto-btn">← Volver a Watchlist</button></div></section>'+
 '<section id="rtoKpis" class="rto-kpis"></section>'+
 '<section class="rto-toolbar"><div id="rtoFilters" class="rto-filters"></div><div id="rtoSignalFilters" class="rto-signal-filters"></div><button id="rtoMethodBtn" class="rto-btn">Cómo se ordena</button></section>'+
+'<section id="rtoProgress" class="rto-progress" hidden></section>'+
 '<main class="rto-main"><section class="rto-panel"><div class="rto-table-wrap"><table class="rto-table"><thead><tr><th style="width:42px">#</th><th style="width:170px">ACTIVO / TICKER</th><th style="width:120px">MERCADO</th><th style="width:92px">ÚLTIMO</th><th style="width:74px">VAR. %</th><th style="width:120px">TENDENCIA (1D)</th><th style="width:120px">SETUP</th><th style="width:92px">CONVICCIÓN</th><th style="width:98px">ESTADO</th><th style="width:110px">ACCIÓN SUGERIDA</th><th>COMENTARIO</th></tr></thead><tbody id="rtoRows"></tbody></table></div></section>'+
 '<aside class="rto-side"><section class="rto-card"><header><h2>Activo seleccionado</h2><span id="rtoSelectedRank">—</span></header><div id="rtoSelected" class="rto-selected"></div></section><section class="rto-card"><header><h2>Plan de decisión</h2><span>sin ejecución automática</span></header><div id="rtoPlan" class="rto-plan"></div></section><section class="rto-card"><header><h2>Qué significa “Top”</h2><span>metodología</span></header><div id="rtoMethod" class="rto-method"></div></section></aside></main>';
   document.body.appendChild(el);
@@ -858,7 +968,7 @@ function render(){
   if($('rtTopOpportunities')?.hidden)return;
   rows=normalize();
   if(!selected||!rows.some(x=>x.key===selected))selected=rows.find(x=>x.kind!=='sell')?.key||rows[0]?.key||'';
-  renderKpis();renderFilters();renderTableAndDetail();tick();
+  renderKpis();renderFilters();renderTableAndDetail();renderCedearProgress();tick();
 }
 function renderKpis(){
   const s=summary(),tone=s.avg<40?'good':s.avg<67?'warn':'bad',risk=riskLabel(s.avg)[0];
@@ -895,15 +1005,15 @@ function applyKpiFilter(kind){
 }
 function renderFilters(){
   const count=t=>rows.filter(x=>t==='usa'?(x.type==='stock'||x.type==='adr'):t==='bond'?(x.type==='argbond'||x.type==='bill'):x.type===t).length;
-  const defs=[['all','Todos',rows.length],['crypto','Crypto',count('crypto')],['cedear','CEDEAR',cedearLoading?'…':count('cedear')],['argstock','Acciones AR',count('argstock')],['usa','EE.UU. / ADR',count('usa')],['bond','Bonos / Letras',count('bond')]];
+  const defs=[['all','Todos',rows.length],['crypto','Crypto',count('crypto')],['cedear','CEDEAR',cedearLoading?(cedearProgress.eligible+'/'+(cedearProgress.total||'…')):count('cedear')],['argstock','Acciones AR',count('argstock')],['usa','EE.UU. / ADR',count('usa')],['bond','Bonos / Letras',count('bond')]];
   $('rtoFilters').innerHTML=defs.map(x=>'<button data-rto-filter="'+x[0]+'" class="'+(typeFilter===x[0]?'active':'')+'">'+x[1]+' <span>('+x[2]+')</span></button>').join('');
   const sig=[['all','Todas'],['buy','Oportunidad'],['near','Posible'],['watch','Seguimiento'],['avoid','Evitar']];
   $('rtoSignalFilters').innerHTML=sig.map(x=>'<button data-rto-signal="'+x[0]+'" class="'+(signalFilter===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
   qa('[data-rto-filter]').forEach(b=>b.addEventListener('click',async()=>{
     typeFilter=b.dataset.rtoFilter;riskFilter='all';renderKpis();renderFilters();renderTableAndDetail();
     if(typeFilter==='cedear'){
-      await refreshCedearCandidates(false);
-      rows=normalize();renderKpis();renderFilters();renderTableAndDetail();
+      refreshCedearCandidates(false);
+      renderCedearProgress();
     }
   }));
   qa('[data-rto-signal]').forEach(b=>b.addEventListener('click',()=>{signalFilter=b.dataset.rtoSignal;riskFilter='all';renderKpis();renderFilters();renderTableAndDetail()}));
@@ -1032,6 +1142,7 @@ function open(){
   const el=$('rtTopOpportunities');if(!el)return;
   window.RadarWatchlistWorkstation?.close?.();
   el.hidden=false;document.body.classList.add('rto-open');render();tick();
+  if(!cedearCandidates.length||Date.now()-cedearLoadedAt>=5*60*1000)refreshCedearCandidates(false);
   const d=daily();if(!rows.length||!d?.lastRun||!directCandidates.length)refresh(false);
 }
 function close(){
