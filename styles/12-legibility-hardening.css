@@ -263,3 +263,37 @@ html body #rtTopOpportunities[data-cedear-loading="true"] [data-rto-filter="cede
   html body #rtTopOpportunities .rto-table{min-width:1120px!important}
   html body #rtTopOpportunities .rto-asset-watch{grid-template-columns:26px 54px minmax(0,1fr)!important;gap:5px!important}
 }
+
+
+/* ---------- CEDEAR analysis progress ---------- */
+html body #rtTopOpportunities .rto-progress{
+  min-height:42px!important;margin:0 0 8px!important;padding:7px 10px!important;
+  display:grid!important;grid-template-columns:minmax(260px,1fr) minmax(240px,520px) 58px!important;
+  align-items:center!important;gap:12px!important;border:1px solid #0d5874!important;border-radius:5px!important;
+  background:linear-gradient(180deg,#062031,#041722)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important
+}
+html body #rtTopOpportunities .rto-progress[hidden]{display:none!important}
+html body #rtTopOpportunities .rto-progress-copy{display:flex!important;flex-direction:column!important;min-width:0!important}
+html body #rtTopOpportunities .rto-progress-copy b{font-size:10.5px!important;color:#dff7ff!important;line-height:1.15!important}
+html body #rtTopOpportunities .rto-progress-copy span{
+  margin-top:3px!important;font-size:9px!important;color:#86a6b8!important;line-height:1.2!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important
+}
+html body #rtTopOpportunities .rto-progress-track{
+  height:8px!important;overflow:hidden!important;border:1px solid #14506b!important;border-radius:999px!important;background:#031018!important
+}
+html body #rtTopOpportunities .rto-progress-track i{
+  display:block!important;height:100%!important;min-width:0!important;border-radius:999px!important;
+  background:linear-gradient(90deg,#11a8df,#23e69b)!important;box-shadow:0 0 10px rgba(35,230,155,.35)!important;
+  transition:width .18s ease!important
+}
+html body #rtTopOpportunities .rto-progress>strong{
+  text-align:right!important;font-size:11px!important;color:#61e9ff!important;font-variant-numeric:tabular-nums!important
+}
+html body #rtTopOpportunities[data-cedear-phase="complete"] .rto-progress{border-color:#14704f!important}
+html body #rtTopOpportunities[data-cedear-phase="error"] .rto-progress{border-color:#8b3543!important;background:#261017!important}
+html body #rtTopOpportunities[data-cedear-phase="error"] .rto-progress-track i{background:#ff586a!important}
+@media(max-width:1200px){
+  html body #rtTopOpportunities .rto-progress{grid-template-columns:minmax(220px,1fr) minmax(180px,360px) 52px!important}
+  html body #rtTopOpportunities .rto-progress-copy span{font-size:8.5px!important}
+}
