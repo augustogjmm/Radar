@@ -372,6 +372,74 @@ async function bymaCedears(url){
   if(liquidOnly&&liquidCount)items=items.filter(x=>(x.volume||0)>0||(x.tradeVolume||0)>0||(x.volumeAmount||0)>0);
   return {source,updated:new Date().toISOString(),liquidOnly,liquidCount,count:items.length,rawCount:rows.length,filterMode:fallback?'YAHOO_FALLBACK':'WEB+ARS+24hs',fallback,errors:r.errors||[],items};
 }
+
+function cedearTechnicalAnalysis(bars){
+  const closes=(bars||[]).map(x=>num(x?.close)).filter(x=>x!==null&&Number.isFinite(x));
+  if(closes.length<8)return{kind:'wait',label:'SEGUIMIENTO',oppScore:42,setup:'Histórico insuficiente',trend:'Lateral'};
+  const last=closes.at(-1);
+  const ma5=closes.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,closes.length);
+  const ma20=closes.slice(-20).reduce((a,b)=>a+b,0)/Math.min(20,closes.length);
+  const previous=closes.slice(-20,-1),hi20=previous.length?Math.max(...previous):last,lo20=previous.length?Math.min(...previous):last;
+  const mom5=closes.length>5&&closes.at(-6)?(last/closes.at(-6)-1)*100:0;
+  if(last>hi20&&ma5>ma20&&mom5>1)return{kind:'buy',label:'OPORTUNIDAD',oppScore:88,setup:'Ruptura con momentum',trend:'Alcista'};
+  if(ma5>ma20&&mom5>.25)return{kind:'near',label:'POSIBLE',oppScore:72,setup:'Tendencia alcista',trend:'Alcista'};
+  if(last<lo20||(ma5<ma20&&mom5<-1))return{kind:'sell',label:'EVITAR',oppScore:22,setup:'Presión bajista',trend:'Bajista'};
+  return{kind:'wait',label:'SEGUIMIENTO',oppScore:50,setup:'Esperar confirmación',trend:ma5>=ma20?'Alcista':'Lateral'};
+}
+async function bymaCedearsAnalysis(url){
+  const force=url.searchParams.get('fresh')==='1';
+  const u=new URL('https://radar.local/api/byma/cedears');u.searchParams.set('liquid','1');
+  const universe=await bymaCedears(u);
+  const liquid=(universe.items||[]).filter(x=>(num(x.volume)||0)>0||(num(x.tradeVolume)||0)>0||(num(x.volumeAmount)||0)>0);
+  if(!liquid.length)return{source:universe.source,updated:new Date().toISOString(),count:0,liquidCount:0,fallback:!!universe.fallback,items:[]};
+
+  const chunks=[];
+  for(let i=0;i<liquid.length;i+=40)chunks.push(liquid.slice(i,i+40));
+  const batchResults=await Promise.allSettled(chunks.map(async chunk=>{
+    const b=new URL('https://radar.local/api/yahoo-batch');
+    b.searchParams.set('symbols',chunk.map(x=>String(x.symbol||'').toUpperCase()+'.BA').join(','));
+    b.searchParams.set('range','6mo');b.searchParams.set('interval','1d');
+    if(force)b.searchParams.set('fresh','1');
+    return yahooBatch(b);
+  }));
+  const market=new Map();
+  for(const result of batchResults){
+    if(result.status!=='fulfilled')continue;
+    for(const q of (result.value?.items||[])){
+      const raw=String(q?.symbol||'').toUpperCase(),symbol=raw.replace(/\.BA$/,'');
+      if(symbol)market.set(symbol,q);
+    }
+  }
+  const items=liquid.map(panel=>{
+    const symbol=String(panel.symbol||'').toUpperCase(),q=market.get(symbol);
+    const bars=(q?.bars||[]).slice(-60).map(b=>({time:Number(b.time),close:num(b.close),volume:num(b.volume)||0})).filter(b=>Number.isFinite(b.time)&&b.close!==null&&Number.isFinite(b.close));
+    const analysis=cedearTechnicalAnalysis(bars);
+    const last=num(panel.trade??panel.closingPrice)??num(q?.last);
+    const changePct=num(q?.changePct);
+    return{
+      ...panel,
+      symbol,
+      trade:last,
+      closingPrice:last,
+      changePct,
+      bars,
+      analysis,
+      historySource:q?.source||'Sin histórico externo',
+      historyOk:bars.length>=8,
+      source:panel.source||universe.source
+    };
+  }).sort((a,b)=>(num(b.volumeAmount)||0)-(num(a.volumeAmount)||0)||String(a.symbol).localeCompare(String(b.symbol)));
+  return{
+    source:universe.source+' + Yahoo Finance histórico',
+    updated:new Date().toISOString(),
+    count:items.length,
+    liquidCount:liquid.length,
+    fallback:!!universe.fallback,
+    analyzedCount:items.filter(x=>x.historyOk).length,
+    items
+  };
+}
+
 function aggregateBymaUdf(j,mode){
   if(!j||j.s!=='ok'||!Array.isArray(j.t)||!j.t.length||!['week','month'].includes(mode))return j;
   const groups=new Map();
@@ -701,6 +769,7 @@ async function handler(req,res){
     if(p==='/api/binance/universe')return send(res,200,await binanceUniverse(url));
     if(p==='/api/byma/equities')return send(res,200,await bymaEquities(url));
     if(p==='/api/byma/cedears')return send(res,200,await bymaCedears(url));
+    if(p==='/api/byma/cedears-analysis')return send(res,200,await bymaCedearsAnalysis(url),{'cache-control':'no-store, max-age=0'});
     if(p==='/api/byma/history'||p==='/api/byma/scan-history')return send(res,200,await bymaHistory(url));
     if(p==='/api/byma/quote')return send(res,200,await bymaQuote(url));
     if(p==='/api/byma/fixed-income')return send(res,200,await bymaFixedIncome(url));
