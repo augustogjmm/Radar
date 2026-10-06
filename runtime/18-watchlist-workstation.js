@@ -575,14 +575,15 @@ function technicalEngine(bars,context=50){
   const maxBreakoutDistancePct=Number.isFinite(atrPct)?clamp(atrPct*.75,1.0,2.8):1.8;
   const freshBreakout=breakoutNow&&breakoutDistancePct<=maxBreakoutDistancePct;
 
-  const distEma10Pct=Number.isFinite(ema10)?Math.max(0,(last/ema10-1)*100):NaN;
+  const distEma10AbsPct=Number.isFinite(ema10)?Math.abs(last/ema10-1)*100:NaN;
+  const distAboveEma10Pct=Number.isFinite(ema10)?Math.max(0,(last/ema10-1)*100):NaN;
   const distEma55Pct=Number.isFinite(ema55)?Math.abs(last/ema55-1)*100:NaN;
-  const pullbackZone=dailyBull&&((Number.isFinite(distEma10Pct)&&distEma10Pct<=Math.max(2.2,(atrPct||1.5)*.9))||(Number.isFinite(distEma55Pct)&&distEma55Pct<=Math.max(2.5,(atrPct||1.5))));
+  const pullbackZone=dailyBull&&((Number.isFinite(distEma10AbsPct)&&distEma10AbsPct<=Math.max(2.2,(atrPct||1.5)*.9))||(Number.isFinite(distEma55Pct)&&distEma55Pct<=Math.max(2.5,(atrPct||1.5))));
   const lastBar=clean.at(-1)||{},bullishReaction=(Number.isFinite(lastBar.open)&&last>lastBar.open)||(Number.isFinite(prev)&&last>prev);
   const pullbackReady=pullbackZone&&bullishReaction&&Number.isFinite(rsi)&&rsi>=44&&rsi<=66&&!breakoutNow;
 
   const nearBreakout=Number.isFinite(trigger20)&&last<trigger20&&trigger20>0&&((trigger20-last)/last*100)<=Math.max(1.8,(atrPct||1.5)*.8)&&dailyBull;
-  const tooFarFromEma10=Number.isFinite(distEma10Pct)&&distEma10Pct>Math.max(4.0,(atrPct||2)*1.25);
+  const tooFarFromEma10=Number.isFinite(distAboveEma10Pct)&&distAboveEma10Pct>Math.max(4.0,(atrPct||2)*1.25);
   const breakoutChased=Number.isFinite(trigger20)&&last>trigger20&& !freshBreakout && ((last/trigger20-1)*100)>maxBreakoutDistancePct;
   const lateEntry=dailyBull&&(tooFarFromEma10||breakoutChased);
   const overextended=lateEntry||(Number.isFinite(rsi)&&rsi>72);
