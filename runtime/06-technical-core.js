@@ -406,7 +406,8 @@ async function fetchBinance(symbol,interval){
  const r=await fetch(u); if(!r.ok){let t='';try{t=await r.text()}catch{};throw new Error(t||('Binance '+r.status))}
  const a=await r.json();
  if(!Array.isArray(a)||!a.length)throw new Error('Sin datos Binance');
- return a.map(x=>({time:Math.floor(x[0]/1000),open:+x[1],high:+x[2],low:+x[3],close:+x[4],volume:+x[5]}));
+ const out=a.map(x=>({time:Math.floor(x[0]/1000),open:+x[1],high:+x[2],low:+x[3],close:+x[4],volume:+x[5]}));
+ return window.RadarMarketData?.tag(out,{...window.RadarMarketData.quality(r),interval,crypto:true})||out;
 }
 
 async function fetchYahoo(symbol,interval,range,quiet=false){
@@ -418,7 +419,7 @@ async function fetchYahoo(symbol,interval,range,quiet=false){
  const out=[]; res.timestamp.forEach((t,i)=>{const o=q.open?.[i],h=q.high?.[i],l=q.low?.[i],c=q.close?.[i],v=q.volume?.[i];
    if([o,h,l,c].every(Number.isFinite))out.push({time:t,open:o,high:h,low:l,close:c,volume:Number.isFinite(v)?v:0})});
  if(out.length<30)throw new Error('Historial insuficiente para '+symbol);
- return out;
+ return window.RadarMarketData?.tag(out,{...window.RadarMarketData.quality(r),interval,crypto:false})||out;
 }
 
 async function fetchBymaHistory(symbol){
@@ -432,7 +433,7 @@ async function fetchBymaHistory(symbol){
    if([o,h,l,c].every(Number.isFinite))out.push({time:+j.t[i],open:o,high:h,low:l,close:c,volume:v});
  }
  if(out.length<30)throw new Error('Histórico BYMA insuficiente para '+symbol);
- return out;
+ return window.RadarMarketData?.tag(out,{...window.RadarMarketData.quality(r),interval:'1d',crypto:false})||out;
 }
 
 async function fetchBymaQuote(symbol){
@@ -458,7 +459,8 @@ function aggregateBars(data,mode){
      const b=m.get(key); b.high=Math.max(b.high,d.high);b.low=Math.min(b.low,d.low);b.close=d.close;b.volume+=(d.volume||0);b.time=d.time;
    }
  }
- return [...m.values()].sort((a,b)=>a.time-b.time);
+ const out=[...m.values()].sort((a,b)=>a.time-b.time);
+ return window.RadarMarketData?.tag(out,{...window.RadarMarketData.quality(data),interval:mode==='week'?'1wk':'1mo'})||out;
 }
 
 function quoteValue(q){
@@ -574,7 +576,7 @@ function analyzeSeries(data,key){
  const macdState=m.macd[i]>m.signal[i]?(m.macd[i]>0?'Alcista sobre cero':'Cruce alcista bajo cero'):(m.macd[i]<0?'Bajista bajo cero':'Cruce bajista sobre cero');
  const vols=data.map(x=>+x.volume||0),n=Math.min(20,vols.length),v20=n?vols.slice(-n).reduce((s,v)=>s+v,0)/n:0;
  const volumeRatio=v20>0?vols.at(-1)/v20:NaN;
- return{key,data,cl,e20,e50,e200,m,A,sw,structure,score,trend,breakType:br,fib,lastH:hs.at(-1),lastL:ls.at(-1),emaState,macdState,c,volumeRatio};
+ return{key,data,dataQuality:window.RadarMarketData?.quality(data),cl,e20,e50,e200,m,A,sw,structure,score,trend,breakType:br,fib,lastH:hs.at(-1),lastL:ls.at(-1),emaState,macdState,c,volumeRatio};
 }
 
 async function analyzeSeriesRuntime(data,key,context={}){
@@ -587,6 +589,7 @@ async function analyzeSeriesRuntime(data,key,context={}){
   if(!r.ok){let msg='';try{msg=await r.text()}catch{};throw new Error(msg||`G2 Technical ${r.status}`)}
   const a=await r.json();
   if(!a||!Array.isArray(a.e20)||a.e20.length!==data.length||!Array.isArray(a.sw)||!Number.isFinite(Number(a.c)))throw new Error('Respuesta G2 Technical incompatible');
+  a.data=data;a.dataQuality=window.RadarMarketData?.quality(data);
   if(a?.g2?.tradePlanStandalone)a.g2.tradePlanStandaloneSignature=g2TradePlanSignature(a,true);
   return a;
  }catch(e){
@@ -747,6 +750,8 @@ function bias(){
    Financial semantics intentionally unchanged. */
 
 function computeTradePlan(a,standalone=false){
+ const quality=window.RadarMarketData?.quality(a?.data)||a?.dataQuality;
+ if(quality && !window.RadarMarketData.canSignal(a?.data,quality))return{direction:'SIN SETUP',status:'DATOS SIN VALIDAR',score:0,components:{},dataQuality:quality,why:['La fuente no pudo validar datos recientes. El gráfico se conserva sólo como referencia.'],action:'Actualizar los datos antes de evaluar una entrada o salida.',invalidation:'No hay una señal operativa activa.'};
  const cached=g2CachedTradePlan(a,standalone);if(cached)return cached;
  if(!a||!Number.isFinite(a.c))return null;
  const dir=directionSign(a),why=[],wait=[];

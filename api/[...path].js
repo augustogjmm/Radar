@@ -48,7 +48,35 @@ function spanishDateIso(day,month,year){
   const m={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',setiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'}[String(month||'').toLowerCase()];
   return m?String(year).padStart(4,'0')+'-'+m+'-'+String(day).padStart(2,'0'):'';
 }
-async function request(url,{method='GET',body,timeout=16000,headers={}}={}){
+// Public upstream reads are shared within a warm serverless instance. No failures
+// or stale fallback payloads are cached; the browser owns stale-data presentation.
+const upstreamCache=new Map(),upstreamPending=new Map();
+let upstreamCacheBytes=0;
+async function request(url,options={}){
+ const method=String(options.method||'GET').toUpperCase();
+ const cacheable=method==='GET'||(method==='POST'&&url.startsWith(BYMA+'/'));
+ if(!cacheable)return requestLive(url,options);
+ const key=JSON.stringify([url,method,options.body??null,options.headers||{}]);
+ const saved=upstreamCache.get(key);
+ const retention=/[?&]interval=1(?:d|wk)(?:&|$)/.test(url)?300000:60000;
+ if(saved&&Date.now()-saved.time<retention)return saved.text;
+ if(upstreamPending.has(key))return upstreamPending.get(key);
+ const job=requestLive(url,options).then(text=>{
+  const bytes=Buffer.byteLength(text,'utf8');
+  if(bytes>0&&bytes<=1000000){
+   // JSON error envelopes with HTTP 200 must remain retryable.
+   let valid=true;try{const j=JSON.parse(text);valid=!j?.error&&j?.ok!==false&&j?.s!=='error'&&!j?.chart?.error;}catch{if(!options.headers?.accept||options.headers.accept.includes('application/json'))valid=false;}
+   if(valid){
+    const old=upstreamCache.get(key);if(old)upstreamCacheBytes-=old.bytes;
+    upstreamCache.delete(key);upstreamCache.set(key,{text,time:Date.now(),bytes});upstreamCacheBytes+=bytes;
+    while(upstreamCache.size>64||upstreamCacheBytes>5000000){const oldest=upstreamCache.keys().next().value;upstreamCacheBytes-=upstreamCache.get(oldest).bytes;upstreamCache.delete(oldest);}
+   }
+  }
+  return text;
+ }).finally(()=>upstreamPending.delete(key));
+ upstreamPending.set(key,job);return job;
+}
+async function requestLive(url,{method='GET',body,timeout=16000,headers={}}={}){
   const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);
   try{
     const r=await fetch(url,{method,body:body===undefined?undefined:JSON.stringify(body),signal:c.signal,headers:{'user-agent':UA,'accept':'application/json,text/plain,*/*',...(body===undefined?{}:{'content-type':'application/json'}),...headers}});
@@ -197,7 +225,7 @@ function compactYahooChart(symbol,payload,source='Yahoo Finance'){
   for(let i=0;i<Math.min(ts.length,cl.length);i++){
     const c=num(cl[i]);if(c===null)continue;
     const o=num(op[i]),h=num(hi[i]),l=num(lo[i]);
-    bars.push({time:Number(ts[i]),open:o??c,high:h??c,low:l??c,close:c,volume:num(vol[i])??0});
+    bars.push({time:Number(ts[i]),open:o,high:h,low:l,close:c,volume:num(vol[i])});
   }
   let last=bars.at(-1)?.close??num(r?.meta?.regularMarketPrice),previous=bars.length>1?bars.at(-2)?.close:num(r?.meta?.chartPreviousClose),time=bars.at(-1)?.time??Math.floor(Date.now()/1000);
   if(last===null)return {symbol,ok:false,error:'Sin cotización',bars};
@@ -211,7 +239,7 @@ async function yahooBatch(url){
   if(!symbols.length)throw new Error('symbols requerido');
   const encoded=symbols.map(encodeURIComponent).join(',');
   let items=[],lastErr='';
-  for(const host of ['query1.finance.yahoo.com','query2.finance.yahoo.com']){
+  for(const host of (url.searchParams.get('technical')==='1'?[]:['query1.finance.yahoo.com','query2.finance.yahoo.com'])){
     try{
       const u='https://'+host+'/v7/finance/spark?symbols='+encoded+'&range='+encodeURIComponent(range)+'&interval='+encodeURIComponent(interval)+'&indicators=close&includeTimestamps=true&includePrePost=false&corsDomain=finance.yahoo.com&.tsrc=finance';
       const j=JSON.parse(await request(u,{timeout:18000,headers:{accept:'application/json'}}));
@@ -226,10 +254,13 @@ async function yahooBatch(url){
     }catch(e){lastErr=String(e.message||e);items=[]}
   }
   if(!items.length||!items.some(x=>x.ok)){
-    const out=await Promise.allSettled(symbols.map(async symbol=>{
-      const u=new URL('https://radar.local/api/yahoo');u.searchParams.set('symbol',symbol);u.searchParams.set('range',range);u.searchParams.set('interval',interval);
-      return compactYahooChart(symbol,await yahoo(u),'Yahoo Finance Chart');
-    }));
+    const out=[];
+    for(let i=0;i<symbols.length;i+=6){
+      out.push(...await Promise.allSettled(symbols.slice(i,i+6).map(async symbol=>{
+        const u=new URL('https://radar.local/api/yahoo');u.searchParams.set('symbol',symbol);u.searchParams.set('range',range);u.searchParams.set('interval',interval);
+        return compactYahooChart(symbol,await yahoo(u),'Yahoo Finance Chart');
+      })));
+    }
     items=out.map((r,i)=>r.status==='fulfilled'?r.value:{symbol:symbols[i],ok:false,error:String(r.reason?.message||r.reason||lastErr||'Yahoo sin datos'),bars:[]});
   }
   return {source:'Yahoo Finance',updated:new Date().toISOString(),count:items.length,items};

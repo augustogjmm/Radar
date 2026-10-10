@@ -2484,7 +2484,7 @@ async function fetchBymaScannerHistory(symbol,key){
    if([o,h,l,c].every(Number.isFinite))out.push({time:+j.t[i],open:o,high:h,low:l,close:c,volume:v});
  }
  if(out.length<30)throw new Error('Histórico insuficiente para '+symbol);
- return out;
+ return window.RadarMarketData?.tag(out,{...window.RadarMarketData.quality(r),interval:'1d',crypto:false})||out;
 }
 
 async function fetchScannerSeries(item,key){
@@ -2538,6 +2538,7 @@ async function scanOne(item,key){
  }
  const marketContext=scannerContextFor(pack.type);
  const status=scannerStatus(plan,a,macroTrend,marketContext);
+ if(plan?.status==='DATOS SIN VALIDAR'){status.kind='none';status.label='DATOS SIN VALIDAR';status.oppScore=0;}
  if(['argbond','on'].includes(pack.type) && status.kind==='sell'){
    status.label='EVITAR / SALIDA';
  }
@@ -2556,7 +2557,7 @@ async function scanOne(item,key){
  const result={
    item:{symbol:pack.symbol,type:pack.type,requestedType:item.type||pack.type,label:item.label||'',panel:item.panel||null},
    key,tfLabel:pack.tfs[key]?.label||key,
-   analysis:a,plan,status,macroTrend,marketContext,price:a.c,
+   analysis:a,plan,status,dataQuality:window.RadarMarketData?.quality(pack.data),macroTrend,marketContext,price:a.c,
    bars:Array.isArray(pack.data)?pack.data:[],
    provider:pack.provider||'Scanner',providerFallback:pack.providerFallback===true,
    rf,

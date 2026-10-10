@@ -92,8 +92,14 @@ function classify(spec,item){
   else if(score>=75&&trendCls==='bull'){action='COMPRAR';actionCls='buy'}
   else if(score<=38&&trendCls==='bear'){action='VENDER';actionCls='sell'}
   else if(score<50){action='VIGILAR';actionCls='watch'}
-  const comment=commentFor(spec,trendCls,setup,day);
-  return{day,perf,trend,trendCls,setup,score,alert,alertCls,action,actionCls,lv,last,comment};
+  const quality=window.RadarMarketData?.quality(item),dataValid=window.RadarMarketData?.canSignal(barsOf(item),quality)===true;
+  let comment=commentFor(spec,trendCls,setup,day);
+  if(!dataValid){alert='SIN VALIDAR';alertCls='watch';action='ACTUALIZAR';actionCls='watch';comment='Referencia sin datos OHLC recientes validados. No habilita una operación.';}
+  else if(spec.category!=='macro'){
+   const technical=window.RadarTopOpportunities?.evaluateTechnical(barsOf(item),50);
+   if(technical){score=technical.oppScore;setup=technical.setup;action=technical.kind==='buy'?'EVALUAR':technical.kind==='near'?'ESPERAR':technical.kind==='sell'?'EVITAR':'OBSERVAR';actionCls=technical.kind==='buy'?'buy':technical.kind==='sell'?'sell':'watch';alert=technical.label;alertCls=technical.kind==='buy'?'ready':'watch';comment=technical.reason;}
+  }else{action='OBSERVAR';actionCls='watch';}
+  return{day,perf,trend,trendCls,setup,score,alert,alertCls,action,actionCls,lv,last,comment,dataValid};
 }
 function commentFor(spec,trend,setup,day){
   if(setup==='RUPTURA')return'Ruptura confirmada; vigilar continuidad y volumen.';
@@ -179,7 +185,7 @@ function mount(){
         <button data-rtw-nav="calendar">Calendario</button>
       </nav>
       <label class="rtw-search"><span>⌕</span><input id="rtwSearch" placeholder="Buscar activo, ticker o sector..." autocomplete="off"></label>
-      <div class="rtw-live"><i></i>Mercado en tiempo real</div>
+      <div class="rtw-live"><i></i>Datos públicos · pueden tener demora</div>
       <div class="rtw-clock"><b id="rtwClock">--:--:--</b><small id="rtwDate">—</small></div>
     </header>
 
@@ -357,12 +363,18 @@ function renderDetail(){
   renderChart(existingSeries(s,period),s);
 }
 function thesis(r){
+  if(!r.dataValid)return'La cotización y el gráfico se conservan como referencia. Se necesita un histórico completo y una consulta válida para evaluar una operación.';
   const d=Number.isFinite(r.day)?pct(r.day):'sin variación disponible';
   if(r.trendCls==='bull')return`${r.spec.name} mantiene una estructura técnica positiva. El movimiento diario es ${d} y el score de convicción es ${r.score}/100. La lectura sigue favorable mientras respete el soporte reciente; una ruptura de resistencia refuerza la continuidad.`;
   if(r.trendCls==='bear')return`${r.spec.name} presenta presión técnica. El movimiento diario es ${d} y el score de convicción es ${r.score}/100. Conviene priorizar control de riesgo y esperar recuperación de soporte antes de asumir continuidad alcista.`;
   return`${r.spec.name} se encuentra en una zona de definición. El movimiento diario es ${d}. El sistema no detecta todavía una ventaja direccional suficiente; soporte y resistencia son las referencias para la próxima decisión.`;
 }
 function actionSentence(r){
+  if(!r.dataValid)return'Actualizar los datos antes de tomar una decisión.';
+  if(r.action==='EVALUAR')return'Revisar la entrada, la invalidación y el riesgo en el análisis completo.';
+  if(r.action==='ESPERAR')return'Falta confirmación; no anticipar una entrada.';
+  if(r.action==='EVITAR')return'No iniciar una posición mientras las condiciones técnicas no mejoren.';
+  if(r.action==='OBSERVAR')return'Seguir el activo; no existe una señal de entrada confirmada.';
   if(r.action==='COMPRAR')return'Considerar entrada sólo mientras se mantenga la estructura alcista.';
   if(r.action==='VENDER')return'Reducir exposición técnica mientras continúe la presión bajista.';
   if(r.action==='VIGILAR')return'Esperar confirmación antes de tomar una nueva posición.';
@@ -410,6 +422,7 @@ async function loadSeries(s,p){
   }catch{}
 }
 function tick(){
+  if(rows.some(x=>x.dataValid&&window.RadarMarketData.quality({dataQuality:x.dataQuality})?.state!=='verified')){rows=normalize();renderKpis();renderTableAndDetail();}
   const now=new Date();if($('rtwClock'))$('rtwClock').textContent=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
   if($('rtwDate'))$('rtwDate').textContent=new Intl.DateTimeFormat('es-AR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'America/Argentina/Buenos_Aires'}).format(now).replaceAll('.','');
 }
@@ -691,7 +704,7 @@ function directRow(meta,market){
     item:{symbol:meta.symbol,type:meta.type,requestedType:meta.type,label:meta.label,panel:{currency:meta.currency}},
     status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore,reason:tech.reason},
     trend:tech.trend,setup:tech.setup,analysis:tech.analysis,why:tech.reason,marketOnly:true,bars,
-    marketData:{last,changePct:num(market.changePct),volume,bars,source:market.source||'Yahoo Finance'}
+    marketData:{last,changePct:num(market.changePct),volume,bars,source:market.source||'Yahoo Finance',dataQuality:market.dataQuality}
   };
 }
 function globalMarketCandidates(){
@@ -785,7 +798,7 @@ function cedearCandidateFromMarket(program,panel,q){
     status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore,reason:tech.reason},
     trend:tech.trend,setup:tech.setup,analysis:tech.analysis,why:tech.reason,bars,marketOnly:true,cedearUniverse:true,
     _liquidityMetric:liq.metric,_tradedDays:liq.tradedDays,_bymaTurnover:liq.bymaTurnover,
-    marketData:{last,changePct:num(q?.changePct),volume:liq.metric,bars,source:q?.source||panel?.source||'Yahoo Finance / BYMA'}
+    marketData:{last,changePct:num(q?.changePct),volume:liq.metric,bars,source:q?.source||panel?.source||'Yahoo Finance / BYMA',dataQuality:window.RadarMarketData?.quality(q)}
   };
 }
 async function fetchJsonNoStore(url){
@@ -818,7 +831,7 @@ async function refreshCedearCandidates(force=false){
     for(let ci=0;ci<chunks.length;ci++){
       const chunk=chunks[ci];
       try{
-        const q=await fetchJsonNoStore('/api/yahoo-batch?symbols='+encodeURIComponent(chunk.map(x=>x+'.BA').join(','))+'&range=1y&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now());
+        const q=await fetchJsonNoStore('/api/yahoo-batch?symbols='+encodeURIComponent(chunk.map(x=>x+'.BA').join(','))+'&range=1y&interval=1d&technical=1&fresh='+(force?'1':'0')+'&_='+Date.now());
         const quotes=new Map((q.items||[]).map(x=>[String(x.symbol||'').toUpperCase().replace(/\.BA$/,''),x]));
         for(const symbol of chunk){
           const row=cedearCandidateFromMarket(officialMap.get(symbol),bymaMap.get(symbol),quotes.get(symbol));
@@ -869,7 +882,7 @@ async function refreshCedearCandidates(force=false){
 async function refreshDirectCandidates(force=false){
   const symbols=DIRECT_UNIVERSE.map(x=>x.quote);
   try{
-    const r=await fetch('/api/yahoo-batch?symbols='+encodeURIComponent(symbols.join(','))+'&range=1y&interval=1d&fresh='+(force?'1':'0')+'&_='+Date.now(),{cache:'no-store'});
+    const r=await fetch('/api/yahoo-batch?symbols='+encodeURIComponent(symbols.join(','))+'&range=1y&interval=1d&technical=1&fresh='+(force?'1':'0')+'&_='+Date.now(),{cache:'no-store'});
     if(!r.ok)throw new Error('Yahoo HTTP '+r.status);
     const j=await r.json(),bySymbol=new Map((j.items||[]).map(x=>[String(x.symbol||'').toUpperCase(),x]));
     const next=[];
@@ -877,7 +890,7 @@ async function refreshDirectCandidates(force=false){
       const x=bySymbol.get(meta.quote.toUpperCase());
       if(!x?.ok&&!Number.isFinite(num(x?.last)))continue;
       const market={
-        last:num(x.last),changePct:num(x.changePct),volume:num(x.volume),source:x.source||j.source||'Yahoo Finance',
+        dataQuality:window.RadarMarketData?.quality(x),last:num(x.last),changePct:num(x.changePct),volume:num(x.volume),source:x.source||j.source||'Yahoo Finance',
         bars:(x.bars||[]).map(b=>({time:num(b.time),open:num(b.open),high:num(b.high),low:num(b.low),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.close))
       };
       const row=directRow(meta,market);if(row)next.push(row);
@@ -1078,12 +1091,14 @@ function normalize(){
     const symbol=symbolOf(r),type=typeOf(r),bars=barsOf(r),context=contextScore(type),risk=volatilityRisk(type,bars),volume=volumeOf(r,bars),rv=relVolume(bars),meta=metaOf(type,r),change=changeOf(r,bars);
     const equityLike=!['argbond','bill','bond'].includes(type);
     const advanced=equityLike&&bars.length>=55?technicalEngine(bars,context):null;
-    const kind=advanced?.kind||String(r?.status?.kind||'wait').toLowerCase();
+    const dataQuality=window.RadarMarketData?.quality(marketFor(r))||window.RadarMarketData?.quality(r)||window.RadarMarketData?.quality(r?.bars);
+    const dataValid=window.RadarMarketData?.canSignal(bars,dataQuality)===true;
+    const kind=dataValid?(advanced?.kind||String(r?.status?.kind||'wait').toLowerCase()):'wait';
     const trend=advanced?{key:advanced.trend==='ALCISTA'?'bull':advanced.trend==='BAJISTA'?'bear':'neutral',label:advanced.trend}:trendOf(r,bars);
     const tech=advanced?.analysis?.technicalScore??techScoreOf(r);
     const setup=advanced?.setup||setupOf(r);
     const why=String(advanced?.reason||r?.why||r?.reason||r?.status?.reason||'').replace(/\s+/g,' ').trim();
-    return{raw:r,key:type+'|'+symbol,symbol,type,label:labelOf(r,symbol),bars,kind,trend,tech,risk,context,volume,rv,meta,change,price:priceOf(r),setup,why,advanced:advanced?.analysis||r?.analysis||null};
+    return{raw:r,dataQuality,dataValid,key:type+'|'+symbol,symbol,type,label:labelOf(r,symbol),bars,kind,trend,tech,risk,context,volume,rv,meta,change,price:priceOf(r),setup,why,advanced:advanced?.analysis||r?.analysis||null};
   });
   const groups=new Map();
   for(const x of items){if(!groups.has(x.type))groups.set(x.type,[]);groups.get(x.type).push(x)}
@@ -1095,16 +1110,17 @@ function normalize(){
   items.forEach(x=>{
     if(x.advanced?.engine==='TA-v3'){
       x.score=clamp(Math.round(x.advanced.total),0,100);
-      x.kind=x.advanced.gates?.trend&&x.advanced.gates?.setup&&x.advanced.gates?.momentum&&x.advanced.gates?.volume&&x.advanced.gates?.rr&&x.advanced.gates?.notExtended&&x.score>=72?'buy':x.kind;
+      // Keep the engine decision: a score never overrides an absolute timing gate.
+      if(!x.dataValid)x.kind='wait';
     }else{
       const boost=x.kind==='buy'?8:x.kind==='near'?3:x.kind==='sell'?-28:x.kind==='none'?-16:-4;
       const trendBoost=x.trend.key==='bull'?5:x.trend.key==='bear'?-10:0;
       x.score=clamp(Math.round(x.tech*.56+x.liquidity*.12+(100-x.risk)*.14+x.context*.18+boost+trendBoost),0,100);
     }
-    x.status=statusOf(x.kind,x.score);
+    x.status=x.dataValid?statusOf(x.kind,x.score):{cls:'watch',label:'SIN VALIDAR'};
     x.riskMeta=riskLabel(x.risk);
     x.horizon=horizonOf(x.type,x.kind);
-    x.reason=x.why||[x.setup,x.trend.label,'técnica '+Math.round(x.tech)+'/100','liquidez '+Math.round(x.liquidity)+'/100'].join(' · ');
+    x.reason=!x.dataValid?'Datos sin validar. Conservamos la referencia; actualizá la fuente antes de decidir.':x.why||[x.setup,x.trend.label,'técnica '+Math.round(x.tech)+'/100','liquidez '+Math.round(x.liquidity)+'/100'].join(' · ');
   });
   return items.sort((a,b)=>b.score-a.score||b.tech-a.tech);
 }
@@ -1239,12 +1255,14 @@ function rtoSetupClass(x){
   return z==='ALCISTA'||z.includes('RUPTURA')||z.includes('TENDENCIA ALCISTA')?'good':z.includes('BAJISTA')||z.includes('PRESIÓN')||z.includes('PÉRDIDA')?'bad':'neutral';
 }
 function actionFor(x){
-  if(x.status.cls==='buy')return['COMPRAR','buy'];
+  if(!x.dataValid)return['ACTUALIZAR','watch'];
+  if(x.status.cls==='buy')return['EVALUAR','buy'];
   if(x.status.cls==='near')return['ESPERAR','watch'];
   if(x.status.cls==='avoid')return['EVITAR','sell'];
   return['SEGUIR','hold'];
 }
 function commentFor(x){
+  if(!x.dataValid)return x.reason;
   if(x.advanced?.engine==='TA-v3'){
     const i=x.advanced.indicators||{};
     return x.status.cls==='buy'
@@ -1309,12 +1327,13 @@ function renderDetail(){
   const indicators=a?'<div class="rto-indicator-strip"><span>EMA 10 <b>'+fmt(i.ema10,2)+'</b></span><span>EMA 55 <b>'+fmt(i.ema55,2)+'</b></span><span>EMA 200 <b>'+fmt(i.ema200,2)+'</b></span><span>Semanal <b>'+esc(i.weeklyTrend||'s/d')+'</b></span><span>RSI 14 <b>'+fmt(i.rsi,1)+'</b></span><span>MACD hist <b>'+fmt(i.macdHist,2)+'</b></span><span>RVOL <b>'+fmt(i.relVolume,2)+'x</b></span><span>Timing <b>'+(i.lateEntry?'TARDE':'VÁLIDO')+'</b></span><span>Dist. entrada <b>'+fmt(i.entryDistancePct,1)+'%</b></span><span>R/R <b>'+fmt(i.rr,2)+'</b></span></div>':'';
   $('rtoSelected').innerHTML=
 '<div class="rto-selected-top"><div><h3>'+esc(x.symbol)+'</h3><small>'+esc(x.label)+' · '+esc(x.meta.classLabel)+' · '+esc(x.meta.market)+'</small></div><span class="rto-big-score" style="--score:'+x.score+'"><b>'+x.score+'</b></span></div>'+
-'<div class="rto-reason">'+esc(x.reason)+'</div>'+metrics+indicators;
+'<div class="rto-reason">'+esc(x.reason)+'</div><p class="radar-provenance">'+esc((marketFor(x.raw)?.source||'Fuente no identificada')+' · '+(x.dataQuality?.observedAt?'Consultado '+new Date(x.dataQuality.observedAt).toLocaleString('es-AR'):'Sin consulta válida')+' · '+(x.dataValid?'Análisis diario; verificar precio antes de operar':'Señal suspendida'))+'</p>'+metrics+indicators;
   let sentence='No hay una compra válida todavía. El activo queda en seguimiento hasta que confirme tendencia, setup, momentum, volumen y R/R.';
-  if(x.status.cls==='buy')sentence='OPORTUNIDAD significa compra técnicamente válida: tendencia diaria/semanal, setup, momentum, volumen y relación riesgo/beneficio están confirmados. Igual debe respetarse el stop técnico.';
+  if(x.status.cls==='buy')sentence='OPORTUNIDAD identifica un candidato técnico para evaluar: tendencia diaria/semanal, setup, momentum, volumen y relación riesgo/beneficio están confirmados. Igual debe respetarse el stop técnico.';
   else if(x.status.cls==='near')sentence='POSIBLE significa que el activo está cerca de una compra, pero falta al menos una condición obligatoria. No conviene anticiparse.';
   else if(x.status.cls==='avoid')sentence='EVITAR significa que el long no cumple las condiciones mínimas. No es una oportunidad de compra mientras no revierta la estructura.';
-  const levels=a?'<span class="rto-levels">Entrada ref. '+fmt(x.price,2)+' · Stop '+fmt(i.stop,2)+' · Objetivo '+fmt(i.target,2)+' · R/R '+fmt(i.rr,2)+'</span>':'';
+  if(!x.dataValid)sentence='La fuente no pudo validar datos recientes. No hay una entrada o salida habilitada. Actualizá los datos; el historial se conserva como referencia.';
+  const levels=a&&x.dataValid?'<span class="rto-levels">Entrada ref. '+fmt(x.price,2)+' · Stop '+fmt(i.stop,2)+' · Objetivo '+fmt(i.target,2)+' · R/R '+fmt(i.rr,2)+'</span>':'';
   $('rtoPlan').innerHTML='<div class="rto-plan-state '+x.status.cls+'">'+x.status.label+'</div><p>'+sentence+'</p>'+levels+'<div class="rto-plan-actions"><button id="rtoAnalyze">Ver análisis completo</button><button id="rtoWatchBack">Volver a Watchlist</button></div>';
   $('rtoAnalyze')?.addEventListener('click',()=>analyze(x));
   $('rtoWatchBack')?.addEventListener('click',back);
@@ -1346,6 +1365,7 @@ async function refresh(force){
   finally{refreshing=false;if(b){b.disabled=false;b.textContent='↻ Actualizar ranking'}render()}
 }
 function tick(){
+  if(rows.some(x=>x.dataValid&&window.RadarMarketData.quality({dataQuality:x.dataQuality})?.state!=='verified')){rows=normalize();renderKpis();renderTableAndDetail();}
   const now=new Date();
   if($('rtoClock'))$('rtoClock').textContent=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Argentina/Buenos_Aires'});
   if($('rtoDate'))$('rtoDate').textContent=new Intl.DateTimeFormat('es-AR',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'America/Argentina/Buenos_Aires'}).format(now).replaceAll('.','');

@@ -34,3 +34,36 @@ Los módulos experimentales de Asesor, Asignador, Rotación CEDEAR y Laboratorio
 ## QA automatizado
 
 El flujo núcleo se valida con un smoke test de navegador sobre Chromium. La prueba levanta Radar localmente, ejecuta la salud profunda de proveedores, corre el pipeline real de escáner sobre BTC, SPY, GGAL y AAPL CEDEAR, navega por Escáner, Renta fija, Seguimiento y Cartera, captura evidencia y falla ante errores JavaScript o regresiones críticas.
+
+
+## Desarrollo local
+
+Usá Node.js 22. El producto no necesita compilación ni una base de datos para su flujo web local. Desde la raíz del repositorio:
+
+```sh
+npm install --no-save playwright@1.55.0
+npx playwright install --with-deps chromium
+node scripts/qa-server.mjs
+```
+
+En otra terminal, ejecutá:
+
+```sh
+node --test scripts/market-data-test.mjs scripts/upstream-cache-test.mjs
+node scripts/smoke-test.mjs
+node scripts/workspace-test.mjs
+```
+
+`workspace-test.mjs` verifica las siete pantallas principales a 1672, 768 y 390 píxeles, análisis individual, exportación, respaldo y suspensión de señales ante una caída de la fuente. Las pruebas de navegador usan fixtures de mercado; la disponibilidad real se comprueba por separado con `/api/health/deep`. El servidor de QA sólo escucha en loopback.
+
+## Datos y continuidad
+
+- `runtime/01-market-data.js` comparte consultas públicas repetidas y conserva una caché local acotada (24 consultas y aproximadamente 2,5 MB). Los precios se consultan cada minuto y las series tienen una vigencia de consulta de cinco minutos.
+- Si falla una fuente, el último resultado de menos de 24 horas puede mostrarse como referencia, con estado de datos sin validar. Las entradas y salidas quedan suspendidas hasta una consulta válida. La fecha de la última vela se comprueba por separado.
+- Los valores nulos y las series sin OHLC real no habilitan una señal. Las respuestas de Yahoo Spark se usan como series de cierre; `technical=1` solicita históricos completos para el ranking. No se fabrican aperturas, máximos, mínimos ni volumen a partir del cierre.
+- El backend comparte lecturas públicas en instancias calientes y limita su caché a 64 respuestas y 5 MB. Históricos diarios/semanales se reutilizan cinco minutos, las demás lecturas un minuto. No se almacenan fallos ni se comparten escrituras arbitrarias.
+- `runtime/19-workspace-tools.js` aporta navegación común, estado de las consultas, ayuda, respaldo y un informe descargable del análisis. La caché de mercado puede borrarse sin perder cartera ni configuración.
+- Los gráficos se sirven desde `assets/vendor/` con su licencia y atribución. No necesitan un CDN ni fuentes remotas para funcionar.
+- Seguimiento, cartera e historial permanecen en el navegador. Guardá un respaldo para recuperarlos en otro equipo; no existe sincronización automática.
+
+No se agregaron proveedores pagos. Las cuotas y disponibilidad de los servicios gratuitos siguen condicionando la operación; la caché reduce consultas, pero no garantiza costo cero ni disponibilidad absoluta.

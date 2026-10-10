@@ -240,6 +240,8 @@ function portfolioPnl(item,res){
  return{price,pnl,pct,currentValue,qty,invested:cost,realized:Number(item?.realizedPnl)||0,priceFallback:!Number.isFinite(Number(res?.analysis?.c))&&!Number.isFinite(Number(res?.rf?.price??res?.rf?.precio))};
 }
 function portfolioDecision(item,res){
+ const quality=window.RadarMarketData?.quality(res?.analysis?.data);
+ if(quality&&!window.RadarMarketData.canSignal(res?.analysis?.data,quality))return{key:'watch',label:'DATOS SIN VALIDAR',why:'No evaluar entradas ni salidas con una cotización sin validar.'};
  if(!item?.inPortfolio)return{key:'watch',label:'SEGUIMIENTO',why:'No está en cartera.'};
  const sell=res?.sellAlert||sellAlertReason(item,res);
  if(sell?.severity>=3)return{key:'exit',label:'SALIR',why:sell.text};

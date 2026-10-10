@@ -3,7 +3,7 @@ const expected=(process.env.EXPECTED_SHA||'').trim();
 const required=['Yahoo SPY','Crypto BTC','BYMA acciones','BYMA CEDEAR','BYMA renta fija','BYMA histórico GGAL','Dólar'];
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const sameSha=(seen)=>!expected||seen===expected||String(seen||'').startsWith(expected)||expected.startsWith(String(seen||''));
+const sameSha=(seen)=>!expected||Boolean(seen)&&(seen===expected||String(seen).startsWith(expected)||expected.startsWith(String(seen)));
 async function json(url,timeoutMs=45000){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeoutMs);

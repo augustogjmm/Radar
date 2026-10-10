@@ -34,8 +34,12 @@ jobs:
           done
           cat /tmp/radar-server.log
           exit 1
+      - name: Validate market cache and upstream requests
+        run: node --test scripts/market-data-test.mjs scripts/upstream-cache-test.mjs
       - name: Run core browser smoke
         run: node scripts/smoke-test.mjs
+      - name: Validate workspaces, exports and provider failures
+        run: node scripts/workspace-test.mjs
       - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4

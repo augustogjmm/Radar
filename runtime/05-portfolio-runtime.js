@@ -310,9 +310,9 @@ async function fetchSeriesForWatch(item,key){
  if(item.type==='crypto')return await fetchBinance(item.symbol,tf.interval);
  if(item.type==='stock')return await fetchYahoo(item.symbol,tf.interval,tf.range);
  const daily=await fetchBymaHistory(item.symbol);
- if(key==='short')return daily.slice(-700);
- if(key==='medium')return aggregateBars(daily,'week').slice(-700);
- if(key==='macro')return aggregateBars(daily,'month').slice(-700);
+ if(key==='short')return window.RadarMarketData?.tag(daily.slice(-700),window.RadarMarketData.quality(daily))||daily.slice(-700);
+ if(key==='medium')return window.RadarMarketData?.tag(aggregateBars(daily,'week').slice(-700),{...window.RadarMarketData.quality(daily),interval:'1wk'})||aggregateBars(daily,'week').slice(-700);
+ if(key==='macro')return window.RadarMarketData?.tag(aggregateBars(daily,'month').slice(-700),{...window.RadarMarketData.quality(daily),interval:'1mo'})||aggregateBars(daily,'month').slice(-700);
  throw new Error('Micro no disponible para BYMA gratuito');
 }
 async function analyzeWatchItem(item){

@@ -555,6 +555,11 @@ function renderChart(key){
      $('freshnessBadge').className='source '+fr.cls;
    }
  }
+ const quality=window.RadarMarketData?.quality(a.data);
+ if(quality&&!window.RadarMarketData.canSignal(a.data,quality)){
+  $('freshnessBadge').textContent='DATOS SIN VALIDAR';$('freshnessBadge').className='source bad';
+  $('freshnessBadge').title=quality.observedAt?'Última consulta válida: '+new Date(quality.observedAt).toLocaleString('es-AR'):'No hay una consulta válida';
+ }
  destroyCharts();
  const common={localization:{locale:'es-AR'},layout:{background:{type:'solid',color:'#06121d'},textColor:'#9fb5c5'},grid:{vertLines:{color:'#10283a'},horzLines:{color:'#10283a'}},rightPriceScale:{borderColor:'#2f688e',scaleMargins:{top:.08,bottom:.08}},timeScale:{borderColor:'#2f688e',timeVisible:true,secondsVisible:false},crosshair:{mode:0}};
  mainChart=LightweightCharts.createChart($('chart'),{...common,width:Math.max(320,$('chart').clientWidth)});
@@ -785,9 +790,9 @@ async function loadAll(){
      const daily=results[0].value;
      if(results[1].status==='fulfilled')state.bymaQuote=results[1].value;else errors.push('Cotización actual: '+results[1].reason?.message);
 
-     state.datasets.short=daily.slice(-700);
-     state.datasets.medium=aggregateBars(daily,'week').slice(-700);
-     state.datasets.macro=aggregateBars(daily,'month').slice(-700);
+     state.datasets.short=window.RadarMarketData?.tag(daily.slice(-700),window.RadarMarketData.quality(daily))||daily.slice(-700);
+     state.datasets.medium=window.RadarMarketData?.tag(aggregateBars(daily,'week').slice(-700),{...window.RadarMarketData.quality(daily),interval:'1wk'})||aggregateBars(daily,'week').slice(-700);
+     state.datasets.macro=window.RadarMarketData?.tag(aggregateBars(daily,'month').slice(-700),{...window.RadarMarketData.quality(daily),interval:'1mo'})||aggregateBars(daily,'month').slice(-700);
      state.source='Open BYMADATA';
    }else{
      for(const[k,tf]of Object.entries(state.tfs)){

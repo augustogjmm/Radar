@@ -9,14 +9,14 @@ const $=id=>document.getElementById(id);
 const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const num=v=>{const n=Number(v);return Number.isFinite(n)?n:NaN};
+const num=v=>{if(v===null||v===undefined||v==='')return NaN;const n=Number(v);return Number.isFinite(n)?n:NaN};
 const fmt=(v,d=2)=>Number.isFinite(num(v))?new Intl.NumberFormat('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(num(v)):'—';
 const pct=v=>Number.isFinite(num(v))?`${num(v)>=0?'+':''}${fmt(v,2)}%`:'—';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const median=a=>{const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length)return NaN;const m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2};
 
 const state={
-  loading:false,lastUpdate:0,markets:new Map(),intraday:new Map(),fixedIncome:new Map(),
+  loading:false,lastUpdate:0,lastAttempt:0,refreshError:'',markets:new Map(),intraday:new Map(),fixedIncome:new Map(),
   selectedRegion:'europe',selectedCountry:null,scope:'global',filter:'all',rdcPeriod:'day',worldMapLoaded:false,
   universes:{equities:[],cedears:[],fixed:[]},opportunityLeaders:[],
   sessionTimer:null,renderTimer:null
@@ -394,7 +394,7 @@ function insertShell(){
       </span>
       <div class="rt-dateblock"><small id="rtDateText">—</small><b>(GMT-3)</b></div>
       <div class="rt-clockblock"><b id="rtClockText">--:--</b><small>(GMT-3)</small></div>
-      <span class="rt-live">En tiempo real</span>
+      <span class="rt-live">Sin validar</span>
     </div>`;
   document.body.insertAdjacentElement('afterbegin',bar);
   bindShell();
@@ -559,7 +559,7 @@ function mountDashboard(){
         </div>
         <div class="rt-source-panel">
           <b>Fuentes y mercado</b>
-          <p><span class="rt-status-dot"></span>Datos en tiempo real</p>
+          <p><span class="rt-status-dot"></span>Datos públicos · pueden tener demora</p>
           <small>Bolsas, índices, commodities, bonos y tipo de cambio. Delayed en algunos mercados.</small>
         </div>
       </aside>
@@ -880,7 +880,7 @@ function mountRegionalDecisionCenter(){
         <button data-rdc-action="calendar">Calendario</button>
       </nav>
       <label class="rdc-search"><span>⌕</span><input id="rtRdcSearch" placeholder="Buscar activo, ticker o sector…"></label>
-      <div class="rdc-live"><i></i>Mercado en tiempo real</div>
+      <div class="rdc-live"><i></i>Datos públicos · pueden tener demora</div>
       <div class="rdc-topclock"><b id="rtRdcClock">--:--:--</b><small id="rtRdcDate">—</small></div>
       <button id="rtRdcClose" class="rdc-x" aria-label="Cerrar">×</button>
     </header>
@@ -1128,19 +1128,13 @@ async function fetchHistoryBars(symbol,signal){
     const r=await fetch(`/api/byma/history?symbol=${encodeURIComponent(symbol)}&days=180&tf=short&_=${Date.now()}`,{cache:'no-store',signal});
     if(!r.ok)return[];
     const h=await r.json(),t=h.t||[],c=h.c||[],v=h.v||[];
-    return t.map((time,i)=>({time:num(time),close:num(c[i]),volume:num(v[i])})).filter(x=>Number.isFinite(x.time)&&Number.isFinite(x.close));
+    const bars=t.map((time,i)=>({time:num(time),open:num(h.o?.[i]),high:num(h.h?.[i]),low:num(h.l?.[i]),close:num(c[i]),volume:num(v[i])})).filter(x=>Number.isFinite(x.time)&&Number.isFinite(x.close));
+    return window.RadarMarketData?.tag(bars,{...window.RadarMarketData.quality(r),interval:'1d'})||bars;
   }catch{return[]}
 }
 function techFromBars(bars){
-  const closes=(bars||[]).map(x=>num(x.close)).filter(Number.isFinite);
-  if(closes.length<8)return{kind:'wait',label:'SEGUIMIENTO',oppScore:35,setup:'Histórico insuficiente',trend:'Lateral'};
-  const last=closes.at(-1),ma5=closes.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,closes.length),ma20=closes.slice(-20).reduce((a,b)=>a+b,0)/Math.min(20,closes.length);
-  const hi20=Math.max(...closes.slice(-20,-1)),lo20=Math.min(...closes.slice(-20,-1));
-  const mom5=closes.length>5&&closes.at(-6)?(last/closes.at(-6)-1)*100:0;
-  if(last>hi20&&ma5>ma20&&mom5>1)return{kind:'buy',label:'OPORTUNIDAD',oppScore:88,setup:'Ruptura con momentum',trend:'Alcista'};
-  if(ma5>ma20&&mom5>.25)return{kind:'near',label:'POSIBLE',oppScore:72,setup:'Tendencia alcista',trend:'Alcista'};
-  if(last<lo20||(ma5<ma20&&mom5<-1))return{kind:'sell',label:'NO',oppScore:18,setup:'Presión bajista',trend:'Bajista'};
-  return{kind:'wait',label:'SEGUIMIENTO',oppScore:48,setup:'Esperar confirmación',trend:ma5>=ma20?'Alcista':'Lateral'};
+ const engine=window.RadarTopOpportunities?.evaluateTechnical;
+ return engine?engine(bars,50):{kind:'wait',label:'SEGUIMIENTO',oppScore:0,setup:'Esperando análisis',trend:'Sin validar'};
 }
 async function buildLocalOpportunityLeaders(signal){
   const pools=[
@@ -1154,7 +1148,7 @@ async function buildLocalOpportunityLeaders(signal){
     const last=num(x.panel.trade??x.panel.closingPrice??bars.at(-1)?.close),prev=bars.length>1?num(bars.at(-2)?.close):NaN;
     const changePct=Number.isFinite(last)&&Number.isFinite(prev)&&prev?((last/prev)-1)*100:NaN;
     const volume=num(x.panel.volumeAmount??x.panel.tradeVolume??x.panel.volume);
-    return{item:{symbol,type:x.type,requestedType:x.type,label:symbol,panel:x.panel},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars,marketData:{last,changePct,volume,bars,source:x.panel?.source||'Open BYMADATA'}};
+    return{item:{symbol,type:x.type,requestedType:x.type,label:symbol,panel:x.panel},status:{kind:tech.kind,label:tech.label,oppScore:tech.oppScore},trend:tech.trend,setup:tech.setup,marketOnly:true,bars,marketData:{last,changePct,volume,bars,source:x.panel?.source||'Open BYMADATA',dataQuality:window.RadarMarketData?.quality(x.panel)}};
   }));
   state.opportunityLeaders=rows.filter(r=>Number.isFinite(r.marketData?.last)&&Number.isFinite(r.marketData?.volume)&&r.marketData.volume>0);
 }
@@ -1179,21 +1173,21 @@ async function fetchBatch(force=false){
     const fixedRes=await fetch('/api/byma/fixed-income?kind=all&currency=ALL&liquid=1',{cache:'no-store',signal:ctrl.signal}).catch(()=>null);
     const j=await dailyRes.json();
     for(const x of (j.items||[])){
-      const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
-      state.markets.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),volume:num(x.volume),bars,source:x.source||j.source||'Yahoo Finance',time:num(x.time),error:x.error||''});
+      const bars=(x.bars||[]).map(b=>({time:num(b.time),open:num(b.open),high:num(b.high),low:num(b.low),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
+      state.markets.set(String(x.symbol),{dataQuality:window.RadarMarketData?.quality(x),ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),volume:num(x.volume),bars,source:x.source||j.source||'Yahoo Finance',time:num(x.time),error:x.error||''});
     }
     if(intraRes?.ok){
       const intraday=await intraRes.json();
       for(const x of (intraday.items||[])){
-        const bars=(x.bars||[]).map(b=>({time:num(b.time),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
-        if(bars.length>2)state.intraday.set(String(x.symbol),{ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),bars,source:x.source||intraday.source||'Yahoo Finance'});
+        const bars=(x.bars||[]).map(b=>({time:num(b.time),open:num(b.open),high:num(b.high),low:num(b.low),close:num(b.close),volume:num(b.volume)})).filter(b=>Number.isFinite(b.time)&&Number.isFinite(b.close));
+        if(bars.length>2)state.intraday.set(String(x.symbol),{dataQuality:window.RadarMarketData?.quality(x),ok:!!x.ok,last:num(x.last),changePct:num(x.changePct),bars,source:x.source||intraday.source||'Yahoo Finance'});
       }
     }
     if(equityRes?.ok){const x=await equityRes.json();state.universes.equities=(x.items||[]).sort((a,b)=>(num(b.volumeAmount)||0)-(num(a.volumeAmount)||0))}
     if(cedearRes?.ok){const x=await cedearRes.json();state.universes.cedears=(x.items||[]).sort((a,b)=>(num(b.volumeAmount)||0)-(num(a.volumeAmount)||0))}
     if(fixedRes?.ok){
       const x=await fixedRes.json();state.universes.fixed=(x.items||[]).sort((a,b)=>(num(b.volumeAmount)||0)-(num(a.volumeAmount)||0));state.fixedIncome.clear();
-      for(const item of state.universes.fixed){const symbol=String(item.symbol||'').toUpperCase(),last=num(item.trade??item.closingPrice),volume=num(item.volumeAmount??item.tradeVolume??item.volume);state.fixedIncome.set(symbol,{ok:Number.isFinite(last),last,changePct:NaN,bars:[],volume,source:x.source||'BYMA',panel:item})}
+      for(const item of state.universes.fixed){const symbol=String(item.symbol||'').toUpperCase(),last=num(item.trade??item.closingPrice),volume=num(item.volumeAmount??item.tradeVolume??item.volume);state.fixedIncome.set(symbol,{dataQuality:window.RadarMarketData?.quality(item),ok:Number.isFinite(last),last,changePct:NaN,bars:[],volume,source:x.source||'BYMA',panel:item})}
     }
     await buildLocalOpportunityLeaders(ctrl.signal);
     const adrRows=adrSymbols.map(symbol=>{
@@ -1576,6 +1570,9 @@ function compactVolume(v){
   return fmt(v,0);
 }
 function opportunityDecision(r){
+  const m=opportunityMarket(r),bars=r?.bars?.length?r.bars:m?.bars;
+  const quality=window.RadarMarketData?.quality(r)||window.RadarMarketData?.quality(m)||window.RadarMarketData?.quality(bars);
+  if(!window.RadarMarketData?.canSignal(bars,quality))return{label:'SIN VALIDAR',cls:'watch'};
   const kind=String(r?.status?.kind||'').toLowerCase();
   if(kind==='buy')return{label:'OPORTUNIDAD',cls:'yes'};
   if(kind==='near')return{label:'POSIBLE',cls:'near'};
@@ -1639,6 +1636,7 @@ function opportunitySetup(r){
   return kind==='wait'?'Esperar confirmación':'Seguimiento';
 }
 function opportunityComment(r){
+  if(opportunityDecision(r).label==='SIN VALIDAR')return'Actualizar datos antes de evaluar una operación.';
   if(r?.marketOnly){const d=opportunityDecision(r);if(d.cls==='yes')return'Volumen alto y señal técnica confirmada.';if(d.cls==='near')return'Volumen alto; falta confirmación de entrada.';if(d.cls==='no')return'Volumen alto, pero estructura técnica desfavorable.';return'Activo líquido en seguimiento técnico.';}
   const kind=String(r?.status?.kind||''),trend=opportunityTrend(r)[0];
   if(kind==='buy')return'Confluencia técnica y momentum favorables.';
@@ -1773,16 +1771,18 @@ async function refresh(force=false){
   try{
     $('dashRefreshBtn')?.click();
     await fetchBatch(force);
+    state.refreshError='';state.lastUpdate=Date.now();
     renderAll();
     if(window.RadarDailyRadar?.run)window.RadarDailyRadar.run(force).then(()=>renderOpportunities()).catch(()=>{});
   }catch(e){
+    state.refreshError=String(e?.message||e);
     console.warn('Global Command Center',e);
     window.radarNotify?.(`No se pudo completar la vista global: ${e?.message||e}`,'warn');
     renderAll();
   }finally{
-    state.loading=false;state.lastUpdate=Date.now();document.body.classList.remove('rt-refreshing');
+    state.loading=false;state.lastAttempt=Date.now();document.body.classList.remove('rt-refreshing');
     if($('rtRefresh')){$('rtRefresh').disabled=false;$('rtRefresh').textContent='Actualizar'}
-    const live=q('.rt-live');if(live)live.textContent='Actualizado '+new Date(state.lastUpdate).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    const live=q('.rt-live');if(live){live.textContent=state.refreshError?'Consulta incompleta':state.lastUpdate?'Consultado '+new Date(state.lastUpdate).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}):'Sin validar';live.title=state.refreshError||'La hora de consulta no garantiza cotizaciones en tiempo real.';}
   }
 }
 

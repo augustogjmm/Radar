@@ -1,0 +1,147 @@
+/* Common workspace primitives. Legacy screens migrate onto this shared scale. */
+:root {
+ --radar-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+ --radar-surface: #081b29;
+ --radar-border: #23485e;
+ --radar-text: #e6f1f7;
+ --radar-muted: #a2b9c8;
+ --radar-accent: #62d9ff;
+ --radar-radius: 10px;
+}
+html body.rt-global-shell { min-width: 0 !important; font-family: var(--radar-font) !important; }
+html body :is(#rtGlobalRadar,#rtWatchlistWorkstation,#rtTopOpportunities,#rtRegionalDecisionCenter,.radar-product-reset) { font-family: var(--radar-font) !important; font-size: 14px !important; }
+html body .rt-appbar { grid-template-columns: 250px minmax(0,1fr) 180px 270px !important; gap: 12px !important; }
+html body :is(.rt-nav,.rto-nav,.rtw-nav,.rdc-nav) { display:flex !important; justify-content:flex-start !important; min-width:0 !important; overflow-x:auto !important; scrollbar-width:thin; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rt-nav,.rto-nav,.rtw-nav,.rdc-nav) button,
+html body .rt-appbar .rt-nav button { font:600 12px/1.3 var(--radar-font) !important; min-height:38px !important; padding:0 12px !important; flex-shrink:0; }
+html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-topbar,.rtw-topbar,.rdc-topbar) { grid-template-columns:220px minmax(0,1fr) 190px 155px 100px !important; gap:10px !important; min-width:0 !important; }
+html body .rt-brand-copy b { font-size:23px !important; }
+html body .rt-brand-copy small { font-size:9px !important; white-space:normal !important; }
+html body :is(.rt-head-avatar,.rt-head-icon) { display:none !important; }
+html body .rt-livebox { min-width:0 !important; gap:8px !important; }
+html body :is(.rt-live,.rto-live,.rtw-live,.rdc-live) { font-size:11px !important; line-height:1.4 !important; color:var(--radar-muted) !important; white-space:normal !important; }
+html body :is(.rt-nav,.rto-nav,.rtw-nav,.rdc-nav) [aria-current="page"] { color:var(--radar-accent) !important; background:#123951 !important; box-shadow:inset 0 -2px 0 var(--radar-accent) !important; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-card,.rto-panel,.rtw-panel,.rtw-side-card,.rdc-panel,.rt-watch-card,.rt-opps-card,.rt-signals-card,.rt-detail-card) { border-color:var(--radar-border) !important; border-radius:var(--radar-radius) !important; min-width:0 !important; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(h2,h3,.rt-section-title h2,.rt-section-title h3) { font-size:18px !important; line-height:1.3 !important; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rt-section-title p,.rt-link-button,.rto-reason,.rto-plan p,.rto-method,.rtw-thesis-card p,.rtw-analysis-card #rtwQuick span,.rtw-next li,.rdc-driver-note,.rdc-comment) { font-size:12px !important; line-height:1.5 !important; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rt-opps-table,.rto-table,.rtw-table) td { font-size:12px !important; height:42px !important; line-height:1.4 !important; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rt-opps-table,.rto-table,.rtw-table) th { font-size:11px !important; height:36px !important; color:var(--radar-muted) !important; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-asset-watch>b,.rtw-asset b,.rt-watch-symbol,.rt-signal-value) { font-size:13px !important; }
+html body :is(#rtGlobalRadar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-asset-watch>small,.rto-market-cell>small,.rtw-asset small,.rt-signal-note,.rt-watch-row small,.rt-signal-row small,.rto-kpi small,.rto-kpi span,.rtw-kpi small,.rtw-kpi span) { font-size:11px !important; line-height:1.4 !important; }
+html body :is(#rtTopOpportunities,#rtWatchlistWorkstation) :is(.rto-comment,.rtw-table .comment,.rtw-top-list button,.rtw-alert-list small,.rto-metric small,.rto-indicator-strip span) { font-size:11px !important; }
+html body :is(#rtTopOpportunities,#rtWatchlistWorkstation) :is(.rto-status,.rto-action,.rto-setup,.rtw-badge,.rtw-alert,.rtw-action) { font-size:10px !important; min-height:25px !important; height:auto !important; }
+html body :is(#rtTopOpportunities,#rtWatchlistWorkstation) :is(.rto-filters button,.rto-signal-filters button,.rtw-filters button,.rto-btn,.rtw-actions button,.rto-plan-actions button) { font-size:12px !important; min-height:36px !important; }
+html body #rtTopOpportunities .rto-main { grid-template-columns:minmax(0,1fr) 360px !important; align-items:start; }
+html body #rtTopOpportunities .rto-table-wrap { overflow:auto !important; }
+html body #rtTopOpportunities .rto-kpi { min-height:108px !important; }
+html body #rtTopOpportunities .rto-metrics-ta .rto-metric { min-height:60px !important; }
+html body #rtTopOpportunities .rto-indicator-strip { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+html body #rtWatchlistWorkstation .rtw-main { grid-template-rows:minmax(455px,auto) auto !important; }
+html body #rtWatchlistWorkstation .rtw-side { grid-template-rows:auto auto auto !important; }
+html body #rtWatchlistWorkstation .rtw-table { min-width:1200px !important; }
+html body #rtWatchlistWorkstation .rtw-panel-head { height:auto !important; min-height:56px !important; }
+html body #rtWatchlistWorkstation .rtw-filters { overflow-x:auto !important; }
+html.radar-product-reset body :is(.card,.panel,.alloc-rpt-card) { border-color:var(--radar-border) !important; border-radius:var(--radar-radius) !important; }
+html.radar-product-reset body :is(.card p,.panel p,.muted,.watch-muted,.reason-box div) { font-size:13px !important; line-height:1.5 !important; }
+html.radar-product-reset body :is(.reason-box strong,.metric small,.alloc-rpt-card-head small,.watch-table th,.scan-table th) { font-size:11px !important; color:var(--radar-muted) !important; }
+html.radar-product-reset body :is(.watch-table td,.scan-table td,.signal-table td,.ledger-table td) { font-size:12px !important; line-height:1.4 !important; }
+html.radar-product-reset body .product-analysis .workspace { align-items:start !important; }
+html.radar-product-reset body :is(input,select,button) { font-family:var(--radar-font) !important; }
+html body :is(button,a,input,select,summary):focus-visible { outline:2px solid var(--radar-accent) !important; outline-offset:3px; }
+.radar-utilitybar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 16px; border-bottom:1px solid var(--radar-border); background:#071824; font:12px/1.5 var(--radar-font); color:var(--radar-text); }
+.radar-data-status { display:flex; flex-direction:column; min-width:0; max-width:560px; }
+.radar-data-status b { font-size:13px; color:var(--radar-accent); }
+.radar-data-status[data-state="partial"] b { color:#ffda7c; }
+.radar-data-status span { color:var(--radar-muted); }
+.radar-utility-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.radar-utility-actions button,.radar-guide button { border:1px solid var(--radar-border); border-radius:6px; background:#0d293b; color:var(--radar-text); padding:8px 12px; min-height:36px; cursor:pointer; font:600 12px/1.3 var(--radar-font); }
+.radar-utility-actions button:disabled { opacity:.45; cursor:default; }
+.radar-provenance { font:12px/1.5 var(--radar-font); color:var(--radar-muted); padding:10px 0; border-top:1px solid var(--radar-border); }
+.radar-guide { width:min(680px,calc(100vw - 32px)); max-height:85dvh; overflow:auto; color:var(--radar-text); background:var(--radar-surface); border:1px solid var(--radar-border); border-radius:var(--radar-radius); padding:24px; font:14px/1.6 var(--radar-font); }
+.radar-guide::backdrop { background:rgba(0,7,14,.8); }
+.radar-guide header { display:flex; justify-content:space-between; align-items:start; gap:12px; }
+.radar-guide h2 { margin:4px 0 16px; font-size:24px; }
+.radar-guide h3 { font-size:16px; }
+.radar-guide li { margin:0 0 14px; }
+.radar-guide footer { border-top:1px solid var(--radar-border); padding-top:12px; font-size:12px; color:var(--radar-muted); }
+.radar-guide a { color:var(--radar-accent); }
+@media(max-width:1250px) {
+ html body .rt-appbar { grid-template-columns:200px minmax(0,1fr) 180px !important; }
+ html body .rt-livebox { display:none !important; }
+ html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-topbar,.rtw-topbar,.rdc-topbar) { grid-template-columns:180px minmax(0,1fr) 180px !important; }
+ html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-live,.rto-clock,.rtw-live,.rtw-clock,.rdc-live,.rdc-city-clock) { display:none !important; }
+ html body #rtTopOpportunities .rto-main { grid-template-columns:minmax(0,1fr) 320px !important; }
+ .radar-utilitybar { align-items:flex-start; }
+}
+@media(max-width:900px) {
+ html body .rt-appbar { height:auto !important; min-height:108px; grid-template-columns:minmax(0,1fr) minmax(120px,200px) !important; grid-template-rows:52px 44px !important; padding:6px 12px !important; }
+ html body .rt-appbar .rt-nav { grid-column:1/-1; grid-row:2; }
+ html body .rt-appbar .rt-header-search { grid-column:2; grid-row:1; width:100% !important; min-width:0 !important; }
+ html body .rt-brand { grid-column:1; grid-row:1; }
+ html body .rt-brand-copy b { font-size:19px !important; }
+ html body .rt-brand-copy small { display:none !important; }
+ html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) { padding:0 12px 16px !important; }
+ html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-topbar,.rtw-topbar,.rdc-topbar) { height:auto !important; min-height:104px !important; grid-template-columns:minmax(0,1fr) minmax(100px,180px) !important; grid-template-rows:50px 44px !important; margin:0 -12px !important; padding:4px 12px !important; }
+ html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-nav,.rtw-nav,.rdc-nav) { grid-column:1/-1; grid-row:2; }
+ html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-search,.rtw-search,.rdc-search) { grid-column:2; grid-row:1; min-width:0 !important; }
+ html body :is(#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) :is(.rto-brand,.rtw-brand,.rdc-brand) { grid-column:1; grid-row:1; width:100% !important; min-width:0 !important; }
+ html body .rt-main-grid { grid-template-columns:minmax(0,1fr) !important; height:auto !important; }
+ html body #rtGlobalRadar .rt-map-card { min-height:340px !important; height:360px !important; }
+ html body #rtGlobalRadar :is(.rt-detail-card,.rt-watch-card) { min-height:260px; }
+ html body #rtGlobalRadar :is(.rt-secondary-grid,.rt-bottom-grid,.rt-mid-grid) { grid-template-columns:minmax(0,1fr) !important; height:auto !important; }
+ html body #rtGlobalRadar .rt-opps-card { overflow:auto !important; }
+ html body #rtGlobalRadar .rt-opps-table { min-width:1100px !important; }
+ html body #rtTopOpportunities .rto-main { grid-template-columns:minmax(0,1fr) !important; }
+ html body #rtTopOpportunities .rto-kpis { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ html body #rtTopOpportunities :is(.rto-toolbar,.rto-progress) { grid-template-columns:minmax(0,1fr) !important; height:auto !important; }
+ html body #rtTopOpportunities .rto-hero { flex-wrap:wrap !important; height:auto !important; padding:16px 0 !important; }
+ html body #rtTopOpportunities .rto-hero h1 { font-size:24px !important; }
+ html body #rtWatchlistWorkstation .rtw-main { grid-template-columns:minmax(0,1fr) !important; grid-template-rows:auto !important; }
+ html body #rtWatchlistWorkstation :is(.rtw-list-panel,.rtw-side,.rtw-detail,.rtw-next) { grid-column:1 !important; grid-row:auto !important; }
+ html body #rtWatchlistWorkstation .rtw-panel-head { grid-template-columns:minmax(0,1fr) !important; }
+ html body #rtWatchlistWorkstation .rtw-kpis { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ html body #rtWatchlistWorkstation .rtw-detail { height:auto !important; }
+ html body #rtRegionalDecisionCenter :is(.rdc-main,.rdc-internal-grid,.rdc-hero,.rdc-arg-grid) { grid-template-columns:minmax(0,1fr) !important; grid-template-rows:auto !important; height:auto !important; }
+ html body #rtRegionalDecisionCenter :is(.rdc-drivers,.rdc-internal,.rdc-argentina,.rdc-assets) { grid-column:1 !important; grid-row:auto !important; height:auto !important; min-width:0 !important; overflow:auto !important; }
+ html body #rtRegionalDecisionCenter :is(.rdc-driver-head,.rdc-driver-row) { min-width:680px !important; }
+ html body #rtRegionalDecisionCenter :is(.rdc-asset-head,.rdc-asset-row) { min-width:680px !important; }
+ html body #rtRegionalDecisionCenter .rdc-timeline { display:block !important; height:auto !important; }
+ html body #rtRegionalDecisionCenter .rdc-kpis { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ html.radar-product-reset body :is(.workspace,.product-analysis .workspace,.rf-workspace,.watch-layout,.history-summary-grid) { grid-template-columns:minmax(0,1fr) !important; }
+ html.radar-product-reset body .analysis-chart-head { flex-wrap:wrap !important; }
+ html.radar-product-reset body #technicalStatusGrid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ html.radar-product-reset body :is(.watch-table-wrap,.scan-table-wrap,.ledger-table-wrap,.rf-table-wrap) { overflow:auto !important; max-width:100% !important; }
+ .radar-utilitybar { flex-direction:column; gap:10px; padding:12px; }
+ .radar-utility-actions { width:100%; }
+ .radar-utility-actions button { flex:1 1 130px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ html body *,html body *::before,html body *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+}
+
+/* Opportunity tables grow with their rows rather than clipping their last entries. */
+html body #rtGlobalRadar .rt-opps-card {height:auto !important;grid-template-rows:auto minmax(288px,auto) !important;}
+html body #rtGlobalRadar .rt-opps-wrap {height:auto !important;min-width:0 !important;overflow:auto !important;}
+html body .rt-brand-official-shell>.rt-brand-copy {overflow:hidden !important;}
+html body .rt-brand-official-shell>.rt-brand-copy>small {text-overflow:ellipsis !important;overflow:hidden !important;}
+@media(max-width:900px) {
+ html body #rtGlobalRadar .rt-opps-card {display:block !important;}
+ html body #rtGlobalRadar .rt-opps-header {display:flex !important;flex-direction:column !important;align-items:flex-start !important;height:auto !important;gap:10px !important;padding:12px !important;}
+ html body #rtGlobalRadar .rt-opps-header>div {min-width:0 !important;max-width:100% !important;flex-wrap:wrap !important;}
+ html body #rtGlobalRadar .rt-tabs {overflow-x:auto !important;max-width:100% !important;}
+ html body #rtGlobalRadar .rt-opps-aside {display:none !important;}
+ html body :is(#rtGlobalAppbar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) .rt-brand-official-shell>.rt-brand-copy>b {font:700 16px/1.3 var(--radar-font) !important;}
+ html body :is(#rtGlobalAppbar,#rtTopOpportunities,#rtWatchlistWorkstation,#rtRegionalDecisionCenter) .rt-brand-official-shell>.rt-brand-copy>small {display:none !important;}
+ html body #rtWatchlistWorkstation .rtw-detail-grid {grid-template-columns:minmax(0,1fr) !important;}
+}
+
+.radar-position-tools {margin:12px 0;border:1px solid var(--radar-border);border-radius:8px;padding:12px;font:13px/1.5 var(--radar-font);}
+.radar-position-tools summary {cursor:pointer;color:var(--radar-accent);font-weight:600;}
+@media(max-width:600px) {
+ html body #rtTopOpportunities .rto-kpi {grid-template-columns:32px minmax(0,1fr) !important;padding:12px 10px !important;gap:8px !important;}
+ html body #rtTopOpportunities .rto-kpi>i {width:32px !important;height:32px !important;font-size:18px !important;}
+ html body #rtTopOpportunities .rto-kpi strong {font-size:18px !important;overflow-wrap:anywhere !important;}
+ html body #rtGlobalRadar .rt-traffic-grid {grid-template-columns:minmax(0,1fr) !important;}
+ html body #rtGlobalRadar .rt-arg-card {height:auto !important;}
+ html body #rtGlobalRadar .rt-signals-head {height:auto !important;min-height:60px !important;flex-direction:column !important;align-items:flex-start !important;gap:8px !important;}
+}
