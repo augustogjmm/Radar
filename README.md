@@ -2,7 +2,7 @@
 
 > **Proyecto personal de ingeniería y arquitectura:** integración de fuentes financieras, backend serverless, caché, controles de calidad de datos y pruebas automatizadas. El propósito es demostrar diseño de servicios y confiabilidad operacional, sin atribuir rentabilidad financiera al producto.
 
-**[Portfolio ejecutivo de Augusto García Juárez Matorras](PORTFOLIO.md)** · [Casos profesionales de arquitectura y liderazgo](docs/EXECUTIVE_CASE_STUDIES.md) · [Demostración](https://radar-chamaquin.vercel.app)
+**[Portfolio ejecutivo de Augusto García Juárez Matorras](PORTFOLIO.md)** · [Casos profesionales de arquitectura y liderazgo](docs/EXECUTIVE_CASE_STUDIES.md) · [Demostración](https://radar-lovat-five.vercel.app)
 
 ---
 
