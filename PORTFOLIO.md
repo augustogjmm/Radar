@@ -1,49 +1,63 @@
 # Augusto García Juárez Matorras
 ### IT Infrastructure & Operations Leader | Cloud & Enterprise Architecture | Financial Services
 
-**Portfolio ejecutivo de tecnología** · Buenos Aires, Argentina  
-[LinkedIn](https://www.linkedin.com/in/augustog/) · [GitHub](https://github.com/augustogjmm)
+**Portfolio ejecutivo de tecnología — Buenos Aires, Argentina**  
+[LinkedIn](https://www.linkedin.com/in/augustog/) · [GitHub](https://github.com/augustogjmm) · [Casos de arquitectura y liderazgo](docs/EXECUTIVE_CASE_STUDIES.md)
 
-Soy un profesional de tecnología con más de 20 años de experiencia en la industria financiera. Mi trayectoria evolucionó desde infraestructura, almacenamiento, seguridad y operaciones hacia la conducción de equipos, gestión de servicios críticos y decisiones de arquitectura e inversión tecnológica.
+## Perfil
 
-En Banco Supervielle ocupé posiciones de liderazgo, incluyendo **Head of Engineering & Innovation**. Mi experiencia incluye continuidad operativa, recuperación ante desastres, infraestructura híbrida, evolución de centros de datos, integraciones corporativas, cloud y gobierno de tecnología en entornos regulados.
+Líder tecnológico con **más de 20 años de experiencia en la industria financiera**, con evolución desde funciones especializadas hacia gestión, estrategia de infraestructura, operación de servicios críticos y arquitectura empresarial. Mi trayectoria incluye posiciones de conducción en **Banco Supervielle**, hasta **Head of Engineering & Innovation**.
 
-## Experiencia profesional: ejes principales
+Experiencia en **equipos multidisciplinarios, continuidad operativa, infraestructura híbrida, recuperación ante desastres, cloud, integraciones corporativas, gobierno tecnológico y gestión CAPEX/OPEX** en entornos regulados. Mi experiencia técnica es un diferencial para dirigir decisiones de arquitectura y operación, no una búsqueda de posiciones de desarrollo individual.
 
-- **Infraestructura y operaciones críticas:** alta disponibilidad, plataformas corporativas, virtualización, storage, networking y soporte a servicios financieros.
-- **Arquitectura y cloud:** evaluación y evolución de plataformas híbridas, AWS, HCI, Kubernetes e integración de servicios.
-- **Resiliencia y continuidad:** Disaster Recovery, diseño activo-activo, migraciones e iniciativas orientadas a reducir indisponibilidad.
-- **Gestión y transformación:** liderazgo multidisciplinario, proveedores, proyectos de integración y presupuestos CAPEX/OPEX.
-- **Gobierno:** experiencia con controles SOX, requerimientos BCRA, auditoría y entornos de elevada exigencia operacional.
+### Experiencia corporativa: casos de estudio
+
+En [**Arquitectura y liderazgo tecnológico**](docs/EXECUTIVE_CASE_STUDIES.md) resumo, de manera conceptual y sin información confidencial:
+
+1. Evolución de **Disaster Recovery y alta disponibilidad activo-activo**.
+2. Modernización de plataformas con **HCI, Kubernetes, VMware y AWS**.
+3. **Integraciones corporativas**, evolución de core sobre IBM i y consolidación de centros de datos.
+4. **Gobierno IT y operación regulada**: auditoría, SOX, BCRA y gestión tecnológica.
 
 ## Proyectos personales seleccionados
 
-Estos repositorios **no contienen sistemas ni propiedad intelectual del banco**: son proyectos personales que permiten observar decisiones técnicas actuales. Son prototipos y herramientas de investigación; no deben interpretarse como productos bancarios certificados ni como sistemas de inversión con rentabilidad comprobada.
+La siguiente selección demuestra aplicación técnica actual. **No son sistemas del banco ni productos financieros certificados**; sus READMEs distinguen implementaciones, pruebas, hipótesis y limitaciones.
 
-### 1. [MTF Live Monitor](https://github.com/augustogjmm/mtf-live-monitor)
-Monitor de mercados con integración de APIs, validaciones de datos, backend cloud, persistencia y controles de confiabilidad. El repositorio documenta una migración de infraestructura, pruebas automatizadas y sus limitaciones.
+| Proyecto | Qué permite evaluar | Documentación |
+| --- | --- | --- |
+| **[Radar Técnico G2](https://github.com/augustogjmm/Radar)** | Arquitectura de integración, múltiples proveedores, APIs serverless, datos resilientes y QA | [Arquitectura](docs/ARCHITECTURE_OVERVIEW.md) |
+| **[MTF Live Monitor](https://github.com/augustogjmm/mtf-live-monitor)** | Cloud, migración de backend, persistencia, controles de frescura de datos, validación y automatización | [Arquitectura](https://github.com/augustogjmm/mtf-live-monitor/blob/main/docs/ARCHITECTURE_OVERVIEW.md) |
+| **[Carter](https://github.com/augustogjmm/Carter)** | Ingeniería de producto, simulación, pipelines, pruebas reproducibles y criterios de bloqueo por riesgo | [Arquitectura](https://github.com/augustogjmm/Carter/blob/main/docs/ARCHITECTURE_OVERVIEW.md) |
 
-**Capacidades ilustradas:** arquitectura de integración, costos de servicio, operación cloud, automatización, observabilidad, calidad de datos y validación.
+### Laboratorio y proyectos complementarios
 
-### 2. [Radar Técnico G2](https://github.com/augustogjmm/Radar)
-Plataforma web para integrar fuentes de información de mercado y análisis, con capa API serverless, caché, controles de salud y pruebas automatizadas.
+Estos repositorios son **experimentos, prototipos o aplicaciones de alcance acotado**; no se presentan como soluciones empresariales de producción.
 
-**Capacidades ilustradas:** integración de servicios, resiliencia ante fallos de proveedores, organización modular y QA.
+| Repositorio | Enfoque |
+| --- | --- |
+| [Analizador / Liquidity Lab](https://github.com/augustogjmm/Analizador) | Aplicación web de análisis, interfaces, datos y simulación |
+| [GlobalAnalyzer](https://github.com/augustogjmm/GlobalAnalyzer) | Integración de fuentes financieras mediante frontend y API |
+| [LibroOrdenes-Rangos](https://github.com/augustogjmm/LibroOrdenes-Rangos) | Libro de órdenes y procesamiento de datos en Python |
+| [CryptoAnalisis-](https://github.com/augustogjmm/CryptoAnalisis-) | Indicadores y recopilación de datos de mercado en Python |
+| [HFT-ENGINE-REBOTES](https://github.com/augustogjmm/HFT-ENGINE-REBOTES) | Explorador experimental de microestructura |
+| [analizer](https://github.com/augustogjmm/analizer) | Análisis visual de Order Blocks; incluye atribución/licencia de terceros |
+| [sc](https://github.com/augustogjmm/sc) | Scanner experimental asíncrono de datos |
+| [scalpping](https://github.com/augustogjmm/scalpping) | Índice de experimentos; no contiene una aplicación independiente |
 
-### 3. [Carter](https://github.com/augustogjmm/Carter)
-Entorno de investigación y simulación de decisiones, con motores, pruebas reproducibles, workflows y reglas explícitas para bloquear ejecuciones que no cumplen controles.
+## Principios de trabajo
 
-**Capacidades ilustradas:** criterios de aceptación, trazabilidad, automatización, gestión de riesgo y disciplina de validación. No envía órdenes reales desde las herramientas documentadas.
+- **Continuidad y seguridad** como condiciones de diseño y operación.
+- **Confiabilidad verificable**: observabilidad, validación de datos, pruebas y límites explícitos.
+- **Decisiones de arquitectura** ligadas a riesgo, capacidad operativa, costo y valor de negocio.
+- **Transparencia técnica**: separar herramientas experimentales de sistemas validados y evitar métricas de rentabilidad sin evidencia.
+- **Liderazgo** que combina profundidad técnica, coordinación de equipos y responsabilidad por servicios.
 
-## Criterios que guían mi trabajo
+## Posiciones de interés
 
-1. Priorizar confiabilidad, seguridad y continuidad antes que promesas de rendimiento.
-2. Separar hipótesis, prototipos, pruebas y funcionalidades comprobadas.
-3. Mantener trazabilidad de decisiones técnicas y limitaciones conocidas.
-4. Tomar decisiones de arquitectura considerando también operación, riesgo y costos.
+IT Director, Head of IT Infrastructure, Head of IT Operations, IT / Technology Manager, Cloud & Infrastructure Management y Enterprise Architecture.
 
-## Objetivo profesional
+**[Contactar por LinkedIn](https://www.linkedin.com/in/augustog/)**
 
-Roles de liderazgo en **IT Infrastructure, IT Operations, Enterprise Architecture, Cloud y Technology Management**, con foco en dirección de equipos, continuidad de servicios y evolución tecnológica.
+---
 
-> Nota: los repositorios documentan trabajo personal y su estado técnico específico. La trayectoria corporativa se presenta en LinkedIn y el CV; no se publican diseños internos, secretos ni información confidencial de empleadores.
+<sub>Este portfolio no publica información confidencial de empleadores, ni software o diseños internos de entidades financieras. Los proyectos personales de mercado no envían instrucciones de inversión y deben evaluarse según el alcance y las limitaciones documentadas en cada repositorio.</sub>
