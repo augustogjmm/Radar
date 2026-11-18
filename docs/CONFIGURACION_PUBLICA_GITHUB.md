@@ -38,7 +38,7 @@ Estas descripciones hablan de arquitectura y capacidades comprobables, sin prome
 
 ## 5. Sitios de demostración para comprobar
 
-- Radar: https://radar-chamaquin.vercel.app
+- Radar: https://radar-lovat-five.vercel.app
 - MTF: https://mtf-monitor.vercel.app
 - Carter: https://carter-rust.vercel.app/desk.html
 - GlobalAnalyzer: https://global-analyzer.vercel.app
