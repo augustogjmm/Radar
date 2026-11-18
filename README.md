@@ -6,6 +6,8 @@
 
 ---
 
+**[Arquitectura y decisiones técnicas](docs/ARCHITECTURE_OVERVIEW.md)**
+
 Radar es un producto personal de análisis de mercados y cartera. La versión web publicada se concentra en un flujo corto y auditable:
 
 **Inicio → análisis individual → escáner RV/cripto → escáner renta fija → seguimiento → cartera/riesgo → historial.**
