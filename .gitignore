@@ -1,2 +1,18 @@
 node_modules/
 artifacts/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+# Local tools and output
+.vercel/
+.wrangler/
+.npm-cache/
+.cache/
+*.log
+.DS_Store
