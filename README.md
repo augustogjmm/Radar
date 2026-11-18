@@ -1,4 +1,10 @@
-# Radar Técnico G2 · v5.1 web
+# Radar Técnico G2 — Arquitectura de servicios y análisis de mercados
+
+> **Proyecto personal de ingeniería y arquitectura:** integración de fuentes financieras, backend serverless, caché, controles de calidad de datos y pruebas automatizadas. El propósito es demostrar diseño de servicios y confiabilidad operacional, sin atribuir rentabilidad financiera al producto.
+
+**[Portfolio ejecutivo de Augusto García Juárez Matorras](PORTFOLIO.md)** · [Demostración](https://radar-chamaquin.vercel.app)
+
+---
 
 Radar es un producto personal de análisis de mercados y cartera. La versión web publicada se concentra en un flujo corto y auditable:
 
